@@ -1,6 +1,8 @@
 package app.TreeViewWatchService;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -54,7 +56,8 @@ import javafx.stage.Stage;
 public class FileTreeViewSample extends Application {
 	
 	private PathTreeCell cell;
-	private final Set<PathTreeCell> myTreeCells = Collections.newSetFromMap(new WeakHashMap<>());
+	public static final Set<PathTreeCell> myTreeCells = Collections.newSetFromMap(new WeakHashMap<>());
+	public static TreeItem<PathItem> treeItem;
 	
     private ExecutorService service;
     private Task watchTask;
@@ -176,16 +179,38 @@ public class FileTreeViewSample extends Application {
             if (searchTask != null && searchTask.isRunning()) {
                 searchTask.cancel();
             }
-            rootPath = Paths.get("D:\\Test");
+//            rootPath = Paths.get("F:\\Test");
+//            PathItem pathItem = new PathItem(rootPath);
+//            fileTreeView.setRoot(createNode(pathItem));
+//            fileTreeView.setEditable(true);
+            rootPath = Paths.get("F:\\Test");
             PathItem pathItem = new PathItem(rootPath);
-            fileTreeView.setRoot(createNode(pathItem));
-            fileTreeView.setEditable(true);
+            treeItem = new TreeItem<PathItem>(pathItem);
+            treeItem.setExpanded(false);
+
+            // create tree structure
+            try {
+				createTree( treeItem);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+            
+            fileTreeView.setRoot(treeItem);
+            
+
+            
             fileTreeView.setCellFactory((TreeView<PathItem> p) -> {
                 cell = new PathTreeCell(stage, messageProp);
                 Platform.runLater(() -> myTreeCells.add(cell));
                 setDragDropEvent(stage, cell);
                 return cell;
             });
+            
+            System.out.println("vor myTreeCells: " + myTreeCells.size());
+            for (PathTreeCell item : myTreeCells) {
+				System.out.println("myTreeCells: " + item.getItem().getPath());
+			}
         
             watchTask = new WatchTask(rootPath, cell, fileTreeView);
             service.submit(watchTask);
@@ -312,6 +337,31 @@ public class FileTreeViewSample extends Application {
         });
     }
 
+    
+    public static void createTree(TreeItem<PathItem> rootItem) throws IOException {
+
+        try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(rootItem.getValue().getPath())) {
+
+            for (Path path : directoryStream) {
+
+                TreeItem<PathItem> newItem = new TreeItem<PathItem>( new PathItem( path));
+                newItem.setExpanded(false);
+
+                rootItem.getChildren().add(newItem);
+
+                if (Files.isDirectory(path)) {
+                    createTree(newItem);
+                }
+            }
+        }
+        // catch exceptions, e. g. java.nio.file.AccessDeniedException: c:\System Volume Information, c:\$RECYCLE.BIN
+        catch( Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+    
+    
+    
     private TreeItem<PathItem> createNode(PathItem pathItem) {
         return PathTreeItem.createNode(pathItem);
     }

@@ -38,7 +38,7 @@ public class NormalLiveDirs extends Application {
             LiveDirs<ChangeSource, Path> dirs = LiveDirs.getInstance(ChangeSource.EXTERNAL);
 
             // set directory to watch
-            dirs.addTopLevelDirectory(new File("D:\\Test").toPath());
+            dirs.addTopLevelDirectory(new File("F:\\Test").toPath());
             view.setRoot(dirs.model().getRoot());
 
             // stop DirWatcher's thread

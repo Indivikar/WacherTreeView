@@ -1,10 +1,14 @@
 package app.TreeViewWatchService;
 
+import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import static java.nio.file.StandardWatchEventKinds.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.file.WatchEvent;
@@ -17,12 +21,15 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.sun.javafx.scene.control.skin.VirtualContainerBase;
 import com.sun.javafx.scene.control.skin.VirtualFlow;
 import com.sun.javafx.scene.control.skin.VirtualFlow.ArrayLinkedList;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
@@ -68,21 +75,32 @@ public class WatchTask extends Task<Void>{
 
                 TreeItem<PathItem> pathTreeItem = PathTreeItem.createNode(new PathItem(child));
 
+//                System.out.println("size(): " + FileTreeViewSample.myTreeCells.size());
                 
-//                for (PathTreeCell path : FileTreeViewSample.children) {
+                
+                
+//                for (int i = 0; i < FileTreeViewSample.myTreeCells.size(); i++) {
+//                	System.out.println(FileTreeViewSample.myTreeCells..getPath());
+//				}
+//                for (PathTreeCell path : FileTreeViewSample.myTreeCells.iterator()) {
 //					System.out.println(path.getItem().getPath());
 //				}
                 
+                addNewNode(pathTreeItem, FileTreeViewSample.treeItem);
+                
+//                System.out.println("root: " + FileTreeViewSample.treeItem);
+//                for (TreeItem<PathItem> item : FileTreeViewSample.treeItem.getChildren()) {
+//    				System.out.println("treeItem.getChildren(): " + item.getValue().getPath());
+//    			}
+                
                 
                 PathNode p = PathNode.getTree(child);
+                System.out.println("pathTreeItem: " + pathTreeItem);
                 System.out.println("p.getPath(): " + p.getPath());
-                for (Path path : p.getPath()) {
-					System.out.println("Root-Ordner: " + path.getRoot() + " -> datei: " + path.getFileName() + "" );
+//                for (Path path : p.getPath()) {
+//					System.out.println("Root-Ordner: " + path.getRoot() + " -> datei: " + path.getFileName() + "" );
+//				}
 
-				}
-                
-                
-                
                 message.append("hallo: " + child.toAbsolutePath());
                 message.append(getKindToMessage(event.kind()));
                 message.append(System.getProperty("line.separator"));
@@ -97,7 +115,67 @@ public class WatchTask extends Task<Void>{
     }
     
 
+	private void addNewNode(TreeItem<PathItem> pathTreeItem, TreeItem<PathItem> treeItem) {
+		String pathNewItem = pathTreeItem.getValue().getPath().toString();
+		String rootItem = treeItem.getValue().getPath().toString();
+			
+		System.out.println("pathNewItem: " + pathNewItem + " == rootItem: " + rootItem);
+		
+		ObservableList<TreeItem<PathItem>> newList = 
+				treeItem.getChildren().stream()
+		            .filter(x -> x.getValue().getPath().toString().equalsIgnoreCase(pathNewItem))
+		            .collect(Collectors.toCollection(FXCollections::observableArrayList));
+		
+
+		System.out.println("newList.size(): " + newList.size());
+		
+		if (newList.size() == 0) {
+			getTreeItem(treeItem);
+		}
+		
+		for (TreeItem<PathItem> item : newList) {
+			System.out.println("gefundenes item: " + item.getValue().getPath());	
+			getTreeItem(item);
+//			item.getChildren().add(e);
+		}
+
+	}
     
+	private void getTreeItem(TreeItem<PathItem> item) {
+		
+		item.getChildren().clear();
+		
+        Path rootPath = item.getValue().getPath();
+        PathItem pathItem = new PathItem(rootPath);
+        TreeItem<PathItem> treeItem = new TreeItem<PathItem>(pathItem);
+        File treeItemFile =  treeItem.getValue().getPath().toFile();
+        
+        if (treeItemFile.exists()) {
+			try {
+				FileTreeViewSample.createTree( treeItem);
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}       
+			item.getChildren().addAll(treeItem.getChildren());
+		}
+        
+
+        
+//        System.out.println("treeItem.getChildren().size(): " + treeItem.getChildren().size());
+//        
+//        for (TreeItem<PathItem> items : treeItem.getChildren()) {
+//        	items.setExpanded(false);
+//	        try {
+//				FileTreeViewSample.createTree( items);			
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
+//        	item.getChildren().add(items);
+//        }
+
+	}
+	
 
     @Override
     protected void cancelled() {

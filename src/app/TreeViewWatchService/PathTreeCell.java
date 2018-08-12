@@ -118,6 +118,7 @@ public class PathTreeCell extends TreeCell<PathItem>{
                 setText(null);
                 setGraphic(textField);
             } else {
+//            	System.out.println("updateItem: " + this.getItem().getPath());
             	FileTreeViewSample.children.add(this);
                 setText(getString());
                 setGraphic(null);

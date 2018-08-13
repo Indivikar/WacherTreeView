@@ -16,7 +16,6 @@ import java.util.WeakHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import javafx.application.Application;
-import static javafx.application.Application.launch;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -44,7 +43,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.Dragboard;
-import javafx.scene.input.KeyCode;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -60,8 +58,7 @@ public class FileTreeViewSample extends Application {
 	public static TreeItem<PathItem> treeItem;
 	
     private ExecutorService service;
-    private Task watchTask;
-    private SearchTask searchTask;
+//    private Task watchTask;
     private TextField rootDirText;
     private Path rootPath;
     private Button dispBtn;
@@ -93,29 +90,16 @@ public class FileTreeViewSample extends Application {
         root.setSpacing(10);
         // root Directory
         HBox rootHbox = getRootHbox(stage);
-        messageText = new Text();        
-        messageText.yProperty().set(30);
-        messageText.setFill(Color.RED);
-        messageText.textProperty().bind(messageProp);
         TitledPane titledPane = new TitledPane("File Tree View", fileTreeView);
         titledPane.setPrefHeight(300);
-        // Watch Directory
-        watchChkbox = new CheckBox("Watch Directory");
-        watchChkbox.setDisable(true);
-        watchText = new TextArea(); // watch result
-        watchText.setPrefHeight(200);
-        // search
-        HBox searchHbox = getSearchHbox();
-        searchListView = new ListView<>(); // search result
-        searchListView.setPrefHeight(100);
-        searchListItem = FXCollections.observableArrayList();
-        searchListView.setItems(searchListItem);
+
         setEventHandler(stage);
-        root.getChildren().addAll(rootHbox, titledPane, messageText, watchChkbox, watchText);
+        root.getChildren().addAll(rootHbox, titledPane);
 //        root.getChildren().addAll(rootHbox, titledPane, messageText, watchChkbox, watchText, searchHbox, searchListView);
         Scene scene = new Scene(root, 800, 600);
         stage.setTitle("File Tree View Sample");
         stage.setScene(scene);
+        stage.setX(6700);
         stage.show();
         Platform.runLater(() -> rootDirText.requestFocus());
     }
@@ -142,55 +126,27 @@ public class FileTreeViewSample extends Application {
         return hbox;
     }
 
-    private HBox getSearchHbox() {
-        HBox hBox = new HBox();
-        hBox.setSpacing(10);
-        Label searchLabel = new Label("search:");
-        patternText = new TextField();
-        Image image = new Image(getClass().getResourceAsStream("Search.png"));
-        searchBtn = new Button("", new ImageView(image));
-        searchBtn.setDisable(true);
-        searchCountLabel = new Label();
-        searchCountLabel.setPrefWidth(200);
-        searchCountLabel.setAlignment(Pos.CENTER_LEFT);
-        hBox.getChildren().addAll(searchLabel, patternText, searchBtn, searchCountLabel);
-        return hBox;
-    }
-
     private void setEventHandler(final Stage stage) {
 
         // Display File Tree Button
 
-    	
 
-    	
-            messageProp.setValue(null);
-            watchChkbox.setDisable(false);
-            watchChkbox.setSelected(true);
-            watchText.clear();
-            searchBtn.setDisable(false);
-            searchListItem.clear();
-            searchProp.unbind();
-            searchCountLabel.textProperty().unbind();
-            searchCountLabel.setText(null);
-            if (watchTask != null && watchTask.isRunning()) {
-                watchTask.cancel();
-            }
-            if (searchTask != null && searchTask.isRunning()) {
-                searchTask.cancel();
-            }
+//            if (watchTask != null && watchTask.isRunning()) {
+//                watchTask.cancel();
+//            }
+
 //            rootPath = Paths.get("F:\\Test");
 //            PathItem pathItem = new PathItem(rootPath);
 //            fileTreeView.setRoot(createNode(pathItem));
 //            fileTreeView.setEditable(true);
-            rootPath = Paths.get("F:\\Test");
+            rootPath = Paths.get("D:\\Test");
             PathItem pathItem = new PathItem(rootPath);
             treeItem = new TreeItem<PathItem>(pathItem);
             treeItem.setExpanded(false);
 
             // create tree structure
             try {
-				createTree( treeItem);
+				createTree(treeItem, false);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -203,7 +159,8 @@ public class FileTreeViewSample extends Application {
             fileTreeView.setCellFactory((TreeView<PathItem> p) -> {
                 cell = new PathTreeCell(stage, messageProp);
                 Platform.runLater(() -> myTreeCells.add(cell));
-                setDragDropEvent(stage, cell);
+                new DragNDropInternal(stage, service, cell);
+//                setDragDropEvent(stage, cell);
                 return cell;
             });
             
@@ -211,146 +168,36 @@ public class FileTreeViewSample extends Application {
             for (PathTreeCell item : myTreeCells) {
 				System.out.println("myTreeCells: " + item.getItem().getPath());
 			}
-        
-            watchTask = new WatchTask(rootPath, cell, fileTreeView);
-            service.submit(watchTask);
-            watchText.textProperty().bind(watchTask.messageProperty());
             
-        // Watch Directory CheckBox
-//        watchChkbox.selectedProperty().addListener((ObservableValue<? extends Boolean> ov, Boolean oldVal, Boolean newVal) -> {
-//            if (newVal) {
-//
-//            } else {
-//                if (watchTask != null && watchTask.isRunning()) {
-//                    watchTask.cancel();
-//                    watchText.textProperty().unbind();
-//                }
-//            }
-//        });
-        // search button
-        searchBtn.setOnAction(event -> {
-            searchListItem.clear();
-            searchListView.getItems().clear();
-            searchTask = new SearchTask(rootPath, patternText.getText());
-            searchCountLabel.textProperty().bind(searchTask.messageProperty());
-            searchList.clear();
-            searchProp.bind(searchTask.getResultString());
-            searchTask.setOnSucceeded((WorkerStateEvent stateEvent) -> {
-                searchListItem.addAll(searchList);
-            });
-            service.submit(searchTask);
-        });
-        // *** binding to search task result one by one ***
-        searchProp.addListener((ObservableValue<? extends String> ov, String oldVal, String newVal) -> {
-            if (newVal != null) {
-                searchList.add(newVal);
-            }
-        });
-    }
+            
+            boolean recursive = true;
+            try {
+            	WatchTask3 watchTask = new WatchTask3(rootPath, recursive, cell, fileTreeView);
+            	service.submit(watchTask);
 
-    private void setDragDropEvent(Stage stage, final PathTreeCell cell) {
-        // The drag starts on a gesture source
-        cell.setOnDragDetected(event -> {
-            TreeItem<PathItem> item = cell.getTreeItem();
-            if (item != null && item.isLeaf()) {
-                Dragboard db = cell.startDragAndDrop(TransferMode.COPY);
-                ClipboardContent content = new ClipboardContent();
-                List<File> files = Arrays.asList(cell.getTreeItem().getValue().getPath().toFile());
-                content.putFiles(files);
-                db.setContent(content);
-                event.consume();
-            }
-        });
-        // on a Target
-        cell.setOnDragOver(event -> {
-            TreeItem<PathItem> item = cell.getTreeItem();
-            if ((item != null && !item.isLeaf()) &&
-                    event.getGestureSource() != cell &&
-                    event.getDragboard().hasFiles()) {
-                Path targetPath = cell.getTreeItem().getValue().getPath();
-                PathTreeCell sourceCell = (PathTreeCell) event.getGestureSource();
-                final Path sourceParentPath = sourceCell.getTreeItem().getValue().getPath().getParent();
-                if (sourceParentPath.compareTo(targetPath) != 0) {
-                    event.acceptTransferModes(TransferMode.COPY);
-                }
-            }
-            event.consume();
-        });
-        // on a Target
-        cell.setOnDragEntered(event -> {
-            TreeItem<PathItem> item = cell.getTreeItem();
-            if ((item != null && !item.isLeaf()) &&
-                    event.getGestureSource() != cell &&
-                    event.getDragboard().hasFiles()) {
-                Path targetPath = cell.getTreeItem().getValue().getPath();
-                PathTreeCell sourceCell = (PathTreeCell) event.getGestureSource();
-                final Path sourceParentPath = sourceCell.getTreeItem().getValue().getPath().getParent();
-                if (sourceParentPath.compareTo(targetPath) != 0) {
-                    cell.setStyle("-fx-background-color: powderblue;");
-                }                
-            }
-            event.consume();
-        });
-        // on a Target
-        cell.setOnDragExited(event -> {
-            cell.setStyle("-fx-background-color: white");
-            event.consume();
-        });
-        // on a Target
-        cell.setOnDragDropped(event -> {
-            Dragboard db = event.getDragboard();
-            boolean success = false;
-            if (db.hasFiles()) {
-                final Path source = db.getFiles().get(0).toPath();
-                final Path target = Paths.get(
-                        cell.getTreeItem().getValue().getPath().toAbsolutePath().toString(),
-                        source.getFileName().toString());
-                if (Files.exists(target, LinkOption.NOFOLLOW_LINKS)) {
-                    Platform.runLater(() -> {
-                        BooleanProperty replaceProp = new SimpleBooleanProperty();
-                        CopyModalDialog dialog = new CopyModalDialog(stage, replaceProp);
-                        replaceProp.addListener((ObservableValue<? extends Boolean> ov, Boolean oldValue, Boolean newValue) -> {
-                            if (newValue) {
-                                FileCopyTask task = new FileCopyTask(source, target);
-                                service.submit(task);
-                            }
-                        });
-                    });
-                } else {
-                    FileCopyTask task = new FileCopyTask(source, target);
-                    service.submit(task);
-                    task.setOnSucceeded(value -> {
-                        Platform.runLater(() -> {
-                            TreeItem<PathItem> item = PathTreeItem.createNode(new PathItem(target));
-                            cell.getTreeItem().getChildren().add(item);
-                        });
-                    });
-                }
-                success = true;
-            }
-            event.setDropCompleted(success);
-            event.consume();
-        });
-        // on a Source
-        cell.setOnDragDone(event -> {
-            ;
-        });
+            	
+				
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+            
     }
+            
 
-    
-    public static void createTree(TreeItem<PathItem> rootItem) throws IOException {
+    public static void createTree(TreeItem<PathItem> rootItem, boolean expand) throws IOException {
 
         try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(rootItem.getValue().getPath())) {
 
             for (Path path : directoryStream) {
 
                 TreeItem<PathItem> newItem = new TreeItem<PathItem>( new PathItem( path));
-                newItem.setExpanded(false);
+//                newItem.setExpanded(expand);
 
                 rootItem.getChildren().add(newItem);
 
                 if (Files.isDirectory(path)) {
-                    createTree(newItem);
+                    createTree(newItem, expand);
                 }
             }
         }

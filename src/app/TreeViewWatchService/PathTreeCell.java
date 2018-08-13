@@ -1,11 +1,16 @@
 package app.TreeViewWatchService;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Comparator;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -32,79 +37,96 @@ public class PathTreeCell extends TreeCell<PathItem>{
     
 
     public PathTreeCell(final Stage owner, final StringProperty messageProp) {
-        this.messageProp = messageProp;
-        
-//        MenuItem expandMenu = new MenuItem("Expand");
-//        expandMenu.setOnAction((ActionEvent event) -> {
-//            getTreeItem().setExpanded(true);
-//        });
-//        MenuItem expandAllMenu = new MenuItem("Expand All");
-//        expandAllMenu.setOnAction(new EventHandler<ActionEvent>() {
-//            @Override
-//            public void handle(ActionEvent t) {
-//                expandTreeItem(getTreeItem());
-//            }
-//            private void expandTreeItem(TreeItem<PathItem> item) {
-//                if (item.isLeaf()){
-//                    return;
-//                }
-//                item.setExpanded(true);
-//                ObservableList<TreeItem<PathItem>> children = item.getChildren();
-//                children.stream().filter(child -> (!child.isLeaf()))
-//                    .forEach(child -> expandTreeItem(child));
-//            }
-//        });
-//        MenuItem addMenu = new MenuItem("Add Directory");
-//        addMenu.setOnAction(new EventHandler<ActionEvent>() {
-//            @Override
-//            public void handle(ActionEvent t) {
-//                Path newDir = createNewDirectory();
-//                if (newDir != null) {
-//                    TreeItem<PathItem> addItem = PathTreeItem.createNode(new PathItem(newDir));
-//                    getTreeItem().getChildren().add(addItem);
-//                }
-//            }
-//            private Path createNewDirectory() {
-//                Path newDir = null;
-//                while (true) {
-//                    Path path = getTreeItem().getValue().getPath();
-//                    newDir = Paths.get(path.toAbsolutePath().toString(), "newDirectory" + String.valueOf(getItem().getCountNewDir()));
-//                    try {
-//                        Files.createDirectory(newDir);
-//                        break;
-//                    } catch (FileAlreadyExistsException ex) {
-//                        continue;
-//                    } catch (IOException ex) {
-//                        cancelEdit();
-//                        messageProp.setValue(String.format("Creating directory(%s) failed", newDir.getFileName()));
-//                        break;
-//                    }
-//                }
-//                    return newDir;
-//            }
-//        });
-//        MenuItem deleteMenu =new MenuItem("Delete");
-//        deleteMenu.setOnAction((ActionEvent event) -> {
-//            ObjectProperty<TreeItem<PathItem>> prop = new SimpleObjectProperty<>();
-//            new ModalDialog(owner, getTreeItem(), prop);
-//            prop.addListener((ObservableValue<? extends TreeItem<PathItem>> ov, TreeItem<PathItem> oldItem, TreeItem<PathItem> newItem) -> {
-//                try {
-//                    Files.walkFileTree(newItem.getValue().getPath(), new VisitorForDelete());
-//                    if (getTreeItem().getParent() == null){
-//                        // when the root is deleted how to clear the TreeView???
-//                    } else {
-//                        getTreeItem().getParent().getChildren().remove(newItem);
-//                    }
-//                } catch (IOException ex) {
-//                    messageProp.setValue(String.format("Deleting %s failed", newItem.getValue().getPath().getFileName()));
-//                }
-//            });
-//        });
-//        dirMenu.getItems().addAll(expandMenu, expandAllMenu, deleteMenu, addMenu);
-//        fileMenu.getItems().addAll(deleteMenu);
+        this.messageProp = messageProp;       
+        contextMenu();
     }
 
-    @Override
+    private void contextMenu() {
+      MenuItem expandMenu = new MenuItem("Expand");
+      expandMenu.setOnAction((ActionEvent event) -> {
+          getTreeItem().setExpanded(true);
+      });
+      MenuItem addFile = new MenuItem("neue Datei");
+      addFile.setOnAction(new EventHandler<ActionEvent>() {
+          @Override
+          public void handle(ActionEvent t) {
+              
+          }
+         
+      });
+      MenuItem addFolder = new MenuItem("neuer Ordner");
+      addFolder.setOnAction(new EventHandler<ActionEvent>() {
+          @Override
+          public void handle(ActionEvent t) {
+              Path newDir = createNewDirectory();
+              if (newDir != null) {
+                  TreeItem<PathItem> addItem = PathTreeItem.createNode(new PathItem(newDir));
+                  getTreeItem().getChildren().add(addItem);
+              }
+          }
+          private Path createNewDirectory() {
+              Path newDir = null;
+              while (true) {
+                  Path path = getTreeItem().getValue().getPath();
+                  newDir = Paths.get(path.toAbsolutePath().toString(), "neuer Ordner " + String.valueOf(getItem().getCountNewDir()));
+                  try {
+                      Files.createDirectory(newDir);
+                      break;
+                  } catch (FileAlreadyExistsException ex) {
+                      continue;
+                  } catch (IOException ex) {
+                      cancelEdit();
+                      messageProp.setValue(String.format("Creating directory(%s) failed", newDir.getFileName()));
+                      break;
+                  }
+              }
+                  return newDir;
+          }
+      });
+      MenuItem deleteMenu = new MenuItem("Delete");
+      deleteMenu.setOnAction((ActionEvent event) -> {
+    	  System.out.println("Del 1: " + this.getItem().getPath());
+    	  Path filePath = this.getItem().getPath();
+    	  
+    	  	try {
+				Files.walk(filePath)
+				    .sorted(Comparator.reverseOrder())
+				    .map(Path::toFile)
+				    .peek(System.out::println)
+				    .forEach(File::delete);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+    	  
+    		
+    		try {
+				Files.walkFileTree(filePath, new SimpleFileVisitor<Path>() {
+    
+					@Override
+					public FileVisitResult visitFile(Path file,
+							BasicFileAttributes attrs) throws IOException {
+						Files.delete(file);
+						return FileVisitResult.CONTINUE;
+					}
+    
+					@Override
+					public FileVisitResult postVisitDirectory(Path dir, IOException exc)
+							throws IOException {
+						Files.delete(dir);
+						return FileVisitResult.CONTINUE;
+					}
+				});
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+      });
+      fileMenu.getItems().addAll(addFile, addFolder, deleteMenu);
+		
+	}
+
+	@Override
     protected void updateItem(PathItem item, boolean empty) {
         super.updateItem(item, empty);
         if (empty) {
@@ -122,11 +144,8 @@ public class PathTreeCell extends TreeCell<PathItem>{
             	FileTreeViewSample.children.add(this);
                 setText(getString());
                 setGraphic(null);
-                if (!getTreeItem().isLeaf()) {
-                    setContextMenu(dirMenu);
-                } else {
-                    setContextMenu(fileMenu);
-                }
+                setContextMenu(fileMenu);
+
             }
         }
     }

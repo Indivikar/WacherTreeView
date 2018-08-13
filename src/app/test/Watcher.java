@@ -46,12 +46,16 @@ public class Watcher {
 				System.out.println("START");
 				while (Thread.interrupted() == false) {
 					WatchKey key;
-					try {
-						key = ws.poll(10, TimeUnit.MILLISECONDS);
+					try {						
+						key = ws.poll(10, TimeUnit.MILLISECONDS);						
 					} catch (InterruptedException | ClosedWatchServiceException e) {
 						break;
 					}
+					
+					
+					
 					if (key != null) {
+						System.out.println("detected");
 						Path path = keys.get(key);
 						for (WatchEvent<?> i : key.pollEvents()) {
 							WatchEvent<Path> event = cast(i);

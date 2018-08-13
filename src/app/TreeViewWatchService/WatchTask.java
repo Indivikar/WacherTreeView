@@ -1,16 +1,13 @@
 package app.TreeViewWatchService;
 
-import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import static java.nio.file.StandardWatchEventKinds.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
@@ -18,20 +15,14 @@ import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.sun.javafx.scene.control.skin.VirtualContainerBase;
-import com.sun.javafx.scene.control.skin.VirtualFlow;
-import com.sun.javafx.scene.control.skin.VirtualFlow.ArrayLinkedList;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
-import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 
@@ -46,7 +37,11 @@ public class WatchTask extends Task<Void>{
     private PathTreeCell cell;
     private TreeView<PathItem> fileTreeView;
     private StringBuilder message = new StringBuilder();
-
+    private WatchService watcher;
+    
+    private boolean mayInterrupt = false;
+    private boolean interrupted = false;
+    
     public WatchTask(Path path, PathTreeCell cell, TreeView<PathItem> fileTreeView) {
         this.path = path;
         this.fileTreeView = fileTreeView;
@@ -56,23 +51,35 @@ public class WatchTask extends Task<Void>{
     
     @Override
     protected Void call() throws Exception {
-        WatchService watcher = FileSystems.getDefault().newWatchService();
+        watcher = FileSystems.getDefault().newWatchService();
         path.register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
         while (true) {
             WatchKey key;
-            System.out.println("in While");
+            System.out.println("in While 1");
+//            key = takeOrNullIfInterrupted();
+            
             try {
+            	System.out.println("in While 11");
                 key = watcher.take();
+                
+                
+                System.out.println("in While 2");
             } catch (InterruptedException e) {
                 break;
             }
+            System.out.println("in While 3");
             for (WatchEvent<?> event : key.pollEvents()) {
+            	System.out.println("in While 4");
                 if (event.kind() == OVERFLOW) {
+                	System.out.println("in While 5");
                     continue;
                 }
+                System.out.println("in While 6");
                 Path context = (Path) event.context();
 				Path child = path.resolve(context);
 
+				System.out.println("in While 7");
+				
                 TreeItem<PathItem> pathTreeItem = PathTreeItem.createNode(new PathItem(child));
 
 //                System.out.println("size(): " + FileTreeViewSample.myTreeCells.size());
@@ -86,6 +93,7 @@ public class WatchTask extends Task<Void>{
 //					System.out.println(path.getItem().getPath());
 //				}
                 
+                System.out.println("in While 8");
                 addNewNode(pathTreeItem, FileTreeViewSample.treeItem);
                 
 //                System.out.println("root: " + FileTreeViewSample.treeItem);
@@ -114,7 +122,33 @@ public class WatchTask extends Task<Void>{
         return null;
     }
     
+    private WatchKey takeOrNullIfInterrupted() {
+        try {
+            return take();
+        } catch(InterruptedException e) {
+            return null;
+        }
+    }
 
+    private WatchKey take() throws InterruptedException {
+        synchronized(this) {
+            if(interrupted) {
+                interrupted = false;
+                throw new InterruptedException();
+            } else {
+                mayInterrupt = true;
+            }
+        }
+
+        try {
+            return watcher.take();
+        } finally {
+            synchronized(this) {
+                mayInterrupt = false;
+            }
+        }
+    }
+    
 	private void addNewNode(TreeItem<PathItem> pathTreeItem, TreeItem<PathItem> treeItem) {
 		String pathNewItem = pathTreeItem.getValue().getPath().toString();
 		String rootItem = treeItem.getValue().getPath().toString();
@@ -192,74 +226,74 @@ public class WatchTask extends Task<Void>{
     }    
 }
 
-class PathNode {
-    public static PathNode getTree(Path root) throws IOException {
-        if(Files.isDirectory(root)) {
-            Path[] childPaths;
-            try(Stream<Path> dirStream = Files.list(root)) {
-                childPaths = dirStream
-                        .sorted(PATH_COMPARATOR)
-                        .toArray(Path[]::new);
-            }
-            List<PathNode> children = new ArrayList<>(childPaths.length);
-            for(Path p: childPaths) {
-//            	System.out.println(p);
-                children.add(getTree(p));
-            }
-            return directory(root, children);
-        } else {
-            return file(root, Files.getLastModifiedTime(root));
-        }
-    }
-
-    private static final Comparator<Path> PATH_COMPARATOR = (p, q) -> {
-        boolean pd = Files.isDirectory(p);
-        boolean qd = Files.isDirectory(q);
-
-        if(pd && !qd) {
-            return -1;
-        } else if(!pd && qd) {
-            return 1;
-        } else {
-            return p.getFileName().toString().compareToIgnoreCase(q.getFileName().toString());
-        }
-    };
-
-    static PathNode file(Path path, FileTime lastModified) {
-        return new PathNode(path, false, Collections.emptyList(), lastModified);
-    }
-
-    static PathNode directory(Path path, List<PathNode> children) {
-        return new PathNode(path, true, children, null);
-    }
-
-    private final Path path;
-    private final boolean isDirectory;
-    private final List<PathNode> children;
-    private final FileTime lastModified;
-
-    private PathNode(Path path, boolean isDirectory, List<PathNode> children, FileTime lastModified) {
-        this.path = path;
-        this.isDirectory = isDirectory;
-        this.children = children;
-        this.lastModified = lastModified;
-    }
-
-    public Path getPath() {
-        return path;
-    }
-
-    public boolean isDirectory() {
-        return isDirectory;
-    }
-
-    public List<PathNode> getChildren() {
-        return children;
-    }
-
-    public FileTime getLastModified() {
-        return lastModified;
-    }
-    
-
-}
+//class PathNode {
+//    public static PathNode getTree(Path root) throws IOException {
+//        if(Files.isDirectory(root)) {
+//            Path[] childPaths;
+//            try(Stream<Path> dirStream = Files.list(root)) {
+//                childPaths = dirStream
+//                        .sorted(PATH_COMPARATOR)
+//                        .toArray(Path[]::new);
+//            }
+//            List<PathNode> children = new ArrayList<>(childPaths.length);
+//            for(Path p: childPaths) {
+////            	System.out.println(p);
+//                children.add(getTree(p));
+//            }
+//            return directory(root, children);
+//        } else {
+//            return file(root, Files.getLastModifiedTime(root));
+//        }
+//    }
+//
+//    private static final Comparator<Path> PATH_COMPARATOR = (p, q) -> {
+//        boolean pd = Files.isDirectory(p);
+//        boolean qd = Files.isDirectory(q);
+//
+//        if(pd && !qd) {
+//            return -1;
+//        } else if(!pd && qd) {
+//            return 1;
+//        } else {
+//            return p.getFileName().toString().compareToIgnoreCase(q.getFileName().toString());
+//        }
+//    };
+//
+//    static PathNode file(Path path, FileTime lastModified) {
+//        return new PathNode(path, false, Collections.emptyList(), lastModified);
+//    }
+//
+//    static PathNode directory(Path path, List<PathNode> children) {
+//        return new PathNode(path, true, children, null);
+//    }
+//
+//    private final Path path;
+//    private final boolean isDirectory;
+//    private final List<PathNode> children;
+//    private final FileTime lastModified;
+//
+//    private PathNode(Path path, boolean isDirectory, List<PathNode> children, FileTime lastModified) {
+//        this.path = path;
+//        this.isDirectory = isDirectory;
+//        this.children = children;
+//        this.lastModified = lastModified;
+//    }
+//
+//    public Path getPath() {
+//        return path;
+//    }
+//
+//    public boolean isDirectory() {
+//        return isDirectory;
+//    }
+//
+//    public List<PathNode> getChildren() {
+//        return children;
+//    }
+//
+//    public FileTime getLastModified() {
+//        return lastModified;
+//    }
+//    
+//
+//}

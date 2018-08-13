@@ -21,7 +21,7 @@ public class FileCopyTask extends Task<Void> {
     
     @Override
     protected Void call() throws Exception {
-        Files.copy(this.source, this.target, StandardCopyOption.REPLACE_EXISTING);
+        Files.move(this.source, this.target, StandardCopyOption.REPLACE_EXISTING);
         return null;
     }
 }

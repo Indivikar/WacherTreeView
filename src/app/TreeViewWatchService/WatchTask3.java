@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-
+import app.controller.CTree;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -41,23 +41,23 @@ import javafx.scene.control.TreeView;
 public class WatchTask3 extends Task<Void>{
     private Path path;
     private PathTreeCell cell;
-    private TreeView<PathItem> fileTreeView;
+    private TreeView<PathItem> tree;
     private StringBuilder message = new StringBuilder();
     private WatchService watcher;
     private final Map<WatchKey, Path> keys;
     
     
     private final boolean recursive;
-    private boolean trace = false;
+    private boolean trace = true;
     
     @SuppressWarnings("unchecked")
     static <T> WatchEvent<T> cast(WatchEvent<?> event) {
         return (WatchEvent<T>) event;
     }
     
-    public WatchTask3(Path path, boolean recursive, PathTreeCell cell, TreeView<PathItem> fileTreeView) throws IOException {
+    public WatchTask3(Path path, boolean recursive, PathTreeCell cell, TreeView<PathItem> tree) throws IOException {
         this.path = path;
-        this.fileTreeView = fileTreeView;
+        this.tree = tree;
         this.watcher = FileSystems.getDefault().newWatchService();
         this.keys = new HashMap<WatchKey, Path>();
         this.recursive = recursive;
@@ -83,6 +83,8 @@ public class WatchTask3 extends Task<Void>{
             Path prev = keys.get(key);
             if (prev == null) {
                 System.out.format("register: %s\n", dir);
+	              TreeItem<PathItem> pathTreeItem = PathTreeItem.createNode(new PathItem(dir));
+	              addNewNode(pathTreeItem, CTree.treeItem);
             } else {
                 if (!dir.equals(prev)) {
                     System.out.format("update: %s -> %s\n", prev, dir);
@@ -103,6 +105,8 @@ public class WatchTask3 extends Task<Void>{
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
                     throws IOException {
                 register(dir);
+//	              TreeItem<PathItem> pathTreeItem = PathTreeItem.createNode(new PathItem(dir));
+//	              addNewNode(pathTreeItem, CTree.treeItem);
                 return FileVisitResult.CONTINUE;
             }
         });
@@ -143,10 +147,11 @@ public class WatchTask3 extends Task<Void>{
                 Path child = dir.resolve(name);
 
                 // print out event
-                System.err.format("%s: %s\n", event.kind().name(), child);
+//                System.err.format("%s: %s\n", event.kind().name(), child);
+                System.err.println("isRecursive: " + recursive + " " +event.kind().name() + " " + child);
 
-                TreeItem<PathItem> pathTreeItem = PathTreeItem.createNode(new PathItem(child));
-                addNewNode(pathTreeItem, FileTreeViewSample.treeItem);
+//                TreeItem<PathItem> pathTreeItem = PathTreeItem.createNode(new PathItem(child));
+//                addNewNode(pathTreeItem, CTree.treeItem);
                 
                 // if directory is created, and watching recursively, then
                 // register it and its sub-directories
@@ -158,7 +163,12 @@ public class WatchTask3 extends Task<Void>{
                     } catch (IOException x) {
                         // ignore to keep sample readbale
                     }
+                } 
+                
+                if (recursive && (kind == ENTRY_DELETE)) {
+                	removeItem(child, CTree.treeItem);
                 }
+                
             }
 
             // reset key and remove from set if directory no longer accessible
@@ -175,12 +185,72 @@ public class WatchTask3 extends Task<Void>{
         return null;
     }
 
+    private void removeItem(Path child, TreeItem<PathItem> rootTreeItem) {
+    	System.out.println("remove item: " + child + "  root: " + rootTreeItem);
+    	
+
+
+    	
+    	TreeItem<PathItem> foundedParent = getFoundedParent(child, rootTreeItem);
+    	TreeItem<PathItem> foundedChild = getFoundedChild(child, foundedParent);
+    	
+    	System.out.println("foundedParent: " + foundedParent + "  root: " + rootTreeItem);
+			
+		System.out.println("foundedChild: " + foundedChild + "  from: " + foundedParent);
+		foundedParent.getChildren().remove(foundedChild);
+		System.out.println("item removed: " + foundedChild);
+		
+
+	}
+    
+    private TreeItem<PathItem> getFoundedChild(Path child, TreeItem<PathItem> foundedParent) {
+    	String childItemString = child.toString();
+    	
+    	if (foundedParent != null) {
+			ObservableList<TreeItem<PathItem>> foundedChild = 
+					foundedParent.getChildren().stream()
+			            .filter(x -> x.getValue().getPath().toString().equalsIgnoreCase(childItemString))
+			            .collect(Collectors.toCollection(FXCollections::observableArrayList));
+
+			System.out.println("foundedChild: " + foundedChild.get(0) + "  from: " + foundedParent);
+			if (!foundedChild.isEmpty()) {
+				return foundedChild.get(0);
+			}			
+		}
+		return null;
+
+	}
+    
+    private TreeItem<PathItem> getFoundedParent(Path child, TreeItem<PathItem> rootTreeItem) {
+    	String childParentString = getChildParent(child).toString();
+    	
+    	// if childParent == rootTreeItem -> return rootTreeItem
+        if (rootTreeItem.getValue().getPath().toString().equalsIgnoreCase(childParentString)) {
+        	return rootTreeItem;
+		} else {
+			 ObservableList<TreeItem<PathItem>> foundedParent = 
+				rootTreeItem.getChildren().stream()
+		            .filter(x -> x.getValue().getPath().toString().equalsIgnoreCase(childParentString))
+		            .collect(Collectors.toCollection(FXCollections::observableArrayList));	
+			if (!foundedParent.isEmpty()) {
+				return foundedParent.get(0);
+			}			 
+		}
+
+		return null;
+
+	}
+    
+    private Path getChildParent(Path child) {
+		return child.toFile().getParentFile().toPath();
+	}
+    
 	private void addNewNode(TreeItem<PathItem> pathTreeItem, TreeItem<PathItem> rootTreeItem) {
 		String pathNewItem = pathTreeItem.getValue().getPath().toString();
 		String rootItem = rootTreeItem.getValue().getPath().toString();
 			
 		System.out.println("pathNewItem: " + pathNewItem + " == rootItem: " + rootItem);
-		
+
 		ObservableList<TreeItem<PathItem>> newList = 
 				rootTreeItem.getChildren().stream()
 		            .filter(x -> x.getValue().getPath().toString().equalsIgnoreCase(pathNewItem))
@@ -213,7 +283,7 @@ public class WatchTask3 extends Task<Void>{
         
         if (treeItemFile.exists()) {
 			try {
-				FileTreeViewSample.createTree(treeItem, true);
+				CTree.createTree(treeItem, true);
 				
 			} catch (IOException e1) {
 				// TODO Auto-generated catch block

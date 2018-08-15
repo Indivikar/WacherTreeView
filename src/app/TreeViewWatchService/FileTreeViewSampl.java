@@ -51,7 +51,7 @@ import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 
-public class FileTreeViewSample extends Application {
+public class FileTreeViewSampl extends Application {
 	
 	private PathTreeCell cell;
 	public static final Set<PathTreeCell> myTreeCells = Collections.newSetFromMap(new WeakHashMap<>());
@@ -77,7 +77,7 @@ public class FileTreeViewSample extends Application {
     public static ArrayList<PathTreeCell> children = new ArrayList<>();
     
     
-    public FileTreeViewSample() {
+    public FileTreeViewSampl() {
         fileTreeView = new TreeView<>();
         fileTreeView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
         service = Executors.newFixedThreadPool(3);

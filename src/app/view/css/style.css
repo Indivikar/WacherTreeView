@@ -1,0 +1,8 @@
+.tree-cell .tree-disclosure-node {
+     -fx-padding: 12 12 12 12;
+}
+
+.tree-cell .tree-disclosure-node .arrow {
+    -fx-content-display: center;
+     -fx-padding: 5 5 5 5;
+}

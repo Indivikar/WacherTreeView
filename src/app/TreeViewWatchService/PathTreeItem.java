@@ -7,6 +7,8 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import app.StartWacherDemo;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.TreeItem;
@@ -59,7 +61,7 @@ public class PathTreeItem extends TreeItem<PathItem> {
                     children.add(createNode(pathItem));
                 }
             } catch (IOException ex) {
-                Logger.getLogger(FileTreeViewSample.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(StartWacherDemo.class.getName()).log(Level.SEVERE, null, ex);
             }
             return children;
         }

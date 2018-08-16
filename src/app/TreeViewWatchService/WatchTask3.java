@@ -78,20 +78,21 @@ public class WatchTask3 extends Task<Void>{
      * Register the given directory with the WatchService
      */
     private void register(Path dir) throws IOException {
-        WatchKey key = dir.register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
-        if (trace) {
-            Path prev = keys.get(key);
-            if (prev == null) {
-                System.out.format("register: %s\n", dir);
-	              TreeItem<PathItem> pathTreeItem = PathTreeItem.createNode(new PathItem(dir));
-	              addNewNode(pathTreeItem, CTree.treeItem);
-            } else {
-                if (!dir.equals(prev)) {
-                    System.out.format("update: %s -> %s\n", prev, dir);
-                }
-            }
-        }
-        keys.put(key, dir);
+
+	        WatchKey key = dir.register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
+	        if (trace) {
+	            Path prev = keys.get(key);
+	            if (prev == null) {
+	                System.out.format("register: %s\n", dir);
+		              TreeItem<PathItem> pathTreeItem = PathTreeItem.createNode(new PathItem(dir));
+		              addNewNode(pathTreeItem, CTree.treeItem);
+	            } else {
+	                if (!dir.equals(prev)) {
+	                    System.out.format("update: %s -> %s\n", prev, dir);
+	                }
+	            }
+	        }
+	        keys.put(key, dir);
     }
 
     /**
@@ -121,11 +122,15 @@ public class WatchTask3 extends Task<Void>{
             // wait for key to be signalled
             WatchKey key;
             try {
+            	System.out.println("wait for key to be signalled");
                 key = watcher.take();
+
+                System.out.println("key detected");
             } catch (InterruptedException x) {
                 return null;
             }
 
+                       
             Path dir = keys.get(key);
             if (dir == null) {
                 System.err.println("WatchKey not recognized!!");
@@ -156,6 +161,7 @@ public class WatchTask3 extends Task<Void>{
                 // if directory is created, and watching recursively, then
                 // register it and its sub-directories
                 if (recursive && (kind == ENTRY_CREATE)) {
+                	System.out.println("im ENTRY_CREATE");
                     try {
                         if (Files.isDirectory(child, NOFOLLOW_LINKS)) {
                             registerAll(child);
@@ -166,7 +172,15 @@ public class WatchTask3 extends Task<Void>{
                 } 
                 
                 if (recursive && (kind == ENTRY_DELETE)) {
-                	removeItem(child, CTree.treeItem);
+//                	removeItem(child, CTree.treeItem);
+                    keys.remove(key);
+//                    key.cancel();
+                    System.out.println("key removed: " + keys.get(key));
+                    // all directories are inaccessible
+                    if (keys.isEmpty()) {
+                    	System.out.println("key break");
+                        break;
+                    }
                 }
                 
             }
@@ -175,9 +189,10 @@ public class WatchTask3 extends Task<Void>{
             boolean valid = key.reset();
             if (!valid) {
                 keys.remove(key);
-
+                System.out.println("key remove");
                 // all directories are inaccessible
                 if (keys.isEmpty()) {
+                	System.out.println("key break");
                     break;
                 }
             }

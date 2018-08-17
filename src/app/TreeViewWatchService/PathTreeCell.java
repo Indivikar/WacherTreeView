@@ -99,381 +99,44 @@ public class PathTreeCell extends TreeCell<PathItem>{
           }
       });
       MenuItem deleteMenu = new MenuItem("Delete");
-      deleteMenu.setOnAction((ActionEvent event) -> {
-    	  System.out.println("Del 1: " + this.getItem().getPath());
+      deleteMenu.setOnAction((event) -> {
     	  Path filePath = this.getItem().getPath();
-//   	  setPermission(filePath);
-    	  
-//    	  deleteTree(filePath.toFile());
-    	  
-    	  
-    	  
-    	  try {
-//    		  	FileUtils.cleanDirectory(filePath.toFile());
-    		  	FileUtils.deleteDirectory(filePath.toFile());
-//				Files.walk(filePath)
-//				  .map(Path::toFile)
-//				  .sorted((o1, o2) -> -o1.compareTo(o2))
-//				  .forEach(File::delete);
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-    	  
-//			FileUtils.deleteDirectory(filePath.toFile());
-//		FileUtils.deleteQuietly(filePath.toFile());
-    	  
-//		removeDir(filePath.toFile());
-		
-//    	  if (filePath.toFile().isDirectory()) {
-//				try {
-//					Files.walk(filePath)
-//					    .sorted(Comparator.reverseOrder())
-//					    .map(Path::toFile)
-//					    .peek(System.out::println)
-//					    .forEach(File::delete);
-//				} catch (IOException e) {
-//					e.printStackTrace();
-//				}
-//    	  }
-//    	  deleteTree(filePath.toFile());
-//    	  deleteFiles(filePath);
-    	  
-    	  System.out.println("Del 1 fertig: " + this.getItem().getPath());
-    	  
-    		if (filePath.toFile().exists()) {
-    			
-//    			try {
-//					Files.delete(filePath);
-//				} catch (IOException e) {
-//					// TODO Auto-generated catch block
-//					e.printStackTrace();
-//				}
-
-    			
-//				try {
-//					Files.walkFileTree(filePath, new SimpleFileVisitor<Path>() {
-//	    
-//						@Override
-//						public FileVisitResult visitFile(Path file,
-//								BasicFileAttributes attrs) throws IOException {
-//							Files.delete(file);
-//							return FileVisitResult.CONTINUE;
-//						}
-//	    
-//						@Override
-//						public FileVisitResult postVisitDirectory(Path dir, IOException exc)
-//								throws IOException {
-//							Files.delete(dir);
-//							return FileVisitResult.CONTINUE;
-//						}
-//					});
-//				} catch (IOException e) {
-//
-//				
-//					try {
-//			            System.err.println("Executable: " + filePath.toFile().canExecute());
-//			            System.err.println("Readable: " + filePath.toFile().canRead());
-//			            System.err.println("Writable: "+ filePath.toFile().canWrite());
-//						System.err.println("File Owner: " + Files.getOwner(filePath));
-//						FileOwnerAttributeView view = Files.getFileAttributeView(filePath, FileOwnerAttributeView.class);	
-//						UserPrincipal userPrincipal = view.getOwner();
-//						System.err.println("File Owner: " + userPrincipal);   
-//					} catch (IOException ex) {
-//						// TODO Auto-generated catch block
-//						ex.printStackTrace();
-//					}
-//				
-//					e.printStackTrace();
-//				}
-			}
-
-
-    		if (!filePath.toFile().exists()) {
-				TreeItem c = (TreeItem)this.getTreeView().getSelectionModel().getSelectedItem();
-	            boolean remove = c.getParent().getChildren().remove(c);
-			}
-
-    		
+    	  deleteFileOrDirectory(filePath.toFile());
       });
-      fileMenu.getItems().addAll(addFile, addFolder, deleteMenu);
-		
-	}
-    
-
-
-	public boolean removeDir(File dir) {
-		
-		
-		
-		try {
-			FileUtils.cleanDirectory(dir);
-			
-		   //destFile = new File((System.getProperty("user.dir")+"/FileName"))
-		   // checks if the directory has any file
-		    if (dir.isDirectory())
-		    {
-		        File[] files = dir.listFiles();
-		        if (files != null && files.length > 0)
-		        {
-		            for (File aFile : files) 
-		            {
-		                System.gc();
-		                Thread.sleep(200);
-		                FileDeleteStrategy.FORCE.delete(aFile);
-		                System.out.println("delet file" +aFile);
-		            }
-		        }
-		        dir.delete();
-		        System.out.println("delet" +dir);
-		    } 
-		    else 
-		    {
-		        dir.delete();
-		    }
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
-		return true;
+      
+      fileMenu.getItems().addAll(addFile, addFolder, deleteMenu);		
 	}
 
-
-    
-    private static void dir(File file) {
-    	
-    	System.err.println("kein zugriff -> " + file);
-        System.out.println("	Executable: " + file.canExecute());
-        System.out.println("	Readable: " + file.canRead());
-        System.out.println("	Writable: "+ file.canWrite());
+    private void deleteFileOrDirectory(File file) {
+    	System.out.println("Del 1 fertig: " + this.getItem().getPath());
 		try {
-			System.out.println("	File Owner: " + Files.getOwner(file.toPath()));
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-        FileSystem fileSystem = file.getParentFile().toPath().getFileSystem();
-        UserPrincipalLookupService service = fileSystem.getUserPrincipalLookupService();
-		UserPrincipal userPrincipal;
-		try {
-			userPrincipal = service.lookupPrincipalByName("DH");
-			Files.setOwner(file.toPath(), userPrincipal);
-		} catch (IOException e2) {
-			// TODO Auto-generated catch block
-			e2.printStackTrace();
-		}
-		file.setExecutable(true);
-		file.setReadable(true);
-		file.setWritable(true);
+			  if (file.isDirectory()) {
+				  	int count = 0;
+					while (file.exists() && count < 10) {
+						 
+						FileUtils.cleanDirectory(file);
+						FileUtils.deleteDirectory(file);						
+			    		count++;
+			    		Thread.sleep(1000);
+			    	}
+			  } else {	   				  
+					FileUtils.forceDelete(file);	
+					Thread.sleep(1000);
+			  }
 		
-    	System.err.println("\nkein zugriff -> " + file);
-        System.out.println("	Executable: " + file.canExecute());
-        System.out.println("	Readable: " + file.canRead());
-        System.out.println("	Writable: "+ file.canWrite());
-		try {
-			System.out.println("	File Owner: " + Files.getOwner(file.toPath()));
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		
-    	System.err.println("\nkein zugriff Parent -> " + file.getParent());
-        System.out.println("	Parent Executable: " + file.getParentFile().canExecute());
-        System.out.println("	Parent Readable: " + file.getParentFile().canRead());
-        System.out.println("	Parent Writable: "+ file.getParentFile().canWrite());
-		try {
-			System.out.println("	Parent File Owner: " + Files.getOwner(file.getParentFile().toPath()));
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-    	
-    	
-        ProcessBuilder builder = new ProcessBuilder(
-                "cmd.exe", "cd \"D:\\Test\" && dir");
-            builder.redirectErrorStream(true);
-            try {
-				Process p = builder.start();
-			} catch (IOException e) {
+		} catch (IOException | InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}
-
-	}
-    
-    private void deleteFiles(Path filePath) {
-    	
-    	int count = 0;
-    	
-    	while (filePath.toFile().exists() && count < 10) {
-			
-					try {
-						Files.walk(filePath)
-						    .sorted(Comparator.reverseOrder())
-						    .map(Path::toFile)
-						    .peek(System.out::println)						    
-						    .forEach(File::delete);
-					} catch (IOException e) {
-						count = 10;
-						e.printStackTrace();
-					}
-	  	  	
-			
-			count++;
 		}
+		
 
+		if (!file.exists()) {
+			TreeItem<PathItem> c = (TreeItem<PathItem>)this.getTreeView().getSelectionModel().getSelectedItem();
+			boolean remove = c.getParent().getChildren().remove(c);
+		} 	  
 	}
     
-    public static void deleteTree( File path ) {
-
-		      for ( File file : path.listFiles() ) {
-		    	  try {
-					Thread.sleep(50);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-		        if ( file.isDirectory() ) {
-		        	deleteTree( file );
-		        } else {
-			        if ( ! file.delete() ) {
-			            System.err.println( file + " could not be deleted!" );
-			        } else {
-			        	System.out.println("refresh folder");
-						dir(file);		        	
-					}
-		        }
-		        
-	      
-      }
-
-      if ( ! path.delete() )
-        System.err.println( path + " could not be deleted!" );
-    }
     
-    
-    public static void deleteTreeFile( File path ) {
-    	
-    	for ( File file : path.listFiles() ) {
-    		try {
-    			Thread.sleep(50);
-    		} catch (InterruptedException e) {
-    			// TODO Auto-generated catch block
-    			e.printStackTrace();
-    		}
-    		if ( file.isDirectory() ) {
-    			deleteTree( file );
-    		} else {
-    			if ( ! file.delete() ) {
-    				System.err.println( file + " could not be deleted!" );
-    			} else {
-    				System.out.println("refresh folder");
-    				dir(file);		        	
-    			}
-    		}
-    		
-    		
-    	}
-    	
-    	if ( ! path.delete() )
-    		System.err.println( path + " could not be deleted!" );
-    }
-
-    
-    public static void removeDirectory(Path directory) throws IOException
-    {
-        // does nothing if non-existent
-        if (Files.exists(directory))
-        {
-            // prefer OS-dependent directory removal tool
-			if (SystemUtils.IS_OS_WINDOWS)
-//                    Processes.execute("%ComSpec%", "/C", "RD /S /Q \"" + directory + '"');
-				Runtime.getRuntime().exec("%ComSpec%" + " /C" + " RD /S /Q \"" + directory + "\"");
-//                else if (SystemUtils.IS_OS_UNIX)
-//                    Processes.execute("/bin/rm", "-rf", directory.toString());
-
-            if (Files.exists(directory))
-                removeRecursive(directory);
-        }
-    }
-    
-    public static void removeRecursive(Path path) throws IOException
-    {
-        Files.walkFileTree(path, new SimpleFileVisitor<Path>()
-        {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                    throws IOException
-            {
-                Files.delete(file);
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException
-            {
-                // try to delete the file anyway, even if its attributes
-                // could not be read, since delete-only access is
-                // theoretically possible
-                Files.delete(file);
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException
-            {
-                if (exc == null)
-                {
-                    Files.delete(dir);
-                    return FileVisitResult.CONTINUE;
-                }
-                else
-                {
-                    // directory iteration failed; propagate exception
-                    throw exc;
-                }
-            }
-        });
-    }
-    
-    private void setPermission(Path path) {
-    	   File file = new File("/Users/pankaj/temp.txt");
-           
-//           //set application user permissions to 455
-//           file.setExecutable(false);
-//           file.setReadable(false);
-//           file.setWritable(true);
-//           
-//           //change permission to 777 for all the users
-//           //no option for group and others
-//           file.setExecutable(true, false);
-//           file.setReadable(true, false);
-//           file.setWritable(true, false);
-           
-           //using PosixFilePermission to set file permissions 777
-           Set<PosixFilePermission> perms = new HashSet<PosixFilePermission>();
-           //add owners permission
-           perms.add(PosixFilePermission.OWNER_READ);
-           perms.add(PosixFilePermission.OWNER_WRITE);
-           perms.add(PosixFilePermission.OWNER_EXECUTE);
-           //add group permissions
-           perms.add(PosixFilePermission.GROUP_READ);
-           perms.add(PosixFilePermission.GROUP_WRITE);
-           perms.add(PosixFilePermission.GROUP_EXECUTE);
-           //add others permissions
-           perms.add(PosixFilePermission.OTHERS_READ);
-           perms.add(PosixFilePermission.OTHERS_WRITE);
-           perms.add(PosixFilePermission.OTHERS_EXECUTE);
-           
-           try {
-//			Files.setPosixFilePermissions(Paths.get(path.toString()), perms);
-			Files.setPosixFilePermissions(path, PosixFilePermissions.fromString("rw-r--r--"));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-	}
-
 	@Override
     protected void updateItem(PathItem item, boolean empty) {
         super.updateItem(item, empty);
@@ -500,10 +163,10 @@ public class PathTreeCell extends TreeCell<PathItem>{
 
 	private ImageView getImage(TreeItem<PathItem> treeItem) {
     	ImageView imageView = new ImageView();
-    	
+
     	File file = treeItem.getValue().getPath().toFile();
     	if (file.isDirectory()) {
-			if (treeItem.isExpanded()) {
+			if (treeItem.isExpanded() && treeItem.getChildren().size() != 0) {
 				imageView.setImage(setOpenIcon());
 			} else {
 				imageView.setImage(setCloseIcon());
@@ -511,8 +174,7 @@ public class PathTreeCell extends TreeCell<PathItem>{
 		} else {
 			imageView.setImage(setDocumentIcon());
 		}
-    	
-    	
+    	    	
 		return imageView;
 	}
 	

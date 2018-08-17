@@ -53,10 +53,10 @@ public class CTree implements Initializable{
 	@Override
 	public void initialize(URL arg0, ResourceBundle arg1) {
 		service = Executors.newFixedThreadPool(3);
-		textFieldRootDirectory.setText("D:\\Test");
+//		textFieldRootDirectory.setText("D:\\Test");
 		
 		setButtonAction();
-		
+		loadTree(primaryStage);
 		
 	}
 
@@ -75,14 +75,18 @@ public class CTree implements Initializable{
 		});
 		
 		buttonLoad.setOnAction(event -> {
-			loadTree(primaryStage);
+			loadTree(primaryStage, textFieldRootDirectory.getText());
 		});
 
 	}
 	
 	private void loadTree(Stage primaryStage) {
+		loadTree(primaryStage, "D:\\Test");
+	}
+	
+	private void loadTree(Stage primaryStage, String rootDirectory) {
 		
-        rootPath = Paths.get(textFieldRootDirectory.getText());
+        rootPath = Paths.get(rootDirectory);
         PathItem pathItem = new PathItem(rootPath);
         treeItem = new TreeItem<PathItem>(pathItem);
         treeItem.setExpanded(false);

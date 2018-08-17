@@ -171,17 +171,17 @@ public class WatchTask3 extends Task<Void>{
                     }
                 } 
                 
-                if (recursive && (kind == ENTRY_DELETE)) {
-//                	removeItem(child, CTree.treeItem);
-                    keys.remove(key);
-//                    key.cancel();
-                    System.out.println("key removed: " + keys.get(key));
-                    // all directories are inaccessible
-                    if (keys.isEmpty()) {
-                    	System.out.println("key break");
-                        break;
-                    }
-                }
+//                if (recursive && (kind == ENTRY_DELETE)) {
+////                	removeItem(child, CTree.treeItem);
+//                    keys.remove(key);
+////                    key.cancel();
+//                    System.out.println("key removed: " + keys.get(key));
+//                    // all directories are inaccessible
+//                    if (keys.isEmpty()) {
+//                    	System.out.println("key break");
+//                        break;
+//                    }
+//                }
                 
             }
 
@@ -287,9 +287,7 @@ public class WatchTask3 extends Task<Void>{
 	}
     
 	private void addTreeItems(TreeItem<PathItem> item) {
-		
-		item.getChildren().clear();
-		
+
         Path rootPath = item.getValue().getPath();
         PathItem pathItem = new PathItem(rootPath);
         TreeItem<PathItem> treeItem = new TreeItem<PathItem>(pathItem);
@@ -303,8 +301,11 @@ public class WatchTask3 extends Task<Void>{
 			} catch (IOException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
-			}       
+			}    
+			
+			item.getChildren().clear();
 			item.getChildren().addAll(treeItem.getChildren());
+			tree.refresh();
 			
 		}
 

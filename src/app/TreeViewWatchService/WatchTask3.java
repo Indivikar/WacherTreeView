@@ -22,12 +22,14 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import app.controller.CTree;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableSet;
 import javafx.concurrent.Task;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
@@ -45,10 +47,16 @@ public class WatchTask3 extends Task<Void>{
     private StringBuilder message = new StringBuilder();
     private WatchService watcher;
     private final Map<WatchKey, Path> keys;
+    private ServiceAddItems serviceAddItems;
+    private Thread thread;
     
     
     private final boolean recursive;
     private boolean trace = true;
+    
+//    private ObservableSet<TreeItem<PathItem>> listeAlleOrdner = FXCollections.observableSet();
+    private HashMap<Path, TreeItem<PathItem>> listeAlleOrdner = new HashMap<>();
+    private ObservableList<Path> delItem = FXCollections.observableArrayList();
     
     @SuppressWarnings("unchecked")
     static <T> WatchEvent<T> cast(WatchEvent<?> event) {
@@ -61,7 +69,11 @@ public class WatchTask3 extends Task<Void>{
         this.watcher = FileSystems.getDefault().newWatchService();
         this.keys = new HashMap<WatchKey, Path>();
         this.recursive = recursive;
-       
+        this.serviceAddItems = new ServiceAddItems();
+        
+        this.thread = new Thread(serviceAddItems.createTask());
+        thread.setDaemon(true);
+        
         if (recursive) {
             System.out.format("Scanning %s ...\n", path);
             registerAll(path);
@@ -83,9 +95,21 @@ public class WatchTask3 extends Task<Void>{
 	        if (trace) {
 	            Path prev = keys.get(key);
 	            if (prev == null) {
-	                System.out.format("register: %s\n", dir);
+	                System.err.format("register: %s - %s\n", dir, CTree.treeItem);
 		              TreeItem<PathItem> pathTreeItem = PathTreeItem.createNode(new PathItem(dir));
-		              addNewNode(pathTreeItem, CTree.treeItem);
+		              
+//		             pathTreeItem.getChildren().stream()
+////		    		.filter(s -> s.contains("B"))
+//		    		.forEach(System.out::println);
+		              
+		              
+		              if (!isItemExist(pathTreeItem, CTree.treeItem)) {
+//		            	  System.out.println("vor");
+//		            	  serviceAddItems.startAdd(pathTreeItem, CTree.treeItem);
+//		            	  System.out.println("nach");
+						addNewNode(pathTreeItem, CTree.treeItem);
+		              }
+		              
 	            } else {
 	                if (!dir.equals(prev)) {
 	                    System.out.format("update: %s -> %s\n", prev, dir);
@@ -122,14 +146,21 @@ public class WatchTask3 extends Task<Void>{
             // wait for key to be signalled
             WatchKey key;
             try {
+//            	serviceAddItems.start();
+            	
+//            	thread.start();
             	System.out.println("wait for key to be signalled");
+//            	
                 key = watcher.take();
-
-                System.out.println("key detected");
+//                thread.interrupt();
+//                thread.resume();
+//                serviceAddItems.cancel();
+                System.out.println("key detected ");
             } catch (InterruptedException x) {
                 return null;
             }
 
+            
                        
             Path dir = keys.get(key);
             if (dir == null) {
@@ -152,8 +183,8 @@ public class WatchTask3 extends Task<Void>{
                 Path child = dir.resolve(name);
 
                 // print out event
-//                System.err.format("%s: %s\n", event.kind().name(), child);
-                System.err.println("isRecursive: " + recursive + " " +event.kind().name() + " " + child);
+                System.err.format("%s: %s\n", event.kind().name(), child);
+//                System.err.println("isRecursive: " + recursive + " " +event.kind().name() + " " + child);
 
 //                TreeItem<PathItem> pathTreeItem = PathTreeItem.createNode(new PathItem(child));
 //                addNewNode(pathTreeItem, CTree.treeItem);
@@ -161,27 +192,48 @@ public class WatchTask3 extends Task<Void>{
                 // if directory is created, and watching recursively, then
                 // register it and its sub-directories
                 if (recursive && (kind == ENTRY_CREATE)) {
-                	System.out.println("im ENTRY_CREATE");
+//                	System.out.println("im ENTRY_CREATE");
                     try {
-                        if (Files.isDirectory(child, NOFOLLOW_LINKS)) {
-                            registerAll(child);
+                        if (Files.isDirectory(child, NOFOLLOW_LINKS)) {                            	
+                            registerAll(child);                           
                         }
                     } catch (IOException x) {
                         // ignore to keep sample readbale
                     }
+                    
+                    System.out.println("Refresh Tree");
+//                    tree.getTreeItem(0).setExpanded(false);
+//                    tree.getTreeItem(0).setExpanded(true);
+                    
+                    for (TreeItem<PathItem> items : tree.getRoot().getChildren()) {                    	
+                    	TreeHelper.triggerTreeItemRefresh(items);
+					}
+                    
+                    tree.refresh();
+                    
                 } 
                 
-//                if (recursive && (kind == ENTRY_DELETE)) {
-////                	removeItem(child, CTree.treeItem);
+                
+                
+                if (recursive && (kind == ENTRY_DELETE)) {
+//                	removeItem(child, CTree.treeItem);
 //                    keys.remove(key);
-////                    key.cancel();
-//                    System.out.println("key removed: " + keys.get(key));
-//                    // all directories are inaccessible
-//                    if (keys.isEmpty()) {
-//                    	System.out.println("key break");
-//                        break;
-//                    }
-//                }
+                	
+//                	keys.forEach((k,v) -> System.out.println("remove: " + v));
+                	
+
+                	System.out.println("delete Child: " + child);
+//                	delItem.add(child);
+                	removeFromRoot(child);
+                	if (child.toFile().isDirectory()) {
+                		System.out.println("key removed: " + child);
+//						removeItem(child, tree.getRoot()); 
+					} 
+                	               	
+//                    key.cancel();
+                    
+                    
+                }
                 
             }
 
@@ -189,23 +241,68 @@ public class WatchTask3 extends Task<Void>{
             boolean valid = key.reset();
             if (!valid) {
                 keys.remove(key);
-                System.out.println("key remove");
+//                System.out.println("key remove: " + key.);
+                
                 // all directories are inaccessible
                 if (keys.isEmpty()) {
+                	
                 	System.out.println("key break");
                     break;
                 }
             }
         }
+        
+//        System.out.println("starte removeFromRoot()");
+//        removeFromRoot();
+        
         return null;
     }
 
+    
+    private void removeFromRoot(Path path) {
+    	ObservableList<TreeItem<PathItem>> foundedChild = null;
+    				
+    		try (Stream<TreeItem<PathItem>> stream = tree.getRoot().getChildren().stream()){
+				
+    			foundedChild = stream
+	    			.filter(x -> x.getValue().getPath().toString().equalsIgnoreCase(path.toString()))			            
+		            .collect(Collectors.toCollection(FXCollections::observableArrayList));
+    			stream.close();
+    			
+			} catch (Exception e) {
+				// TODO: handle exception
+			}
+    	
+//				 foundedChild = 
+//					tree.getRoot().getChildren().stream()
+//			            .filter(x -> x.getValue().getPath().toString().equalsIgnoreCase(path.toString()))			            
+////			            .peek(System.out::println)
+//			            .collect(Collectors.toCollection(FXCollections::observableArrayList));
+		
+    	
+    	
+    	for (TreeItem<PathItem> treeItem : foundedChild) {
+    		treeItem.getParent().getChildren().remove(treeItem);
+		}
+    	
+
+
+//			System.out.println("foundedChild: " + foundedChild.get(0) + "  from: " + foundedParent);
+//			if (!foundedChild.isEmpty()) {
+//				return foundedChild.get(0);
+//			}			
+//		}
+
+	}
+    
+    private void test() {
+		// TODO Auto-generated method stub
+
+	}
+    
     private void removeItem(Path child, TreeItem<PathItem> rootTreeItem) {
     	System.out.println("remove item: " + child + "  root: " + rootTreeItem);
-    	
 
-
-    	
     	TreeItem<PathItem> foundedParent = getFoundedParent(child, rootTreeItem);
     	TreeItem<PathItem> foundedChild = getFoundedChild(child, foundedParent);
     	
@@ -266,25 +363,89 @@ public class WatchTask3 extends Task<Void>{
 			
 		System.out.println("pathNewItem: " + pathNewItem + " == rootItem: " + rootItem);
 
-		ObservableList<TreeItem<PathItem>> newList = 
-				rootTreeItem.getChildren().stream()
-		            .filter(x -> x.getValue().getPath().toString().equalsIgnoreCase(pathNewItem))
-		            .collect(Collectors.toCollection(FXCollections::observableArrayList));
-		
 
-		System.out.println("newList.size(): " + newList.size());
+//		listeAlleOrdner.clear();
+//		populateMap(rootTreeItem);
+//		
+//		// gibt es im Tree, das Item schon, wenn ja -> abbrechen
+//		for(Entry<Path, TreeItem<PathItem>> entry: listeAlleOrdner.entrySet()) {	
+//			
+//			  if (entry.getKey().toString().equalsIgnoreCase(pathNewItem)) {
+//				  System.err.println("Item gibt es schon: " + entry.getKey() + " -> " + entry.getValue());
+//				  return;
+//			  }
+//		}
+		
+		
+		
+		ObservableList<TreeItem<PathItem>> newList = FXCollections.observableArrayList();
+		
+		try (Stream<TreeItem<PathItem>> stream = rootTreeItem.getChildren().stream()){
+			
+			newList = stream.filter(x -> x.getValue().getPath().toString().equalsIgnoreCase(pathNewItem))
+		          .collect(Collectors.toCollection(FXCollections::observableArrayList));
+			stream.close();
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+		
+		
+		
+//		ObservableList<TreeItem<PathItem>> newList = 
+//				rootTreeItem.getChildren().stream()
+//					.filter(x -> x.getValue().getPath().toString().equalsIgnoreCase(pathNewItem))
+//					.collect(Collectors.toCollection(FXCollections::observableArrayList));
+
+		System.out.println("newList.size() 1: " + newList.size());
 		
 		if (newList.size() == 0) {
 			addTreeItems(rootTreeItem);
 		}
 		
 		for (TreeItem<PathItem> item : newList) {
-			System.out.println("gefundenes item: " + item.getValue().getPath());	
+			System.out.println("gefundenes item: " + item.getValue().getPath().toFile());	
 			addTreeItems(item);
 //			item.getChildren().add(e);
 		}
 
 	}
+	
+	
+	private boolean isItemExist(TreeItem<PathItem> pathTreeItem, TreeItem<PathItem> rootTreeItem) {
+		String pathNewItem = pathTreeItem.getValue().getPath().toString();
+		
+		
+		populateMap(rootTreeItem);
+		
+		// gibt es im Tree, das Item schon, wenn ja -> abbrechen
+		for(Entry<Path, TreeItem<PathItem>> entry: listeAlleOrdner.entrySet()) {	
+			
+			  if (entry.getKey().toString().equalsIgnoreCase(pathNewItem)) {
+				  System.err.println("Item gibt es schon: " + entry.getKey() + " -> " + entry.getValue());
+				  return true;
+			  }
+		}
+		return false;
+	}
+	
+    private void populateMap(TreeItem<PathItem> item){
+    	listeAlleOrdner.clear();
+        if(item.getChildren().size() > 0){
+            for(TreeItem<PathItem> subItem : item.getChildren()){
+            	if (subItem.getValue().getPath().toFile().isDirectory()) {
+            		listeAlleOrdner.put(subItem.getValue().getPath(), subItem);
+            		populateMap(subItem);
+				}
+                
+            }
+        }
+//        else {
+//        	PathItem node = (PathItem) item.getValue();     
+//            if(!node.isHeader()){
+//                map.put(node.getTitle(), node);
+//            }
+//        }
+    }
     
 	private void addTreeItems(TreeItem<PathItem> item) {
 
@@ -295,18 +456,15 @@ public class WatchTask3 extends Task<Void>{
         File treeItemFile =  treeItem.getValue().getPath().toFile();
         
         if (treeItemFile.exists()) {
-			try {
-				CTree.createTree(treeItem, true);
-				
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}    
+			CTree.createTree(treeItem, true);    
 			
 			item.getChildren().clear();
+			System.out.println("addTreeItems in Item: " + item + " -> " + treeItem);
 			item.getChildren().addAll(treeItem.getChildren());
-			tree.refresh();
-			
+			item.setExpanded(true);
+			tree.getSelectionModel().select(0);
+			tree.getFocusModel().focus(0);
+//			tree.refresh();			
 		}
 
 	}

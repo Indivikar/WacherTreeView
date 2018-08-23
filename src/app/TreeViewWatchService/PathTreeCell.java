@@ -1,35 +1,24 @@
 package app.TreeViewWatchService;
 
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.FileSystem;
-import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.attribute.FileOwnerAttributeView;
-import java.nio.file.attribute.PosixFilePermission;
-import java.nio.file.attribute.PosixFilePermissions;
-import java.nio.file.attribute.UserPrincipal;
-import java.nio.file.attribute.UserPrincipalLookupService;
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Set;
 
-import org.apache.commons.io.FileDeleteStrategy;
+import javax.swing.ImageIcon;
+
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.SystemUtils;
 
 import app.StartWacherDemo;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import app.controller.CTree;
 import javafx.beans.property.StringProperty;
-import javafx.beans.value.ObservableValue;
-import javafx.collections.ObservableList;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.control.ContextMenu;
@@ -41,7 +30,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.stage.Stage;
+import sun.awt.shell.ShellFolder;
 
 public class PathTreeCell extends TreeCell<PathItem>{
     private TextField textField;
@@ -52,7 +41,6 @@ public class PathTreeCell extends TreeCell<PathItem>{
     
 
     public PathTreeCell() {
-        this.messageProp = messageProp;       
         contextMenu();
     }
 
@@ -75,8 +63,9 @@ public class PathTreeCell extends TreeCell<PathItem>{
           public void handle(ActionEvent t) {
               Path newDir = createNewDirectory();
               if (newDir != null) {
-                  TreeItem<PathItem> addItem = PathTreeItem.createNode(new PathItem(newDir));
-                  getTreeItem().getChildren().add(addItem);
+            	  
+            	  TreeItem<PathItem> newItem = new TreeItem<PathItem>(new PathItem(newDir));
+            	  CTree.createTree(newItem, false);
               }
           }
           private Path createNewDirectory() {
@@ -109,16 +98,35 @@ public class PathTreeCell extends TreeCell<PathItem>{
 
     private void deleteFileOrDirectory(File file) {
     	System.out.println("Del 1 fertig: " + this.getItem().getPath());
-		try {
+    	try {
 			  if (file.isDirectory()) {
+
 				  	int count = 0;
 					while (file.exists() && count < 10) {
-						 
-						FileUtils.cleanDirectory(file);
-						FileUtils.deleteDirectory(file);						
+						
+					Files.walk(file.toPath())
+							.filter(f -> f.toFile().isDirectory())
+							.sorted(Comparator.reverseOrder())
+							.map(Path::toFile)
+							.peek(System.out::println)
+							.forEach(ordner -> {
+								try {
+									Thread.sleep(50);
+									if (ordner.exists()) {
+										FileUtils.cleanDirectory(ordner);
+									}									
+								} catch (IOException | InterruptedException e) {
+									e.printStackTrace();
+								}
+							});
+					
+						Thread.sleep(50);
+						if (file.exists()) {
+							FileUtils.deleteDirectory(file);
+						}						
 			    		count++;
-			    		Thread.sleep(1000);
 			    	}
+
 			  } else {	   				  
 					FileUtils.forceDelete(file);	
 					Thread.sleep(1000);
@@ -128,12 +136,7 @@ public class PathTreeCell extends TreeCell<PathItem>{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 		}
-		
-
-		if (!file.exists()) {
-			TreeItem<PathItem> c = (TreeItem<PathItem>)this.getTreeView().getSelectionModel().getSelectedItem();
-			boolean remove = c.getParent().getChildren().remove(c);
-		} 	  
+    	
 	}
     
     
@@ -143,21 +146,30 @@ public class PathTreeCell extends TreeCell<PathItem>{
         if (empty) {
             setText(null);
             setGraphic(null);
+            setContextMenu(null);
         } else {
-            if (isEditing()) {
-                if (textField != null) {
-                    textField.setText(getString());
-                }
-                setText(null);
-                setGraphic(textField);
-            } else {
+//            if (isEditing()) {
+//                if (textField != null) {
+//                    textField.setText(getString());
+//                }
+//                setText(null);
+//                setGraphic(textField);
+//                setContextMenu(null);
+//            } else {
 //            	System.out.println("updateItem: " + this.getItem().getPath());
 //            	FileTreeViewSample.children.add(this);
                 setText(getString());
+                setGraphic(null);
                 setGraphic(getImage(this.getTreeItem()));
                 setContextMenu(fileMenu);
                 
-            }
+                
+                
+//              if (getString().equalsIgnoreCase("test")) {
+//					this.setDisable(true);
+//				}
+                
+//            }
         }
     }
 
@@ -172,10 +184,42 @@ public class PathTreeCell extends TreeCell<PathItem>{
 				imageView.setImage(setCloseIcon());
 			}
 		} else {
-			imageView.setImage(setDocumentIcon());
+//			imageView.setImage(setDocumentIcon());
+			imageView.setImage(getSystemIcon(file));
 		}
     	    	
 		return imageView;
+	}
+	
+	private Image getSystemIcon(File file)  {
+
+        ShellFolder sf = null;
+		try {
+			sf = ShellFolder.getShellFolder(file);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+
+		// Get large icon
+		ImageIcon ico = new ImageIcon(sf.getIcon(true), sf.getFolderType());
+		java.awt.Image awtImage = ico.getImage();
+		
+		BufferedImage bImg ;
+		if (awtImage instanceof BufferedImage) {
+		    bImg = (BufferedImage) awtImage ;
+		} else {
+		    bImg = new BufferedImage(awtImage.getWidth(null), awtImage.getHeight(null), BufferedImage.TYPE_INT_ARGB);
+		    Graphics2D graphics = bImg.createGraphics();
+		    graphics.drawImage(awtImage, 0, 0, null);
+		    graphics.dispose();
+		}
+		
+		Image fxImage = SwingFXUtils.toFXImage(bImg, null);
+   			
+//		System.out.println("Icon-Breite: " + fxImage.getWidth() + "  -  Icon-Höhe: " + fxImage.getHeight());
+		
+		return fxImage;
+
 	}
 	
 	

@@ -177,7 +177,7 @@ public class Sample implements Runnable {
         boolean recursive = true;
 
         // register directory and process its events
-        Path dir = Paths.get("D:\\Test");
+        Path dir = Paths.get("H:\\Test");
         new Sample(dir, recursive).processEvents();
     }
 

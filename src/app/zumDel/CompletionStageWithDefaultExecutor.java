@@ -1,4 +1,4 @@
-package app.TreeViewWatchService;
+package app.funktionen;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;

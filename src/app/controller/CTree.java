@@ -1,30 +1,18 @@
 package app.controller;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
 import java.nio.file.DirectoryStream;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.FileOwnerAttributeView;
-import java.nio.file.attribute.PosixFileAttributes;
-import java.nio.file.attribute.PosixFilePermission;
-import java.nio.file.attribute.PosixFilePermissions;
-import java.nio.file.attribute.UserPrincipal;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.ResourceBundle;
-import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 
 import app.StartWacherDemo;
 import app.TreeViewWatchService.FileMonitor;
+import app.TreeViewWatchService.ModelFileChanges;
 import app.TreeViewWatchService.PathItem;
 import app.TreeViewWatchService.PathTreeCell;
 import app.TreeViewWatchService.WatchTask3;
@@ -36,9 +24,14 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
+import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 
@@ -53,8 +46,19 @@ public class CTree implements Initializable{
 	public static TreeItem<PathItem> treeItem;
 
 	private static ObservableList<TreeItem<PathItem>> listFiles = FXCollections.observableArrayList();
-	
+
 	private StringProperty messageProp = new SimpleStringProperty();
+	
+	@FXML private VBox vBoxMessage;
+	
+//	@FXML private ListView<File> listViewChanges;
+	@FXML private TableView<ModelFileChanges> tableView;
+	@FXML private TableColumn<ModelFileChanges, String> columnAction;
+	@FXML private TableColumn<ModelFileChanges, String> columnFile;
+	@FXML private TableColumn<ModelFileChanges, String> columnTime;
+	
+	@FXML private Button buttonNow;
+//	@FXML private Button buttonLater;
 	
 	@FXML private TextField textFieldRootDirectory;
 	@FXML private Button buttonChooser;
@@ -71,10 +75,15 @@ public class CTree implements Initializable{
 		textFieldRootDirectory.setText("H:\\Test");
 		
 		setButtonAction();
+		setPropUpdateMessage();
 //		loadTree(primaryStage);
 		
 	}
 
+	private void setPropUpdateMessage() {
+		vBoxMessage.setVisible(false);
+	}
+	
 	
 	private void setButtonAction() {
 		buttonChooser.setOnAction(event -> {
@@ -119,7 +128,7 @@ public class CTree implements Initializable{
             return cell;
         });
         
-        FileMonitor fileMonitor = new FileMonitor(tree, "H:\\Test", 1000);
+        FileMonitor fileMonitor = new FileMonitor(this, "H:\\Test", 1000);
         fileMonitor.startFileMonitor();    
 //        try {
 //        	boolean recursive = true;
@@ -136,13 +145,14 @@ public class CTree implements Initializable{
     public static void createTree(TreeItem<PathItem> rootItem, boolean expand) {
     	
     	if (rootItem.getValue().getPath().toFile().isDirectory()) {
+    		
+    		
+    		
 			try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(rootItem.getValue().getPath())){
 	
 	            for (Path path : directoryStream) {
 	                TreeItem<PathItem> newItem = new TreeItem<PathItem>( new PathItem( path));
-	                newItem.setExpanded(true);
-	                newItem.setExpanded(false);
-	                newItem.setExpanded(expand);
+
 	
 	                rootItem.getChildren().add(newItem);
 	                sortMyList(rootItem.getChildren());
@@ -151,7 +161,12 @@ public class CTree implements Initializable{
 	                }
 	            }
 	            directoryStream.close();
+	            
+		        rootItem.setExpanded(true);
+				rootItem.setExpanded(false);
+				rootItem.setExpanded(expand);
 	        }
+			
 	        // catch exceptions, e. g. java.nio.file.AccessDeniedException: c:\System Volume Information, c:\$RECYCLE.BIN
 	        catch( Exception ex) {
 	            ex.printStackTrace();
@@ -172,8 +187,17 @@ public class CTree implements Initializable{
     }
     
 
-    
+    // Getter
 //	public ExecutorService getService() {return service;}
+    public TreeView<PathItem> getTree() {return tree;}
+	public VBox getvBoxMessage() {return vBoxMessage;}
+//	public ListView<File> getListViewChanges() {return listViewChanges;}
+//	public Button getButtonLater() {return buttonLater;}
+	public Button getButtonNow() {return buttonNow;}
+	public TableView<ModelFileChanges> getTableView() {return tableView;}
+	public TableColumn<ModelFileChanges, String> getColumnAction() {return columnAction;}
+	public TableColumn<ModelFileChanges, String> getColumnFile() {return columnFile;}
+	public TableColumn<ModelFileChanges, String> getColumnTime() {return columnTime;}
 
 	public void set(StartWacherDemo startWacherDemo, Stage primaryStage) {
 		this.startWacherDemo = startWacherDemo;
@@ -181,5 +205,7 @@ public class CTree implements Initializable{
 		
 		loadTree(primaryStage);
 	}
+
+
 	
 }

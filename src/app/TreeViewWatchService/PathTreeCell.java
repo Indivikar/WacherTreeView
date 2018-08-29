@@ -2,9 +2,14 @@ package app.TreeViewWatchService;
 
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,10 +23,16 @@ import org.apache.commons.io.FileUtils;
 import app.StartWacherDemo;
 import app.controller.CTree;
 import javafx.beans.property.StringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TreeCell;
@@ -30,6 +41,8 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 import sun.awt.shell.ShellFolder;
 
 public class PathTreeCell extends TreeCell<PathItem>{
@@ -39,7 +52,9 @@ public class PathTreeCell extends TreeCell<PathItem>{
     private ContextMenu dirMenu = new ContextMenu();
     private ContextMenu fileMenu = new ContextMenu();
     
-
+    private ObservableList<String> listAllLockedFiles = FXCollections.observableArrayList();
+    
+    
     public PathTreeCell() {
         contextMenu();
     }
@@ -53,7 +68,7 @@ public class PathTreeCell extends TreeCell<PathItem>{
       addFile.setOnAction(new EventHandler<ActionEvent>() {
           @Override
           public void handle(ActionEvent t) {
-              
+        	  FileAlterationListenerImpl.isInternalChange = true;
           }
          
       });
@@ -61,15 +76,17 @@ public class PathTreeCell extends TreeCell<PathItem>{
       addFolder.setOnAction(new EventHandler<ActionEvent>() {
           @Override
           public void handle(ActionEvent t) {
+        	  FileAlterationListenerImpl.isInternalChange = true;
               Path newDir = createNewDirectory();
-              if (newDir != null) {
-            	  
+              if (newDir != null) {            	  
             	  TreeItem<PathItem> newItem = new TreeItem<PathItem>(new PathItem(newDir));
             	  CTree.createTree(newItem, false);
               }
           }
-          private Path createNewDirectory() {
+          
+      private Path createNewDirectory() {
               Path newDir = null;
+              
               while (true) {
                   Path path = getTreeItem().getValue().getPath();
                   newDir = Paths.get(path.toAbsolutePath().toString(), "neuer Ordner " + String.valueOf(getItem().getCountNewDir()));
@@ -87,10 +104,13 @@ public class PathTreeCell extends TreeCell<PathItem>{
                   return newDir;
           }
       });
+      
       MenuItem deleteMenu = new MenuItem("Delete");
       deleteMenu.setOnAction((event) -> {
+    	  FileAlterationListenerImpl.isInternalChange = true;
     	  Path filePath = this.getItem().getPath();
     	  deleteFileOrDirectory(filePath.toFile());
+    	  
       });
       
       fileMenu.getItems().addAll(addFile, addFolder, deleteMenu);		
@@ -100,7 +120,13 @@ public class PathTreeCell extends TreeCell<PathItem>{
     	System.out.println("Del 1 fertig: " + this.getItem().getPath());
     	try {
 			  if (file.isDirectory()) {
-
+				    listAllLockedFiles.clear();
+				    recursiveSearch(file);
+				    if (listAllLockedFiles.size() > 0) {
+						alertFilesLocked();
+						return;
+					}
+				    				   
 				  	int count = 0;
 					while (file.exists() && count < 10) {
 						
@@ -138,6 +164,65 @@ public class PathTreeCell extends TreeCell<PathItem>{
 		}
     	
 	}
+    
+    
+    private void alertFilesLocked() {
+    	Alert alert = new Alert(AlertType.ERROR);
+    	alert.setTitle("Exception Dialog");
+    	alert.setHeaderText("can not be deleted, it is still being edited");
+    	alert.setContentText(null);
+
+    	Label label = new Label("Locked Files:");
+
+    	ListView<String> listLockedFiles = new ListView<>(listAllLockedFiles);
+
+    	listLockedFiles.setMaxWidth(Double.MAX_VALUE);
+    	listLockedFiles.setMaxHeight(Double.MAX_VALUE);
+    	GridPane.setVgrow(listLockedFiles, Priority.ALWAYS);
+    	GridPane.setHgrow(listLockedFiles, Priority.ALWAYS);
+
+    	GridPane expContent = new GridPane();
+    	expContent.setMaxWidth(Double.MAX_VALUE);
+    	expContent.add(label, 0, 0);
+    	expContent.add(listLockedFiles, 0, 1);
+
+    	// Set expandable Exception into the dialog pane.
+    	alert.getDialogPane().setExpandableContent(expContent);
+
+    	alert.showAndWait();
+
+	}
+    
+    private void recursiveSearch(File file) {
+    	 File[] filesList = file.listFiles();
+    	    for (File f : filesList) {
+    	        if (f.isDirectory() && !f.isHidden()) {
+    	            recursiveSearch(f);
+    	        }
+    	        if( f.isFile() ){
+    	        	if (accessFile(f)) {
+    	        		listAllLockedFiles.add(f.getAbsolutePath());
+					}    	        	
+    	        }
+    	    }
+    	}
+    
+    
+    private boolean accessFile(File name) {
+    		System.out.println("is File Locked: " + name);
+    		System.out.println(name.canWrite()); // -> true
+    		FileOutputStream fileOutputStream = null;
+    		try {
+    			fileOutputStream =  new FileOutputStream(name);
+    			fileOutputStream.close();
+			} catch (IOException e) {			
+					System.out.println(e.getMessage());	
+//					fileOutputStream.close();
+					return true;						
+			}
+        
+		return false;
+    }
     
     
 	@Override
@@ -185,7 +270,10 @@ public class PathTreeCell extends TreeCell<PathItem>{
 			}
 		} else {
 //			imageView.setImage(setDocumentIcon());
-			imageView.setImage(getSystemIcon(file));
+			if (file.exists()) {
+				imageView.setImage(getSystemIcon(file));
+			}
+			
 		}
     	    	
 		return imageView;

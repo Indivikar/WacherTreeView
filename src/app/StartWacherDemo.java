@@ -1,5 +1,9 @@
 package app;
 
+import java.io.RandomAccessFile;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
+
 import app.controller.CTree;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -40,7 +44,7 @@ public class StartWacherDemo  extends Application {
     	System.exit(0);
 //    	controller.getService().shutdownNow();
     }
-	
+
 	public static void main(String[] args) {
         launch(args);
     }

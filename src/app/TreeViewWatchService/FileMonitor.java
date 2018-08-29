@@ -5,18 +5,19 @@ import java.io.File;
 import org.apache.commons.io.monitor.FileAlterationMonitor;
 import org.apache.commons.io.monitor.FileAlterationObserver;
 
+import app.controller.CTree;
 import javafx.scene.control.TreeView;
 
 
 
 public class FileMonitor {
 
-	private TreeView<PathItem> tree;
+	private CTree cTree;
 	private final FileAlterationMonitor monitor;
     
 	
-	public FileMonitor(TreeView<PathItem> tree, String root, long intervalInMilliSec) {
-		this.tree = tree;
+	public FileMonitor(CTree cTree, String root, long intervalInMilliSec) {
+		this.cTree = cTree;
 
 		final File directory = new File(root);
 
@@ -24,7 +25,7 @@ public class FileMonitor {
 		FileAlterationObserver fao = new FileAlterationObserver(directory);
 		
 		// Create a new FileAlterationListenerImpl and pass it the previously created FileAlterationObserver
-		fao.addListener(new FileAlterationListenerImpl(tree));
+		fao.addListener(new FileAlterationListenerImpl(cTree));
 
 		// Create a new FileAlterationMonitor with the given pollingInterval period
 		monitor = new FileAlterationMonitor(

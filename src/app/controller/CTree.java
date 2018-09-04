@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.ResourceBundle;
 
 import app.StartWacherDemo;
@@ -17,6 +18,8 @@ import app.TreeViewWatchService.PathItem;
 import app.TreeViewWatchService.PathTreeCell;
 import app.TreeViewWatchService.WatchTask3;
 import app.TreeViewWatchService.WindowsExplorerComparator;
+import app.interfaces.ISuffix;
+import app.interfaces.ISystemIcon;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
@@ -31,11 +34,13 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 
-public class CTree implements Initializable{
+public class CTree implements Initializable, ISuffix, ISystemIcon{
 
 	private StartWacherDemo startWacherDemo;
 	private Stage primaryStage;
@@ -47,6 +52,8 @@ public class CTree implements Initializable{
 
 	private static ObservableList<TreeItem<PathItem>> listFiles = FXCollections.observableArrayList();
 
+	public static HashMap<String, Image> suffixIcon = new HashMap<>();
+	
 	private StringProperty messageProp = new SimpleStringProperty();
 	
 	@FXML private VBox vBoxMessage;
@@ -121,7 +128,7 @@ public class CTree implements Initializable{
         tree.getRoot().setExpanded(true);      
 		tree.setFixedCellSize(35);
         tree.setCellFactory((TreeView<PathItem> p) -> {
-            cell = new PathTreeCell();
+            cell = new PathTreeCell(primaryStage);
             
 //            new DragNDropInternal(primaryStage, service, cell);
 //            setDragDropEvent(stage, cell);
@@ -145,20 +152,20 @@ public class CTree implements Initializable{
     public static void createTree(TreeItem<PathItem> rootItem, boolean expand) {
     	
     	if (rootItem.getValue().getPath().toFile().isDirectory()) {
-    		
-    		
-    		
+
 			try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(rootItem.getValue().getPath())){
 	
 	            for (Path path : directoryStream) {
 	                TreeItem<PathItem> newItem = new TreeItem<PathItem>( new PathItem( path));
-
-	
+  
 	                rootItem.getChildren().add(newItem);
 	                sortMyList(rootItem.getChildren());
 	                if (Files.isDirectory(path)) {
 	                    createTree(newItem, expand);
-	                }
+	                } else {
+	                	File file = newItem.getValue().getPath().toFile();
+						addSuffixAndImage(file.getName(), ISystemIcon.getSystemImageView(file));
+					}
 	            }
 	            directoryStream.close();
 	            
@@ -174,6 +181,10 @@ public class CTree implements Initializable{
 		}    	
     }
     
+	private static void addSuffixAndImage(String name, Image image) {
+//		System.out.println("Add Icon from: " + name);
+		suffixIcon.put(ISuffix.getSuffix(name), image);
+	}
     
     private static void sortMyList(ObservableList<TreeItem<PathItem>> children) {
         Collections.sort(children, new Comparator<TreeItem<PathItem>>() {
@@ -189,11 +200,14 @@ public class CTree implements Initializable{
 
     // Getter
 //	public ExecutorService getService() {return service;}
+    
     public TreeView<PathItem> getTree() {return tree;}
+	public Stage getPrimaryStage() {return primaryStage;}
 	public VBox getvBoxMessage() {return vBoxMessage;}
 //	public ListView<File> getListViewChanges() {return listViewChanges;}
 //	public Button getButtonLater() {return buttonLater;}
-	public Button getButtonNow() {return buttonNow;}
+	public Button getButtonNow() {return buttonNow;}	
+	public static HashMap<String, Image> getSuffixIcon() {return suffixIcon;}
 	public TableView<ModelFileChanges> getTableView() {return tableView;}
 	public TableColumn<ModelFileChanges, String> getColumnAction() {return columnAction;}
 	public TableColumn<ModelFileChanges, String> getColumnFile() {return columnFile;}

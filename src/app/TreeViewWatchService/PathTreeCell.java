@@ -2,19 +2,19 @@ package app.TreeViewWatchService;
 
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map.Entry;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.swing.ImageIcon;
 
@@ -22,6 +22,8 @@ import org.apache.commons.io.FileUtils;
 
 import app.StartWacherDemo;
 import app.controller.CTree;
+import app.interfaces.ISuffix;
+import app.interfaces.ISystemIcon;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -43,20 +45,24 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
+import javafx.stage.Stage;
 import sun.awt.shell.ShellFolder;
 
-public class PathTreeCell extends TreeCell<PathItem>{
+public class PathTreeCell extends TreeCell<PathItem> implements ISuffix, ISystemIcon{
+	private Stage primaryStage;
     private TextField textField;
     private Path editingPath;
     private StringProperty messageProp;
     private ContextMenu dirMenu = new ContextMenu();
     private ContextMenu fileMenu = new ContextMenu();
-    
+    private ExecutorService service = Executors.newFixedThreadPool(1);
     private ObservableList<String> listAllLockedFiles = FXCollections.observableArrayList();
+   
     
-    
-    public PathTreeCell() {
+    public PathTreeCell(Stage primaryStage) {
+    	
         contextMenu();
+        DragNDropInternal DragNDropInternal = new DragNDropInternal(primaryStage, service, this);
     }
 
     private void contextMenu() {
@@ -228,6 +234,7 @@ public class PathTreeCell extends TreeCell<PathItem>{
 	@Override
     protected void updateItem(PathItem item, boolean empty) {
         super.updateItem(item, empty);
+//         ImageView iconView = new ImageView();
         if (empty) {
             setText(null);
             setGraphic(null);
@@ -243,12 +250,18 @@ public class PathTreeCell extends TreeCell<PathItem>{
 //            } else {
 //            	System.out.println("updateItem: " + this.getItem().getPath());
 //            	FileTreeViewSample.children.add(this);
-                setText(getString());
-                setGraphic(null);
+//        	ImageView iconView = new ImageView();
+        		ImageView iconView = getImage(this.getTreeItem());
+//        		iconView.setImage(getImage(this.getTreeItem()).getImage());
+        		String name = getString();
+        		
+                setText(name);
+//                setGraphic(null);
                 setGraphic(getImage(this.getTreeItem()));
+//                setGraphic(iconView);
                 setContextMenu(fileMenu);
-                
-                
+//                iconView.setImage(getImage(this.getTreeItem()).getImage());
+//                addSuffixAndImage(name, image);
                 
 //              if (getString().equalsIgnoreCase("test")) {
 //					this.setDisable(true);
@@ -258,68 +271,123 @@ public class PathTreeCell extends TreeCell<PathItem>{
         }
     }
 
+
+	
+//	private String getSuffix(String dateiName){
+//		
+//		String suffix = null;
+//		if ( dateiName.lastIndexOf( '.' ) > 0 ) // das > ist pure Absicht, damit versteckte Dateien nicht als Dateiendung interpretiert werden!
+//		{
+//		  suffix = dateiName.substring(dateiName.lastIndexOf('.'));
+////		  System.out.println("DateiEndung: " + suffix);
+//		}
+//		else
+//		{
+//		  suffix = "";
+//		}
+//
+//		return suffix;
+//	}
+	
 	private ImageView getImage(TreeItem<PathItem> treeItem) {
     	ImageView imageView = new ImageView();
 
     	File file = treeItem.getValue().getPath().toFile();
     	if (file.isDirectory()) {
-			if (treeItem.isExpanded() && treeItem.getChildren().size() != 0) {
-				imageView.setImage(setOpenIcon());
-			} else {
-				imageView.setImage(setCloseIcon());
-			}
+//    	if (IsPathDirectory(file.getAbsolutePath())) {
+    		imageView.setImage(getDirectoryItem(treeItem));
 		} else {
 //			imageView.setImage(setDocumentIcon());
 			if (file.exists()) {
-				imageView.setImage(getSystemIcon(file));
-			}
-			
+				imageView.setImage(ISystemIcon.getSystemImage(file));
+			} else {								
+				String itemSuffix = ISuffix.getSuffix(file.getName());
+				
+//				System.out.println("suffix: " + file + " -> " + itemSuffix);
+				
+				if (!itemSuffix.equals("")) {
+					for (Entry<String, Image> item : CTree.getSuffixIcon().entrySet()) {	
+//						System.out.println("      suffix: " + item.getKey() + " == " + itemSuffix);
+						if (item.getKey().equalsIgnoreCase(itemSuffix)) {
+							
+							imageView.setImage(item.getValue());
+//							System.out.println("      suffix found: " + item.getKey() + " == " + itemSuffix + " -> " + imageView);
+							return imageView;
+						}					
+					}
+					// Default File-Icon
+					imageView.setImage(getDefaultDocumentIcon());	
+				} else {
+					imageView.setImage(getDirectoryItem(treeItem));
+				}
+			}			
 		}
     	    	
 		return imageView;
 	}
 	
-	private Image getSystemIcon(File file)  {
-
-        ShellFolder sf = null;
-		try {
-			sf = ShellFolder.getShellFolder(file);
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
-
-		// Get large icon
-		ImageIcon ico = new ImageIcon(sf.getIcon(true), sf.getFolderType());
-		java.awt.Image awtImage = ico.getImage();
-		
-		BufferedImage bImg ;
-		if (awtImage instanceof BufferedImage) {
-		    bImg = (BufferedImage) awtImage ;
+	private Image getDirectoryItem(TreeItem<PathItem> treeItem) {
+		if (treeItem.isExpanded() && treeItem.getChildren().size() != 0) {
+			return getOpenIcon();
 		} else {
-		    bImg = new BufferedImage(awtImage.getWidth(null), awtImage.getHeight(null), BufferedImage.TYPE_INT_ARGB);
-		    Graphics2D graphics = bImg.createGraphics();
-		    graphics.drawImage(awtImage, 0, 0, null);
-		    graphics.dispose();
+			return getCloseIcon();
 		}
-		
-		Image fxImage = SwingFXUtils.toFXImage(bImg, null);
-   			
-//		System.out.println("Icon-Breite: " + fxImage.getWidth() + "  -  Icon-Höhe: " + fxImage.getHeight());
-		
-		return fxImage;
-
 	}
 	
+	private boolean IsPathDirectory(String path) {
+	    File file = new File(path);
+
+	    // check if the file/directory is already there
+	    if (!file.exists()) {
+	        // see if the file portion it doesn't have an extension
+	        return file.getName().lastIndexOf('.') == -1;
+	    } else {
+	        // see if the path that's already in place is a file or directory
+	        return true;
+	    }
+	}
 	
-	private Image setOpenIcon() {
+//	private Image getSystemIcon(File file)  {
+//
+//        ShellFolder sf = null;
+//		try {
+//			sf = ShellFolder.getShellFolder(file);
+//		} catch (FileNotFoundException e) {
+//			e.printStackTrace();
+//		}
+//
+//		// Get large icon
+//		ImageIcon ico = new ImageIcon(sf.getIcon(true), sf.getFolderType());
+//		java.awt.Image awtImage = ico.getImage();
+//		
+//		BufferedImage bImg ;
+//		if (awtImage instanceof BufferedImage) {
+//		    bImg = (BufferedImage) awtImage ;
+//		} else {
+//		    bImg = new BufferedImage(awtImage.getWidth(null), awtImage.getHeight(null), BufferedImage.TYPE_INT_ARGB);
+//		    Graphics2D graphics = bImg.createGraphics();
+//		    graphics.drawImage(awtImage, 0, 0, null);
+//		    graphics.dispose();
+//		}
+//		
+//		Image fxImage = SwingFXUtils.toFXImage(bImg, null);
+//   			
+////		System.out.println("Icon-Breite: " + fxImage.getWidth() + "  -  Icon-Höhe: " + fxImage.getHeight());
+//		
+//		return fxImage;
+//
+//	}
+	
+	
+	private Image getOpenIcon() {
 		return new Image(StartWacherDemo.class.getResourceAsStream("view/images/folderOpen.png"));
 	}
 	
-	private Image setCloseIcon() {
+	private Image getCloseIcon() {
 		return new Image(StartWacherDemo.class.getResourceAsStream("view/images/folderClose.png"));
 	}
 	
-	private Image setDocumentIcon() {
+	private Image getDefaultDocumentIcon() {
 		return new Image(StartWacherDemo.class.getResourceAsStream("view/images/document.png"));
 	}
 	

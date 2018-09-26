@@ -1,6 +1,7 @@
 package app.TreeViewWatchService;
 
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -8,17 +9,25 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 
+import org.apache.commons.io.FileUtils;
+
+import app.view.Stages.StageFileIsExist;
 import javafx.application.Platform;
 import javafx.scene.Group;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.DialogPane;
+import javafx.scene.layout.StackPane;
+import javafx.stage.Stage;
 
-class CopyDirectory extends SimpleFileVisitor<Path> {
-
+public class CopyDirectory extends SimpleFileVisitor<Path> {
+	  private Object lock = new Object();
+	
 	  private Path source;
 	  private Path target;
 	  private FileCopyTask fileCopyTask;
@@ -30,67 +39,119 @@ class CopyDirectory extends SimpleFileVisitor<Path> {
 		    this.source = source;
 		    this.target = target;
 		    this.fileCopyTask = fileCopyTask;
+		    	    
+		    System.out.println("CopyDirectory: target -> " + target);
 	  }
 
+	  
+	    public void next(){
+	        synchronized(lock){
+	            lock.notify();
+	        }   
+	    }
+	  
+	  
       @Override
       public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) 
               throws IOException {
-          System.out.format("preVisitDirectory: %s\n", dir);
-
-          if (dir.toFile().exists()) {
-        	  System.out.println("    exists -> " + dir);
-        	  if (isSameForAll) {
-        		  if (replaceYes) {
-        			  Files.move(this.source, this.target, StandardCopyOption.REPLACE_EXISTING);
-        		  }        		  
-        	  }  else {
-        		  Platform.runLater(() -> {
-						Alert alert = createAlertWithOptOut(AlertType.CONFIRMATION, "Exit", null, 
-				                  "This file \"" + dir + "\" is exists.\nAre you replace this file", "same for all files" , ButtonType.YES, ButtonType.NO);
-						boolean res = alert.showAndWait().filter(t -> t == ButtonType.YES).isPresent();
-
-					    if (res) {
-					    	try {
-								Files.move(this.source, this.target, StandardCopyOption.REPLACE_EXISTING);
-							} catch (IOException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-					    }
-        		  });    
-        	  }        	  
-          } else {
-        	  Files.move(this.source, this.target);
-          }
+                 
+          Path fileTarget = target.resolve(source.relativize(dir));
+          System.out.format("preVisitDirectory: %s  ->  ", dir);   
+          System.out.format("target: %s\n", fileTarget);
           
+          if (fileTarget.toFile().exists()) {
+  			System.err.println("    exists -> " + fileTarget);
+          } else {
+        	  fileTarget.toFile().mkdir();
+          }
+         
           return super.preVisitDirectory(dir, attrs);
       }
 
       @Override
       public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) 
               throws IOException {
-          System.out.format("visitFile: %s\n", file);
-          if (file.toFile().exists()) {
-  			System.out.println("    exists -> " + file);
-          }         
+          Path fileTarget = target.resolve(source.relativize(file));
+          System.out.format("visitFile: %s  ->  ", file);   
+          System.out.format("target: %s\n", fileTarget);
+          
+          if (fileTarget.toFile().exists()) {
+  			System.err.println("    exists -> " + fileTarget);
+  			
+		  	if (isSameForAll) {
+		  		  if (replaceYes) {
+		  			copyAndDeleteOldFile(file, fileTarget);
+		  		  }        		  
+		  	  }  else {		 		
+		  		  	new StageFileIsExist(this, file);
+		  		
+					synchronized(lock){
+			            try {
+			                lock.wait();
+			            } catch (InterruptedException e1) {
+			                e1.printStackTrace();
+			            }
+					}
+				
+				    if (replaceYes) {
+			    		System.out.println("Source: " + this.source + "  ->  target: " + this.target);
+			    		copyAndDeleteOldFile(file, fileTarget);
+				    }		
+		  	  }
+  			
+          } else {
+//        	  System.err.println("    Copy File -> " + fileTarget);
+        	  copyAndDeleteOldFile(file, fileTarget);
+          }        
           return super.visitFile(file, attrs);
       }
 	  
       @Override
       public FileVisitResult visitFileFailed(Path file, IOException exc) 
               throws IOException {
-          System.out.format("visitFileFailed: %s\n", file);
+    	  // TODO - Fehlermeldung einbauen, wird ausgelöst, wenn eine Datei nicht gelesen werden kann
+          Path fileTarget = target.resolve(source.relativize(file));
+          System.out.format("visitFileFailed: %s  ->  ", file);   
+          System.out.format("target: %s\n", fileTarget);
+          
+          if (fileTarget.toFile().exists()) {
+  			System.err.println("    exists -> " + fileTarget);
+          }   
+          
           return super.visitFileFailed(file, exc);
       }
 
       @Override
       public FileVisitResult postVisitDirectory(Path dir, IOException exc) 
               throws IOException {
-          System.out.format("postVisitDirectory: %s\n", dir);
+//          System.out.format("postVisitDirectory: %s\n", dir);
+    	  
+    	  if (isDirectoryEmpty(dir)) {
+    		  dir.toFile().delete();
+    	  }
+    	  
           return super.postVisitDirectory(dir, exc);
       }
        
       
+      private void copyAndDeleteOldFile(Path file, Path fileTarget) {
+	    	try {
+				Files.copy(file, fileTarget, StandardCopyOption.REPLACE_EXISTING);
+				if (fileTarget.toFile().exists()) {
+		    		file.toFile().delete();
+		    	}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    	  
+      }
+      
+      private boolean isDirectoryEmpty(final Path directory) throws IOException {
+    	    try(DirectoryStream<Path> dirStream = Files.newDirectoryStream(directory)) {
+    	        return !dirStream.iterator().hasNext();
+    	    }
+    	}
       
 //	  @Override
 //	  public FileVisitResult visitFile(Path file, BasicFileAttributes attributes)
@@ -158,5 +219,14 @@ class CopyDirectory extends SimpleFileVisitor<Path> {
 		   
 		   return alert;
 	}
+
+
+	public boolean isSameForAll() {return isSameForAll;}
+	public boolean isReplaceYes() {return replaceYes;}
+	
+	
+	public void setReplaceYes(boolean replaceYes) {this.replaceYes = replaceYes;}
+	public void setSameForAll(boolean isSameForAll) {this.isSameForAll = isSameForAll;}  
 	  
-	}
+	  
+}

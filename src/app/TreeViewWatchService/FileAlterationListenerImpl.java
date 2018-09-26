@@ -128,14 +128,14 @@ public class FileAlterationListenerImpl implements FileAlterationListener, ISuff
 
 	@Override
 	public void onDirectoryCreate(final File directory) {
-		System.out.println(directory.getAbsolutePath() + " was created.");
+//		System.out.println(directory.getAbsolutePath() + " was created.");
 		data.add(new ModelFileChanges("create", directory, getTimeStamp()));
 		nowShowUpdateMessage = true;
 	}
 
 	@Override
 	public void onDirectoryChange(final File directory) {
-		System.out.println(directory.getAbsolutePath() + " wa modified");
+//		System.out.println(directory.getAbsolutePath() + " wa modified");
 		data.add(new ModelFileChanges("change", directory, getTimeStamp()));
 		nowShowUpdateMessage = true;
 	}
@@ -149,21 +149,21 @@ public class FileAlterationListenerImpl implements FileAlterationListener, ISuff
 
 	@Override
 	public void onFileCreate(final File file) {
-		System.out.println(file.getAbsoluteFile() + " was created.");
+//		System.out.println(file.getAbsoluteFile() + " was created.");
 		data.add(new ModelFileChanges("create", file, getTimeStamp()));
 		nowShowUpdateMessage = true;
 	}
 
 	@Override
 	public void onFileChange(final File file) {		
-		System.out.println(file.getAbsoluteFile() + " was modified.");
+//		System.out.println(file.getAbsoluteFile() + " was modified.");
 		data.add(new ModelFileChanges("change", file, getTimeStamp()));
 		nowShowUpdateMessage = true;
 	}
 
 	@Override
 	public void onFileDelete(final File file) {
-		System.out.println(file.getAbsoluteFile() + " was deleted.");
+//		System.out.println(file.getAbsoluteFile() + " was deleted.");
 		data.add(new ModelFileChanges("delete", file, getTimeStamp()));
 		nowShowUpdateMessage = true;
 	}
@@ -172,6 +172,8 @@ public class FileAlterationListenerImpl implements FileAlterationListener, ISuff
 	public void onStop(final FileAlterationObserver observer) {
 //		System.out.println("The FileListener has stopped on " + observer.getDirectory().getAbsolutePath());
 
+		
+		
 		Platform.runLater(() -> {
 			if (data.size() != 0 && nowShowUpdateMessage) {			
 					
@@ -179,10 +181,12 @@ public class FileAlterationListenerImpl implements FileAlterationListener, ISuff
 				getMainDirectory();
 				nowShowUpdateMessage = false;
 				
+				
+				
 				if (isInternalChange) {
 					actionChange();
 				} else {
-					System.out.println("show List");
+//					System.out.println("show List");
 					vBoxMessage.setVisible(true);
 				}
 				
@@ -199,7 +203,7 @@ public class FileAlterationListenerImpl implements FileAlterationListener, ISuff
 	
 	private void getMainDirectory() {
 				
-		System.out.println("data.size(): " + data.size());
+//		System.out.println("data.size(): " + data.size());
 		
 //			ObservableList<ModelFileChanges> filter = data.stream()		
 //				.filter(p -> p.getFile().isDirectory())
@@ -220,19 +224,19 @@ public class FileAlterationListenerImpl implements FileAlterationListener, ISuff
 					res = resDirectory.get();
 					
 				} else {
-					System.err.println("ergOptional not present");
+//					System.err.println("ergOptional not present");
 					Optional<ModelFileChanges> resFiles = data.stream()		
 							.filter(p -> !IsPathDirectory( p.getFileString()))
 							.findFirst();	
 					res = resFiles.get();
 				}
 			} else {
-				System.err.println("list data is empty");
+//				System.err.println("list data is empty");
 				return;
 			}
 
 
-			System.err.println("der kleinste: " + res.getFileString());
+//			System.err.println("der kleinste: " + res.getFileString());
 			removeItem(res);
 			
 			if (!existItem(res) && !existMainDirectoryFromItem(res)) {
@@ -301,7 +305,7 @@ public class FileAlterationListenerImpl implements FileAlterationListener, ISuff
 			if (data.get(i).getFile().isDirectory() && data.get(i).getFileString().contains(erg.getFileString())) {				
 				for (String parents : checkParents(data.get(i))) {
 					if (erg.getFileString().equalsIgnoreCase(parents)) {
-						System.out.println("remove: " + data.get(i).getFile());
+//						System.out.println("remove: " + data.get(i).getFile());
 						data.remove(i);
 					}
 				}					
@@ -414,7 +418,7 @@ public class FileAlterationListenerImpl implements FileAlterationListener, ISuff
 			            .filter(x -> x.getValue().getPath().toString().equalsIgnoreCase(childItemString))
 			            .collect(Collectors.toCollection(FXCollections::observableArrayList));
 
-			System.out.println("foundedChild: " + foundedChild.get(0) + "  from: " + foundedParent);
+//			System.out.println("foundedChild: " + foundedChild.get(0) + "  from: " + foundedParent);
 			if (!foundedChild.isEmpty()) {
 				foundedChild.get(0).setExpanded(true);
 				return foundedChild.get(0);
@@ -484,7 +488,7 @@ public class FileAlterationListenerImpl implements FileAlterationListener, ISuff
 		String pathNewItem = pathTreeItem.getValue().getPath().toString();
 		String rootItem = rootTreeItem.getValue().getPath().toString();
 			
-		System.out.println("pathNewItem: " + pathNewItem + " == rootItem: " + rootItem);
+//		System.out.println("pathNewItem: " + pathNewItem + " == rootItem: " + rootItem);
 			
 		ObservableList<TreeItem<PathItem>> newList = FXCollections.observableArrayList();
 		
@@ -497,14 +501,14 @@ public class FileAlterationListenerImpl implements FileAlterationListener, ISuff
 			// TODO: handle exception
 		}
 		
-		System.out.println("newList.size() 1: " + newList.size());
+//		System.out.println("newList.size() 1: " + newList.size());
 		
 		if (newList.size() == 0) {
 			addTreeItems(rootTreeItem);
 		}
 		
 		for (TreeItem<PathItem> item : newList) {
-			System.out.println("gefundenes item: " + item.getValue().getPath().toFile());	
+//			System.out.println("gefundenes item: " + item.getValue().getPath().toFile());	
 			addTreeItems(item);
 		}
 	}
@@ -521,7 +525,7 @@ public class FileAlterationListenerImpl implements FileAlterationListener, ISuff
 			CTree.createTree(treeItem, false);    
 			
 			item.getChildren().clear();
-			System.out.println("addTreeItems in Item: " + item + " -> " + treeItem);
+//			System.out.println("addTreeItems in Item: " + item + " -> " + treeItem);
 			item.getChildren().addAll(treeItem.getChildren());
 			item.setExpanded(true);
 			tree.getSelectionModel().select(0);
@@ -539,7 +543,7 @@ public class FileAlterationListenerImpl implements FileAlterationListener, ISuff
 		for(Entry<Path, TreeItem<PathItem>> entry: listAllItems.entrySet()) {	
 			
 			  if (entry.getKey().toString().equalsIgnoreCase(pathNewItem)) {
-				  System.err.println("Item gibt es schon: " + entry.getKey() + " -> " + entry.getValue());
+//				  System.err.println("Item gibt es schon: " + entry.getKey() + " -> " + entry.getValue());
 				  return true;
 			  }
 		}
@@ -563,7 +567,7 @@ public class FileAlterationListenerImpl implements FileAlterationListener, ISuff
     	TreeItem<PathItem> foundedItem = null;
         if(root.getChildren().size() > 0){
             for(TreeItem<PathItem> subItem : root.getChildren()){
-            	System.out.println(subItem.getValue().getPath().toString() + " == " + path.toString());
+//            	System.out.println(subItem.getValue().getPath().toString() + " == " + path.toString());
             	if (subItem.getValue().getPath().toString().equalsIgnoreCase(path.toString())) {       
             		System.err.println("return: " + subItem);
             		foundedItem = subItem;   

@@ -22,9 +22,7 @@ public class FileCopyTask extends Task<Void> {
 
     public FileCopyTask(Path source, Path target) {
         this.source = source;
-        this.target = target;
-
-        
+        this.target = target; 
     }
     
     @Override
@@ -33,6 +31,8 @@ public class FileCopyTask extends Task<Void> {
         System.out.println("Start FileCopyTask");
         Files.walkFileTree(source, EnumSet.of(FileVisitOption.FOLLOW_LINKS),
                 Integer.MAX_VALUE, new CopyDirectory(source, target, this));
+        wait();
+        System.out.println("Ende FileCopyTask");
         
         return null;
     }

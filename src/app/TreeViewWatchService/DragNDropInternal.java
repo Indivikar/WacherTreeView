@@ -133,6 +133,7 @@ public class DragNDropInternal {
 	                	FileAlterationListenerImpl.isInternalChange = true;
 	                    FileCopyTask task = new FileCopyTask(source, target);
 //	                    bindUIandService(stage, task);
+//	                    new Thread(task).start();
 	                    service.submit(task);
 	                    task.setOnSucceeded(value -> {
 	                        Platform.runLater(() -> {

@@ -24,17 +24,20 @@ import org.apache.commons.io.monitor.FileAlterationListener;
 import org.apache.commons.io.monitor.FileAlterationObserver;
 
 import app.controller.CTree;
+import app.interfaces.ISaveExpandedItems;
 import app.interfaces.ISuffix;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
 import javafx.collections.ObservableSet;
 import javafx.collections.SetChangeListener;
+import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -55,25 +58,28 @@ import javafx.stage.Stage;
  * @source http://examples.javacodegeeks.com/core-java/apache/commons/io-commons/monitor/filealterationmonitor/org-apache-commons-io-monitor-filealterationmonitor-example/
  *
  */
-public class FileAlterationListenerImpl implements FileAlterationListener, ISuffix {
+public class FileAlterationListenerImpl implements FileAlterationListener, ISuffix, ISaveExpandedItems {
 
 	private CTree cTree;
 	private TreeView<PathItem> tree;
+	private PathTreeCell cell;
+	
 	private HashMap<Path, TreeItem<PathItem>> listAllItems = new HashMap<>();
 	
 	private ExecutorService executorService;
 	private ServiceRegister serviceRegister;
-//	private ServiceWaitUpdate serviceWaitUpdate;	
+	private ServiceWaitForUpdate serviceWaitForUpdate;	
+	
 	
 	
 	private Map<File, String> map = new HashMap<File, String>();
 	 
     // Now add observability by wrapping it with ObservableList.
 	private ObservableList<ModelFileChanges> data = FXCollections.observableArrayList();
-	private ObservableList<ModelFileChanges> listSaveChanges = FXCollections.observableArrayList();
+//	private ObservableList<ModelFileChanges> listSaveChanges = FXCollections.observableArrayList();
 	
 	public static boolean isInternalChange = false;
-	private boolean nowShowUpdateMessage = false;
+	private boolean startUpdate = false;
 
 	private VBox vBoxMessage;
 	
@@ -83,9 +89,10 @@ public class FileAlterationListenerImpl implements FileAlterationListener, ISuff
 	private TableColumn<ModelFileChanges, String> columnTime;
 	private Button buttonNow;
 		
-	public FileAlterationListenerImpl(CTree cTree) {
+	public FileAlterationListenerImpl(CTree cTree, PathTreeCell cell) {
 		this.cTree = cTree;
 		this.tree = cTree.getTree();
+		this.cell = cell;
 		this.vBoxMessage = cTree.getvBoxMessage();
 		this.buttonNow = cTree.getButtonNow();
 		this.tableView = cTree.getTableView();
@@ -93,6 +100,10 @@ public class FileAlterationListenerImpl implements FileAlterationListener, ISuff
 		this.columnFile = cTree.getColumnFile();
 		this.columnTime = cTree.getColumnTime();
 
+		
+		
+		serviceWaitForUpdate = new ServiceWaitForUpdate(this, cTree);
+		
 		executorService = Executors.newFixedThreadPool(1);
 //		serviceWaitUpdate = new ServiceWaitUpdate(this);
 		
@@ -103,19 +114,46 @@ public class FileAlterationListenerImpl implements FileAlterationListener, ISuff
 //			nowShowUpdateMessage = true;
 //		});
 				
+		
+//		data.addListener(new ListChangeListener<ModelFileChanges>() {
+//				@Override
+//				public void onChanged(Change<? extends ModelFileChanges> arg0) {
+//					System.out.println("data.size(): " + data.size());
+//				}
+//		    });		
+//		bindings();
 	}
 
+
+	ListChangeListener<ModelFileChanges> saveChangesListener = new ListChangeListener<ModelFileChanges>() {
+
+		@Override
+		public void onChanged(Change<? extends ModelFileChanges> c) {
+			System.out.println("change listSaveChanges: " + cTree.getListSaveChanges().size());
+			System.out.println("change data: " + data.size());
+			if (c.getList().size() == 0) {
+				vBoxMessage.setVisible(false);
+			}
+			
+			
+		}
+    };
+	
 	private void addTableViewProperties() {
 		columnAction.setCellValueFactory(new PropertyValueFactory<>("action"));
 		columnFile.setCellValueFactory(new PropertyValueFactory<>("fileString"));
 		columnTime.setCellValueFactory(new PropertyValueFactory<>("time"));
         
-		tableView.setItems(listSaveChanges);
+		cTree.getListSaveChanges().addListener(saveChangesListener);
+		tableView.setItems(cTree.getListSaveChanges());
 	}
 	
 	
 	private void setButtonAction() {
 		buttonNow.setOnAction(e -> {
+			Platform.runLater(() -> {
+				addAllExpandedItems(cTree.getTree().getRoot());
+			});
 			actionChange();
 		});		
 	}
@@ -123,146 +161,190 @@ public class FileAlterationListenerImpl implements FileAlterationListener, ISuff
 	@Override
 	public void onStart(final FileAlterationObserver observer) {
 //		System.out.println("The FileListener has started on " + observer.getDirectory().getAbsolutePath());
-		data.clear();	
+//		data.clear();	
 	}
 
 	@Override
 	public void onDirectoryCreate(final File directory) {
 //		System.out.println(directory.getAbsolutePath() + " was created.");
-		data.add(new ModelFileChanges("create", directory, getTimeStamp()));
-		nowShowUpdateMessage = true;
+//		data.add(new ModelFileChanges("create", directory, getTimeStamp()));
+		addData("create", directory, getTimeStamp());
+		startUpdate = true;
 	}
 
 	@Override
 	public void onDirectoryChange(final File directory) {
 //		System.out.println(directory.getAbsolutePath() + " wa modified");
-		data.add(new ModelFileChanges("change", directory, getTimeStamp()));
-		nowShowUpdateMessage = true;
+//		data.add(new ModelFileChanges("change", directory, getTimeStamp()));
+		addData("change", directory, getTimeStamp());
+		startUpdate = true;
 	}
 
 	@Override
 	public void onDirectoryDelete(final File directory) {		
 		System.out.println(directory.getAbsolutePath() + " was deleted.");
-		data.add(new ModelFileChanges("delete", directory, getTimeStamp()));
-		nowShowUpdateMessage = true;
+//		data.add(new ModelFileChanges("delete", directory, getTimeStamp()));
+		addData("delete", directory, getTimeStamp());
+		startUpdate = true;
 	}
 
 	@Override
 	public void onFileCreate(final File file) {
 //		System.out.println(file.getAbsoluteFile() + " was created.");
-		data.add(new ModelFileChanges("create", file, getTimeStamp()));
-		nowShowUpdateMessage = true;
+//		data.add(new ModelFileChanges("create", file, getTimeStamp()));
+		addData("create", file, getTimeStamp());
+		startUpdate = true;
 	}
 
 	@Override
 	public void onFileChange(final File file) {		
 //		System.out.println(file.getAbsoluteFile() + " was modified.");
-		data.add(new ModelFileChanges("change", file, getTimeStamp()));
-		nowShowUpdateMessage = true;
+//		data.add(new ModelFileChanges("change", file, getTimeStamp()));
+//		addData("change", file, getTimeStamp());
+		startUpdate = true;
 	}
 
 	@Override
 	public void onFileDelete(final File file) {
 //		System.out.println(file.getAbsoluteFile() + " was deleted.");
-		data.add(new ModelFileChanges("delete", file, getTimeStamp()));
-		nowShowUpdateMessage = true;
+//		data.add(new ModelFileChanges("delete", file, getTimeStamp()));
+		addData("delete", file, getTimeStamp());
+		startUpdate = true;
 	}
 
 	@Override
 	public void onStop(final FileAlterationObserver observer) {
 //		System.out.println("The FileListener has stopped on " + observer.getDirectory().getAbsolutePath());
 
-		
+//		System.err.println("onStop: " + data.size());
 		
 		Platform.runLater(() -> {
-			if (data.size() != 0 && nowShowUpdateMessage) {			
-					
-				
-				getMainDirectory();
-				nowShowUpdateMessage = false;
-				
-				
-				
-				if (isInternalChange) {
-					actionChange();
-				} else {
-//					System.out.println("show List");
-					vBoxMessage.setVisible(true);
-				}
-				
-//				for (ModelFileChanges items : listSaveChanges) {
-//					System.out.println("items in List: " + items.getFileString());
-//				}
+			if (data.size() != 0 && !serviceWaitForUpdate.isRunning()) {	
+//					System.err.println("   Starte Service: " + data.size());
+					serviceWaitForUpdate.start();
 			} 								
 		});		
+		
+		
+//		Platform.runLater(() -> {
+//			if (data.size() != 0 && startUpdate) {			
+//					
+//				
+//				if (!serviceWaitForUpdate.isRunning()) {
+//					serviceWaitForUpdate.start();
+//				}
+//				
+//				getMainDirectory();
+//				
+//
+//				if (isInternalChange) {
+//					actionChange();
+//				} else {
+////					System.out.println("show List");
+//					vBoxMessage.setVisible(true);
+//					startUpdate = false;
+//				}
+//				
+////				for (ModelFileChanges items : listSaveChanges) {
+////					System.out.println("items in List: " + items.getFileString());
+////				}
+//			} 								
+//		});		
 	}
 
 	private Timestamp getTimeStamp() {
 		return new Timestamp(System.currentTimeMillis());
 	}
 	
-	private void getMainDirectory() {
-				
-//		System.out.println("data.size(): " + data.size());
-		
-//			ObservableList<ModelFileChanges> filter = data.stream()		
-//				.filter(p -> p.getFile().isDirectory())
-//				.collect(Collectors.toCollection(FXCollections::observableArrayList)); 
-//		
-//			System.out.println("filter.size(): " + filter.size());
-//			if (filter.size() <= 1) {
-//				return;
-//			}
-			
-			ModelFileChanges res = null;
-			Optional<ModelFileChanges> resDirectory = data.stream()		
-				.filter(p -> IsPathDirectory( p.getFileString()))	
-				.min((p1, p2) -> Integer.compare(p1.getFileString().length(), p2.getFileString().length()));
-			
-			if (!data.isEmpty()) {
-				if (resDirectory.isPresent()) {
-					res = resDirectory.get();
-					
-				} else {
-//					System.err.println("ergOptional not present");
-					Optional<ModelFileChanges> resFiles = data.stream()		
-							.filter(p -> !IsPathDirectory( p.getFileString()))
-							.findFirst();	
-					res = resFiles.get();
-				}
-			} else {
-//				System.err.println("list data is empty");
-				return;
-			}
-
-
-//			System.err.println("der kleinste: " + res.getFileString());
-			removeItem(res);
-			
-			if (!existItem(res) && !existMainDirectoryFromItem(res)) {
-				listSaveChanges.add(res);	
-				sortList(listSaveChanges);				
-			}
-			data.remove(res);
-
-			getMainDirectory();
-	}
-	
-	
-	private boolean existMainDirectoryFromItem(ModelFileChanges res) {
-
-		for (ModelFileChanges item : listSaveChanges) {
-			if (item.getAction().equalsIgnoreCase(res.getAction())) {
-				for (String parents : getAllParents(res.getFile())) {
-					if (parents.equalsIgnoreCase(item.getFileString())) {
-						return true;
-					}
-				}	
-			}			
+	private void addData(String action, File file, Timestamp timestamp) {
+		if (!isFileHidden(file)) {
+			data.add(new ModelFileChanges(action, file, getTimeStamp()));
 		}
 		
-		return false;
 	}
+	
+    public boolean isFileHidden(File file) {
+        return file.isHidden();
+    }
+	
+//	private boolean isShadowFile(File file) {
+//		String name = file.getName()
+//		ObservableList<String> suffix = FXCollections.observableArrayList("tmp");
+//		ObservableList<String> startWith = FXCollections.observableArrayList("~");
+//		
+//		for (String item : startWith) {
+//			if (item.equals(anObject)) {
+//				
+//			}
+//		}
+//		
+//		
+//		
+//		return startUpdate;
+//	}
+	
+//	public void getMainDirectory() {
+//				
+//		System.out.println("data.size(): " + data.size());
+//		
+////			ObservableList<ModelFileChanges> filter = data.stream()		
+////				.filter(p -> p.getFile().isDirectory())
+////				.collect(Collectors.toCollection(FXCollections::observableArrayList)); 
+////		
+////			System.out.println("filter.size(): " + filter.size());
+////			if (filter.size() <= 1) {
+////				return;
+////			}
+//			
+//			ModelFileChanges res = null;
+//			Optional<ModelFileChanges> resDirectory = data.stream()		
+//				.filter(p -> IsPathDirectory( p.getFileString()))	
+//				.min((p1, p2) -> Integer.compare(p1.getFileString().length(), p2.getFileString().length()));
+//			
+//			if (!data.isEmpty()) {
+//				if (resDirectory.isPresent()) {
+//					res = resDirectory.get();
+//					
+//				} else {
+//					System.err.println("ergOptional not present");
+//					Optional<ModelFileChanges> resFiles = data.stream()		
+//							.filter(p -> !IsPathDirectory( p.getFileString()))
+//							.findFirst();	
+//					res = resFiles.get();
+//				}
+//			} else {
+//				System.err.println("list data is empty");
+//				return;
+//			}
+//
+//
+//			System.err.println("der kleinste: " + res.getFileString());
+//			removeItem(res);
+//			
+//			if (!existItem(res) && !existMainDirectoryFromItem(res)) {
+//				listSaveChanges.add(res);	
+//				sortList(listSaveChanges);				
+//			}
+//			data.remove(res);
+//
+//			getMainDirectory();
+//	}
+	
+	
+//	private boolean existMainDirectoryFromItem(ModelFileChanges res) {
+//
+//		for (ModelFileChanges item : listSaveChanges) {
+//			if (item.getAction().equalsIgnoreCase(res.getAction())) {
+//				for (String parents : getAllParents(res.getFile())) {
+//					if (parents.equalsIgnoreCase(item.getFileString())) {
+//						return true;
+//					}
+//				}	
+//			}			
+//		}
+//		
+//		return false;
+//	}
 
 	private ObservableList<String> getAllParents(File file) {
 		ObservableList<String> parents = FXCollections.observableArrayList();
@@ -290,28 +372,28 @@ public class FileAlterationListenerImpl implements FileAlterationListener, ISuff
 	    }
 	}
 	
-	private boolean existItem(ModelFileChanges erg) {
-		for (ModelFileChanges item : listSaveChanges) {
-			if (item.equals(erg)) {
-				return true;
-			}
-		}
-		return false;		
-	}
+//	private boolean existItem(ModelFileChanges erg) {
+//		for (ModelFileChanges item : listSaveChanges) {
+//			if (item.equals(erg)) {
+//				return true;
+//			}
+//		}
+//		return false;		
+//	}
 	
-	private void removeItem(ModelFileChanges erg) {
-		
-		for (int i = 0; i < data.size(); i++) {
-			if (data.get(i).getFile().isDirectory() && data.get(i).getFileString().contains(erg.getFileString())) {				
-				for (String parents : checkParents(data.get(i))) {
-					if (erg.getFileString().equalsIgnoreCase(parents)) {
-//						System.out.println("remove: " + data.get(i).getFile());
-						data.remove(i);
-					}
-				}					
-			}
-		}
-	}
+//	private void removeItem(ModelFileChanges erg) {
+//		
+//		for (int i = 0; i < data.size(); i++) {
+//			if (data.get(i).getFile().isDirectory() && data.get(i).getFileString().contains(erg.getFileString())) {				
+//				for (String parents : checkParents(data.get(i))) {
+//					if (erg.getFileString().equalsIgnoreCase(parents)) {
+////						System.out.println("remove: " + data.get(i).getFile());
+//						data.remove(i);
+//					}
+//				}					
+//			}
+//		}
+//	}
 	
 	private ObservableList<String> checkParents(ModelFileChanges modelFileChanges) {
 		ObservableList<String> list = FXCollections.observableArrayList();
@@ -330,8 +412,8 @@ public class FileAlterationListenerImpl implements FileAlterationListener, ISuff
 		return list;
 	}
 	
-	private void actionChange() {
-		ActionChangeTask ActionChangeTask = new ActionChangeTask(this);
+	public void actionChange() {
+		ActionChangeTask ActionChangeTask = new ActionChangeTask(this, cTree);
 		bindUIandService(cTree.getPrimaryStage(), ActionChangeTask);
 		executorService.submit(ActionChangeTask);
 		new Thread(ActionChangeTask).start();
@@ -376,11 +458,11 @@ public class FileAlterationListenerImpl implements FileAlterationListener, ISuff
 //		}		
 //		listSaveChanges.clear();
 		
-		ActionChangeTask.setOnSucceeded(e -> {
+//		ActionChangeTask.setOnSucceeded(e -> {
 			vBoxMessage.setVisible(false);
-			isInternalChange = false;
-		});
-		
+////			isInternalChange = false;
+//		});
+		System.out.println("actionChange Ende");
 
 	}
 	
@@ -521,17 +603,21 @@ public class FileAlterationListenerImpl implements FileAlterationListener, ISuff
         
         File treeItemFile =  treeItem.getValue().getPath().toFile();
         
+//        System.err.println("treeItem: " + treeItem);
+        
         if (treeItemFile.exists()) {
+        	
 			CTree.createTree(treeItem, false);    
 			
 			item.getChildren().clear();
-//			System.out.println("addTreeItems in Item: " + item + " -> " + treeItem);
-			item.getChildren().addAll(treeItem.getChildren());
+			System.out.println("addTreeItems in Item: " + item + " -> " + treeItem);
+			item.getChildren().addAll(treeItem.getChildren());			
 			item.setExpanded(true);
 			tree.getSelectionModel().select(0);
-			tree.getFocusModel().focus(0);
-//			tree.refresh();			
+			tree.getFocusModel().focus(0);			
+//			tree.refresh();					
 		}
+        System.err.println("addTreeItems Ende");
 	}
 	
 	private boolean isItemExist(TreeItem<PathItem> pathTreeItem, TreeItem<PathItem> rootTreeItem) {
@@ -583,9 +669,12 @@ public class FileAlterationListenerImpl implements FileAlterationListener, ISuff
 		return foundedItem;
     }
 
-	public ObservableList<ModelFileChanges> getListSaveChanges() {return listSaveChanges;}
+    
+	public ObservableList<ModelFileChanges> getData() {return data;}
+//	public ObservableList<ModelFileChanges> getListSaveChanges() {return listSaveChanges;}
 	public TreeView<PathItem> getTree() {return tree;}
 	public VBox getvBoxMessage() {return vBoxMessage;}
+	
 	
 	   
 //    private void removeFromRoot(Path path) {

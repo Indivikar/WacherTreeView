@@ -7,10 +7,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
+import app.interfaces.ISaveExpandedItems;
 import app.models.ExistFiles;
 import app.models.ReplaceOrIgnore;
+import app.test.dragNdropMitAnimation.TaskNode;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
@@ -19,20 +22,28 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
+import javafx.event.EventHandler;
 import javafx.scene.Cursor;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Label;
+import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.Dragboard;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-public class DragNDropInternal {
+public class DragNDropInternal implements ISaveExpandedItems{
 
+	private boolean isMove;
+	private TreeCell<PathItem> dropZone;
+	private TreeItem<TaskNode> draggedItem;
+	private static final String DROP_HINT_STYLE = "-fx-border-color: #eea82f; -fx-border-width: 0 0 2 0; -fx-padding: 3 3 1 3";
 	private ObservableList<ExistFiles> listExistFiles = FXCollections.observableArrayList();
+	
 	
 	public DragNDropInternal(Stage stage, ExecutorService service, final PathTreeCell cell) {
 		
@@ -44,8 +55,6 @@ public class DragNDropInternal {
 		setDragDone(cell);
 	}
 
-	
-	
 	private void setDragDetected(PathTreeCell cell) {
         cell.setOnDragDetected(event -> {
             TreeItem<PathItem> item = cell.getTreeItem();
@@ -56,6 +65,7 @@ public class DragNDropInternal {
                 List<File> files = Arrays.asList(cell.getTreeItem().getValue().getPath().toFile());
                 content.putFiles(files);
                 db.setContent(content);
+                db.setDragView(cell.snapshot(null, null));
                 event.consume();
             }
         });
@@ -64,15 +74,24 @@ public class DragNDropInternal {
 	private void setDragOver(PathTreeCell cell) {
         cell.setOnDragOver(event -> {
             TreeItem<PathItem> item = cell.getTreeItem();
-            if (item != null &&
-                    event.getGestureSource() != cell &&
-                    event.getDragboard().hasFiles()) {           
-                Path targetPath = cell.getTreeItem().getValue().getPath();
+            if (item != null && event.getGestureSource() != cell && event.getDragboard().hasFiles()) {
+                Path targetPath = cell.getTreeItem().getValue().getPath();                
                 PathTreeCell sourceCell = (PathTreeCell) event.getGestureSource();
-                final Path sourceParentPath = sourceCell.getTreeItem().getValue().getPath().getParent();
-                if (sourceParentPath.compareTo(targetPath) != 0) {
-                    event.acceptTransferModes(TransferMode.COPY);
-                }
+
+                if (sourceCell == null) {
+					// external Drag N Drop
+					event.acceptTransferModes(TransferMode.COPY);          
+					isMove = false;
+//					System.out.println("external");
+				} else {
+					// internal Drag N Drop
+					final Path sourceParentPath = sourceCell.getTreeItem().getValue().getPath().getParent();	                
+	                if (sourceParentPath.compareTo(targetPath) != 0) {
+	                    event.acceptTransferModes(TransferMode.COPY);
+	                    isMove = true;
+//	                    System.out.println("internal");
+	                }
+				}
             }
             event.consume();
         });
@@ -85,11 +104,7 @@ public class DragNDropInternal {
                     event.getGestureSource() != cell &&
                     event.getDragboard().hasFiles()) {
                 Path targetPath = cell.getTreeItem().getValue().getPath();
-                PathTreeCell sourceCell = (PathTreeCell) event.getGestureSource();
-//                final Path sourceParentPath = sourceCell.getTreeItem().getValue().getPath().getParent();
-//                if (sourceParentPath.compareTo(targetPath) != 0) {
-//                    cell.setStyle("-fx-background-color: powderblue;");
-//                }                
+                PathTreeCell sourceCell = (PathTreeCell) event.getGestureSource();               
             }
             event.consume();
         });
@@ -97,42 +112,24 @@ public class DragNDropInternal {
 	
 	private void setDragExited(PathTreeCell cell) {
         cell.setOnDragExited(event -> {
-//            cell.setStyle("-fx-background-color: white");
-//            event.consume();
+
         });
 	}
 	
 	private void setDragDropped(Stage stage, ExecutorService service, PathTreeCell cell) {
 		 cell.setOnDragDropped(event -> {
+			 
+			 	addAllExpandedItems(cell.getTreeView().getRoot());
 	            Dragboard db = event.getDragboard();
 	            boolean success = false;	            
 	            if (db.hasFiles()) {
 	                final Path source = db.getFiles().get(0).toPath();
 	                final Path target = Paths.get(cell.getTreeItem().getValue().getPath().toAbsolutePath().toString(), source.getFileName().toString());
-//	                if (Files.exists(target, LinkOption.NOFOLLOW_LINKS)) {
-//	                    Platform.runLater(() -> {
-//	                    	System.out.println(1);
-////	                    	getAllExistFiles(source.toFile(), target.toFile());
-////	                    	alertExist();	                    	
-//	                    	FileAlterationListenerImpl.isInternalChange = true;
-//	                        BooleanProperty replaceProp = new SimpleBooleanProperty();
-////	                        CopyModalDialog dialog = new CopyModalDialog(stage, replaceProp);
-//	                        
-//	                        
-////	                        replaceProp.addListener((ObservableValue<? extends Boolean> ov, Boolean oldValue, Boolean newValue) -> {
-////	                            if (newValue) {
-//	                            	System.out.println(2);
-//	                                FileCopyTask task = new FileCopyTask(source, target);
-////	                                bindUIandService(stage, task);
-//	                                service.submit(task);
-////	                            }
-////	                        });
-//	                    });
-//	                } else {
+
 	                	System.out.println(3);
 	                	FileAlterationListenerImpl.isInternalChange = true;
-	                    FileCopyTask task = new FileCopyTask(source, target);
-//	                    bindUIandService(stage, task);
+	                    FileCopyTask task = new FileCopyTask(source, target, isMove);
+	                    bindUIandService(stage, task);
 //	                    new Thread(task).start();
 	                    service.submit(task);
 	                    task.setOnSucceeded(value -> {
@@ -155,69 +152,6 @@ public class DragNDropInternal {
         });
 	}
 	
-	
-	private void getExist() {
-		for(Path entry: stream){
-			  if(entry.toFile().exists()){
-			    log.info("working on file " + entry.getFileName());
-			  }
-			}
-
-	}
-	
-	private void alertExist() {
-		Alert alert = new Alert(AlertType.ERROR);
-		alert.setTitle("Dialog");
-		alert.setHeaderText("Files exist");
-		alert.setContentText(null);
-
-
-		VBox expContent = new VBox();
-
-		Label label = new Label("The exception stacktrace was:");
-
-		expContent.getChildren().addAll(label, new TableViewExistFiles());
-
-		// Set expandable Exception into the dialog pane.
-		alert.getDialogPane().setExpandableContent(expContent);
-
-		alert.showAndWait();
-
-	}
-	
-	
-    private void getAllExistFiles(File source, File target) {
-
-        File[] filesList = source.listFiles();
-        for(File f : filesList){
-            if(f.isDirectory())
-            	if (searchFile(f, target)) {
-            		long fileSizeInMB  = f.length() / 1024 / 1024;
-					listExistFiles.add(new ExistFiles(f.getName(), ReplaceOrIgnore.Ignore.getCode(), f.getAbsolutePath(), fileSizeInMB + ""));
-				}
-            	getAllExistFiles(f, target);
-            if(f.isFile()){
-                System.out.println(f.getName());
-            }
-        }
-    }
-	
-    private boolean searchFile(File file, File dirTarget) {
-
-        File[] filesList = dirTarget.listFiles();
-        for(File f : filesList){
-            if(f.isDirectory())
-            	if (f.exists()) {
-            		return true;
-				}
-            	searchFile(dirTarget, file);
-            if(f.isFile()){
-                System.out.println(f.getName());
-            }
-        }        
-        return false;     
-    }
-    
     private void bindUIandService(Stage stage, Task task) {
         stage.getScene()
                 .getRoot()

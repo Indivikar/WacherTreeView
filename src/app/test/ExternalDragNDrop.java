@@ -26,7 +26,7 @@ public class ExternalDragNDrop extends Application {
                 if (event.getGestureSource() != dragTarget
                         && event.getDragboard().hasFiles()) {
                     /* allow for both copying and moving, whatever user chooses */
-                    event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
+                    event.acceptTransferModes(TransferMode.COPY);
                 }
                 event.consume();
             }

@@ -47,9 +47,6 @@ public class ServiceRegister extends Task<Void>{
 	protected void failed() {
 
 	}
-	
-
-
 
 	@Override
 	protected Void call() throws Exception {		
@@ -91,17 +88,6 @@ public class ServiceRegister extends Task<Void>{
 		System.out.println("pathNewItem: " + pathNewItem + " == rootItem: " + rootItem);
 
 
-//		listeAlleOrdner.clear();
-//		populateMap(rootTreeItem);
-//		
-//		// gibt es im Tree, das Item schon, wenn ja -> abbrechen
-//		for(Entry<Path, TreeItem<PathItem>> entry: listeAlleOrdner.entrySet()) {	
-//			
-//			  if (entry.getKey().toString().equalsIgnoreCase(pathNewItem)) {
-//				  System.err.println("Item gibt es schon: " + entry.getKey() + " -> " + entry.getValue());
-//				  return;
-//			  }
-//		}
 				
 		ObservableList<TreeItem<PathItem>> newList = FXCollections.observableArrayList();
 		

@@ -3,6 +3,7 @@ package app.TreeViewWatchService;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import app.controller.CTree;
 import javafx.beans.binding.Bindings;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -12,15 +13,18 @@ import javafx.stage.Stage;
 
 public class ActionChangeTask extends Task<Void>{
 
+		private CTree cTree;
 		private FileAlterationListenerImpl fileAlterationListenerImpl;
+		
 	
-	    public ActionChangeTask(FileAlterationListenerImpl fileAlterationListenerImpl) {
+	    public ActionChangeTask(FileAlterationListenerImpl fileAlterationListenerImpl, CTree cTree) {
+	    	this.cTree = cTree;
 	    	this.fileAlterationListenerImpl = fileAlterationListenerImpl;
 	    }
 	    
 	    @Override
 	    protected Void call() throws Exception {
-	    	ObservableList<ModelFileChanges> listSaveChanges = fileAlterationListenerImpl.getListSaveChanges();
+	    	ObservableList<ModelFileChanges> listSaveChanges = cTree.getListSaveChanges();
 	    	TreeView<PathItem> tree = fileAlterationListenerImpl.getTree();
 	    	
 			for (ModelFileChanges item : fileAlterationListenerImpl.sortList(listSaveChanges)) {
@@ -29,18 +33,20 @@ public class ActionChangeTask extends Task<Void>{
 				if (Files.isDirectory(item.getFile().toPath())) {
 					System.out.println("its a Directory: " + item.getFileString());
 					if (item.getAction().equalsIgnoreCase("create") && item.getFile().exists()) {
+						System.out.println("create");
 						fileAlterationListenerImpl.registerAll(item.getFile().toPath()); 
-//						TreeItem<PathItem> pathTreeItem = new TreeItem<PathItem> (new PathItem(item.getFile().toPath()));
-//				    	TreeItem<PathItem> foundedParent = getFoundedParent(pathTreeItem.getValue().getPath(), tree.getRoot());
-//				    	TreeItem<PathItem> selectChild = selectChild(pathTreeItem.getValue().getPath(), foundedParent);
+						break;
 					}
 					
 					if (item.getAction().equalsIgnoreCase("change") && item.getFile().exists()) {
+						System.out.println("change");
 						fileAlterationListenerImpl.removeFromRoot(tree.getRoot(), item.getFile().toPath());
-						fileAlterationListenerImpl.registerAll(item.getFile().toPath()); 
+						fileAlterationListenerImpl.registerAll(item.getFile().toPath()); 	
+						break;
 					}
 
 					if (item.getAction().equalsIgnoreCase("delete") && !item.getFile().exists()) {
+						System.out.println("delete");
 						fileAlterationListenerImpl.removeFromRoot(tree.getRoot(), item.getFile().toPath());
 					}				
 				} else {
@@ -62,8 +68,8 @@ public class ActionChangeTask extends Task<Void>{
 				}
 			}		
 			listSaveChanges.clear();
-//			fileAlterationListenerImpl.getvBoxMessage().setVisible(false);
-//			fileAlterationListenerImpl.isInternalChange = false;
+		
+			System.out.println("ActionChangeTask Ende");
 	        return null;
 	    }	
 

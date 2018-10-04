@@ -9,6 +9,7 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Map.Entry;
 import java.util.ResourceBundle;
 
 import app.StartWacherDemo;
@@ -16,8 +17,8 @@ import app.TreeViewWatchService.FileMonitor;
 import app.TreeViewWatchService.ModelFileChanges;
 import app.TreeViewWatchService.PathItem;
 import app.TreeViewWatchService.PathTreeCell;
-import app.TreeViewWatchService.WatchTask3;
 import app.TreeViewWatchService.WindowsExplorerComparator;
+import app.interfaces.ISaveExpandedItems;
 import app.interfaces.ISuffix;
 import app.interfaces.ISystemIcon;
 import javafx.beans.property.SimpleStringProperty;
@@ -27,21 +28,20 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 
-public class CTree implements Initializable, ISuffix, ISystemIcon{
+public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpandedItems {
 
+	String mainDirectory = "H:\\test";
+	
 	private StartWacherDemo startWacherDemo;
 	private Stage primaryStage;
 	
@@ -52,6 +52,7 @@ public class CTree implements Initializable, ISuffix, ISystemIcon{
 
 	private static ObservableList<TreeItem<PathItem>> listFiles = FXCollections.observableArrayList();
 
+	private ObservableList<ModelFileChanges> listSaveChanges = FXCollections.observableArrayList();
 	public static HashMap<String, Image> suffixIcon = new HashMap<>();
 	
 	private StringProperty messageProp = new SimpleStringProperty();
@@ -79,12 +80,11 @@ public class CTree implements Initializable, ISuffix, ISystemIcon{
 	@Override
 	public void initialize(URL arg0, ResourceBundle arg1) {
 //		service = Executors.newFixedThreadPool(1);
-		textFieldRootDirectory.setText("H:\\Test");
+//		textFieldRootDirectory.setText("H:\\Test");
+		textFieldRootDirectory.setText(mainDirectory);
 		
 		setButtonAction();
 		setPropUpdateMessage();
-//		loadTree(primaryStage);
-		
 	}
 
 	private void setPropUpdateMessage() {
@@ -111,8 +111,11 @@ public class CTree implements Initializable, ISuffix, ISystemIcon{
 
 	}
 	
-	private void loadTree(Stage primaryStage) {
-		loadTree(primaryStage, "H:\\Test");
+	public void loadTree() {
+		listSaveChanges.clear();
+		addAllExpandedItems(tree.getRoot());
+//		loadTree(primaryStage, "H:\\Test");
+		loadTree(primaryStage, mainDirectory);
 	}
 	
 	private void loadTree(Stage primaryStage, String rootDirectory) {
@@ -125,64 +128,67 @@ public class CTree implements Initializable, ISuffix, ISystemIcon{
         createTree(treeItem, false);
         
         tree.setRoot(treeItem);
-        tree.getRoot().setExpanded(true);      
+        tree.getRoot().setExpanded(true);    
+        
+        tree.getRoot().expandedProperty().addListener((o, oldVal, newVal) -> {
+        	System.out.println(newVal + " - " + o.getValue());
+        });
+        
 		tree.setFixedCellSize(35);
         tree.setCellFactory((TreeView<PathItem> p) -> {
-            cell = new PathTreeCell(primaryStage);
-            
-//            new DragNDropInternal(primaryStage, service, cell);
-//            setDragDropEvent(stage, cell);
+            cell = new PathTreeCell(this, primaryStage);           
             return cell;
         });
         
-        FileMonitor fileMonitor = new FileMonitor(this, "H:\\Test", 1000);
+//        FileMonitor fileMonitor = new FileMonitor(this, cell, "H:\\Test", 1000);
+        FileMonitor fileMonitor = new FileMonitor(this, cell, mainDirectory, 1000);
         fileMonitor.startFileMonitor();    
-//        try {
-//        	boolean recursive = true;
-//        	WatchTask3 watchTask = new WatchTask3(rootPath, recursive, cell, tree);       	
-//        	service.submit(watchTask);
-//        	
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
 
 	}
 	
-    public static void createTree(TreeItem<PathItem> rootItem, boolean expand) {
+    public static void createTree(TreeItem<PathItem> oldItem, boolean expand) {
     	
-    	if (rootItem.getValue().getPath().toFile().isDirectory()) {
+    	if (oldItem.getValue().getPath().toFile().isDirectory()) {
 
-			try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(rootItem.getValue().getPath())){
+			try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(oldItem.getValue().getPath())){
 	
 	            for (Path path : directoryStream) {
 	                TreeItem<PathItem> newItem = new TreeItem<PathItem>( new PathItem( path));
   
-	                rootItem.getChildren().add(newItem);
-	                sortMyList(rootItem.getChildren());
-	                if (Files.isDirectory(path)) {
-	                    createTree(newItem, expand);
-	                } else {
-	                	File file = newItem.getValue().getPath().toFile();
-						addSuffixAndImage(file.getName(), ISystemIcon.getSystemImageView(file));
+	                // is File Hidden, not add in Tree
+	                if (!newItem.getValue().getPath().toFile().isHidden()) {
+	                	
+						oldItem.getChildren().add(newItem);
+		                sortMyList(oldItem.getChildren());
+		                if (Files.isDirectory(path)) {
+		                    createTree(newItem, expand);
+		                } else {
+		                	File file = newItem.getValue().getPath().toFile();
+							addSuffixAndImage(file.getName(), ISystemIcon.getSystemImageView(file));
+						}
 					}
+	                
 	            }
 	            directoryStream.close();
 	            
-		        rootItem.setExpanded(true);
-				rootItem.setExpanded(false);
-				rootItem.setExpanded(expand);
+	            // Expand saved items
+				for (Entry<Path, TreeItem<PathItem>> item : saveExpandedItems.entrySet()) {	
+					if (item.getKey().toString().equals(oldItem.getValue().getPath().toString())) {
+						System.err.println("rootItem expand: " + oldItem);
+						oldItem.setExpanded(true);
+					} 
+				}							
 	        }
 			
 	        // catch exceptions, e. g. java.nio.file.AccessDeniedException: c:\System Volume Information, c:\$RECYCLE.BIN
 	        catch( Exception ex) {
 	            ex.printStackTrace();
 	        }
-		}    	
+		}  
+//    	System.out.println("createTree Ende");
     }
     
 	private static void addSuffixAndImage(String name, Image image) {
-//		System.out.println("Add Icon from: " + name);
 		suffixIcon.put(ISuffix.getSuffix(name), image);
 	}
     
@@ -197,16 +203,13 @@ public class CTree implements Initializable, ISuffix, ISystemIcon{
         });
     }
     
-
-    // Getter
-//	public ExecutorService getService() {return service;}
-    
+    // Getter    
     public TreeView<PathItem> getTree() {return tree;}
+	public PathTreeCell getCell() {return cell;}
 	public Stage getPrimaryStage() {return primaryStage;}
 	public VBox getvBoxMessage() {return vBoxMessage;}
-//	public ListView<File> getListViewChanges() {return listViewChanges;}
-//	public Button getButtonLater() {return buttonLater;}
 	public Button getButtonNow() {return buttonNow;}	
+	public ObservableList<ModelFileChanges> getListSaveChanges() {return listSaveChanges;}
 	public static HashMap<String, Image> getSuffixIcon() {return suffixIcon;}
 	public TableView<ModelFileChanges> getTableView() {return tableView;}
 	public TableColumn<ModelFileChanges, String> getColumnAction() {return columnAction;}
@@ -217,7 +220,7 @@ public class CTree implements Initializable, ISuffix, ISystemIcon{
 		this.startWacherDemo = startWacherDemo;
 		this.primaryStage = primaryStage;		
 		
-		loadTree(primaryStage);
+		loadTree();
 	}
 
 

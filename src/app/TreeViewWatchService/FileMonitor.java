@@ -13,11 +13,13 @@ import javafx.scene.control.TreeView;
 public class FileMonitor {
 
 	private CTree cTree;
+	private PathTreeCell cell;
 	private final FileAlterationMonitor monitor;
     
 	
-	public FileMonitor(CTree cTree, String root, long intervalInMilliSec) {
+	public FileMonitor(CTree cTree, PathTreeCell cell, String root, long intervalInMilliSec) {
 		this.cTree = cTree;
+		this.cell = cell;
 
 		final File directory = new File(root);
 
@@ -25,7 +27,7 @@ public class FileMonitor {
 		FileAlterationObserver fao = new FileAlterationObserver(directory);
 		
 		// Create a new FileAlterationListenerImpl and pass it the previously created FileAlterationObserver
-		fao.addListener(new FileAlterationListenerImpl(cTree));
+		fao.addListener(new FileAlterationListenerImpl(cTree, cell));
 
 		// Create a new FileAlterationMonitor with the given pollingInterval period
 		monitor = new FileAlterationMonitor(

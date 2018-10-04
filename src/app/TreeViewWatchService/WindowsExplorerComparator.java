@@ -12,6 +12,8 @@ import javafx.scene.control.TreeItem;
 
 public class WindowsExplorerComparator implements Comparator<PathItem> {
 
+	// TODO - Sortiert wie in Windows, noch auf die internetseite bringen, als example
+	
     private static final Pattern splitPattern = Pattern.compile("\\d+|\\.|\\s");
 
     @Override

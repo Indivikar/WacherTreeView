@@ -32,19 +32,20 @@ public class CopyDirectory extends SimpleFileVisitor<Path> {
 	  private Path target;
 	  private FileCopyTask fileCopyTask;
 	  
+	  private boolean isMove;
 	  private boolean isSameForAll = false;
 	  private boolean replaceYes = false;
 	  
-	  public CopyDirectory(Path source, Path target, FileCopyTask fileCopyTask) {
+	  public CopyDirectory(Path source, Path target, FileCopyTask fileCopyTask, boolean isMove) {
 		    this.source = source;
 		    this.target = target;
 		    this.fileCopyTask = fileCopyTask;
-		    	    
+		    this.isMove = isMove;	    
+		    
 		    System.out.println("CopyDirectory: target -> " + target);
 	  }
 
-	  
-	    public void next(){
+		public void next(){
 	        synchronized(lock){
 	            lock.notify();
 	        }   
@@ -80,7 +81,7 @@ public class CopyDirectory extends SimpleFileVisitor<Path> {
   			
 		  	if (isSameForAll) {
 		  		  if (replaceYes) {
-		  			copyAndDeleteOldFile(file, fileTarget);
+		  			copyOrMove(file, fileTarget, isMove);
 		  		  }        		  
 		  	  }  else {		 		
 		  		  	new StageFileIsExist(this, file);
@@ -95,13 +96,13 @@ public class CopyDirectory extends SimpleFileVisitor<Path> {
 				
 				    if (replaceYes) {
 			    		System.out.println("Source: " + this.source + "  ->  target: " + this.target);
-			    		copyAndDeleteOldFile(file, fileTarget);
+			    		copyOrMove(file, fileTarget, isMove);
 				    }		
 		  	  }
   			
           } else {
 //        	  System.err.println("    Copy File -> " + fileTarget);
-        	  copyAndDeleteOldFile(file, fileTarget);
+        	  copyOrMove(file, fileTarget, isMove);
           }        
           return super.visitFile(file, attrs);
       }
@@ -134,11 +135,13 @@ public class CopyDirectory extends SimpleFileVisitor<Path> {
       }
        
       
-      private void copyAndDeleteOldFile(Path file, Path fileTarget) {
+      private void copyOrMove(Path file, Path fileTarget, boolean isMove) {
 	    	try {
 				Files.copy(file, fileTarget, StandardCopyOption.REPLACE_EXISTING);
 				if (fileTarget.toFile().exists()) {
-		    		file.toFile().delete();
+					if (isMove) {
+						file.toFile().delete();
+					}		    		
 		    	}
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -152,41 +155,7 @@ public class CopyDirectory extends SimpleFileVisitor<Path> {
     	        return !dirStream.iterator().hasNext();
     	    }
     	}
-      
-//	  @Override
-//	  public FileVisitResult visitFile(Path file, BasicFileAttributes attributes)
-//	      throws IOException {
-//	    System.out.println("Copying 1: " + source.relativize(file) + " -> " + target.resolve(source.relativize(file)));
-//	    Files.copy(file, target.resolve(source.relativize(file)));
-//	    return FileVisitResult.CONTINUE;
-//	  }
-//
-//	  @Override
-//	  public FileVisitResult preVisitDirectory(Path directory,
-//	      BasicFileAttributes attributes) throws IOException {
-//	    Path targetDirectory = target.resolve(source.relativize(directory));
-//	    try {
-//	      System.out.println("Copying 2: " + source.relativize(directory) + " -> " + targetDirectory);
-//	      Files.copy(directory, targetDirectory);
-//	    } catch (FileAlreadyExistsException e) {
-//	      if (!Files.isDirectory(targetDirectory)) {
-//	        throw e;
-//	      }
-//	    }
-//	    return FileVisitResult.CONTINUE;
-//	  }
-	  
-     
-      
-//	  private void alertExists(Path path) {
-//		    Alert alert = createAlertWithOptOut(AlertType.CONFIRMATION, "Exit", null, 
-//	                  "This file \"" +  + "\" is exists. Are you replace this file", "same for all files" , ButtonType.YES, ButtonType.NO);
-//		    if (alert.showAndWait().filter(t -> t == ButtonType.YES).isPresent()) {
-//	
-//		    }
-//	  }
-      
-      
+
 	  public Alert createAlertWithOptOut(AlertType type, String title, String headerText, 
 		              String message, String optOutMessage,
 		              ButtonType... buttonTypes) {

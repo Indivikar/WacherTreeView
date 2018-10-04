@@ -2,13 +2,12 @@ package app.interfaces;
 
 public interface ISuffix {
 	
-	public static String getSuffix(String dateiName){
+	public static String getSuffix(String fileName){
 		
 		String suffix = null;
-		if ( dateiName.lastIndexOf( '.' ) > 0 ) // das > ist pure Absicht, damit versteckte Dateien nicht als Dateiendung interpretiert werden!
+		if ( fileName.lastIndexOf( '.' ) > 0 ) // Do not consider files without a dot
 		{
-		  suffix = dateiName.substring(dateiName.lastIndexOf('.'));
-//		  System.out.println("DateiEndung: " + suffix);
+		  suffix = fileName.substring(fileName.lastIndexOf('.'));
 		}
 		else
 		{
@@ -17,4 +16,20 @@ public interface ISuffix {
 
 		return suffix;
 	}
+	
+	public default String suffixRemove(String fileName){
+
+		String withoutSuffix = null;
+		if ( fileName.lastIndexOf( '.' ) > 0 ) // Do not consider files without a dot
+		{
+			withoutSuffix = fileName.substring(0, fileName.lastIndexOf('.'));
+		}
+		else
+		{
+			withoutSuffix = "";
+		}
+
+		return withoutSuffix;
+	}
+	
 }

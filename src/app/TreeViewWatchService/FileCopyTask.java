@@ -11,18 +11,16 @@ import javafx.concurrent.Task;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 
-/**
- * File copy Task
- * 
- * @author tomo
- */
+
 public class FileCopyTask extends Task<Void> {
     private Path source;
     private Path target;
-
-    public FileCopyTask(Path source, Path target) {
+    private boolean isMove;
+    
+    public FileCopyTask(Path source, Path target, boolean isMove) {
         this.source = source;
         this.target = target; 
+        this.isMove = isMove;
     }
     
     @Override
@@ -30,7 +28,7 @@ public class FileCopyTask extends Task<Void> {
 //        Files.move(this.source, this.target);
         System.out.println("Start FileCopyTask");
         Files.walkFileTree(source, EnumSet.of(FileVisitOption.FOLLOW_LINKS),
-                Integer.MAX_VALUE, new CopyDirectory(source, target, this));
+                Integer.MAX_VALUE, new CopyDirectory(source, target, this, isMove));
         wait();
         System.out.println("Ende FileCopyTask");
         

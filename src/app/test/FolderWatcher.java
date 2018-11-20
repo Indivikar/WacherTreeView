@@ -6,7 +6,6 @@ import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 
-import org.apache.log4j.Logger;
 
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
@@ -20,7 +19,7 @@ public class FolderWatcher {
 //	static Logger log = Logger.getLogger(FolderWatcher.class);
 	public static Integer mExecId = 0;
 	
-	private static final String inputDirPath = "D:\\Test";
+	private static final String inputDirPath = "D:\\Test\\___DB___";
 
 	public static void main(String[] args) {
 

@@ -19,6 +19,8 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.ContextMenu;
+import javafx.scene.control.SelectionMode;
+import javafx.scene.control.SelectionModel;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
@@ -30,6 +32,8 @@ import javafx.stage.Stage;
 
 public class PathTreeCell extends TreeCell<PathItem> implements ISuffix, ISystemIcon, IOpenFile{
 	private Stage primaryStage;
+	private CTree cTree;
+	
     private TextField textField;
     private Path editingPath;
     private StringProperty messageProp;
@@ -38,12 +42,21 @@ public class PathTreeCell extends TreeCell<PathItem> implements ISuffix, ISystem
     private ExecutorService service = Executors.newFixedThreadPool(1);
     private ObservableList<String> listAllLockedFiles = FXCollections.observableArrayList();
 
+    private int index;
     
-    public PathTreeCell(CTree cTree, Stage primaryStage) {    	
-    	this.fileMenu = new CellContextMenu(this, cTree, listAllLockedFiles);
-        DragNDropInternal DragNDropInternal = new DragNDropInternal(primaryStage, service, this);
+    public PathTreeCell(CTree cTree, Stage primaryStage) {  
+    	this.cTree = cTree;
+    	this.fileMenu = new CellContextMenu(this, primaryStage, cTree, listAllLockedFiles);
+        DragNDropInternal DragNDropInternal = new DragNDropInternal(primaryStage, service, this);     
     }
 
+    public void selectCell() {
+    	System.err.println("CellIndex: " + getIndex());
+//    	System.err.println("CellName: " + getTreeItem().getValue().getPath());
+    	getTreeView().getSelectionModel().clearSelection();
+    	getTreeView().getSelectionModel().select(getIndex());
+    }
+    
 	@Override
     protected void updateItem(PathItem item, boolean empty) {
         super.updateItem(item, empty);
@@ -54,8 +67,18 @@ public class PathTreeCell extends TreeCell<PathItem> implements ISuffix, ISystem
         } else {
 
         		String name = getString();
+        		indexProperty().addListener(e -> {
+//        			System.out.println("--- Set Index " +  getIndex());
+        			item.setRow(getIndex());
+//        			index = getIndex();
+        		});
         		
-                setText(name);
+//        		selectedProperty().addListener(e -> {
+//        			System.out.println("selectedProperty");
+//        			cTree.getScrollingByDragNDrop().stopScrolling();
+//        		});
+        		
+                setText(name + " (" + getIndex() + ")");
                 setGraphic(getImage(this.getTreeItem()));
                 setContextMenu(fileMenu);
 
@@ -187,6 +210,9 @@ public class PathTreeCell extends TreeCell<PathItem> implements ISuffix, ISystem
             }
         });
     }
+
+    // Getter
+	public CTree getcTree() {return cTree;}
     
 
     

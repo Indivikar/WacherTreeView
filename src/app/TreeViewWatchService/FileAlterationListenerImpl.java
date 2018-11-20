@@ -26,6 +26,7 @@ import org.apache.commons.io.monitor.FileAlterationObserver;
 import app.controller.CTree;
 import app.interfaces.ISaveExpandedItems;
 import app.interfaces.ISuffix;
+import app.loadTime.LoadTime.LoadTimeOperation;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
@@ -60,6 +61,8 @@ import javafx.stage.Stage;
  */
 public class FileAlterationListenerImpl implements FileAlterationListener, ISuffix, ISaveExpandedItems {
 
+	
+	
 	private CTree cTree;
 	private TreeView<PathItem> tree;
 	private PathTreeCell cell;
@@ -152,7 +155,7 @@ public class FileAlterationListenerImpl implements FileAlterationListener, ISuff
 	private void setButtonAction() {
 		buttonNow.setOnAction(e -> {
 			Platform.runLater(() -> {
-				addAllExpandedItems(cTree.getTree().getRoot());
+//				addAllExpandedItems(cTree.getTree().getRoot());
 			});
 			actionChange();
 		});		
@@ -198,9 +201,9 @@ public class FileAlterationListenerImpl implements FileAlterationListener, ISuff
 
 	@Override
 	public void onFileChange(final File file) {		
-//		System.out.println(file.getAbsoluteFile() + " was modified.");
+		System.out.println(file.getAbsoluteFile() + " was modified.");
 //		data.add(new ModelFileChanges("change", file, getTimeStamp()));
-//		addData("change", file, getTimeStamp());
+		addData("change", file, getTimeStamp());
 		startUpdate = true;
 	}
 
@@ -541,73 +544,140 @@ public class FileAlterationListenerImpl implements FileAlterationListener, ISuff
 		System.out.println("5. executable: " + file.canExecute());
 	}
 	
-    public void registerAll(final Path start)  {
+    public void registerAll(final Path item, Path itemParent)  {
         // register directory and sub-directories   	
-        try {
-			Files.walkFileTree(start, new SimpleFileVisitor<Path>() {
-			    @Override
-			    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
-			            throws IOException {
-			        register(dir);
-			        return FileVisitResult.CONTINUE;
-			    }
-			});
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+    	
+    	register(item, itemParent);
+//        try {
+//			Files.walkFileTree(start, new SimpleFileVisitor<Path>() {
+//			    @Override
+//			    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
+//			            throws IOException {
+//			    	System.out.println("register 1: " + dir);
+//			    	
+//			        register(dir);
+//			        return FileVisitResult.CONTINUE;
+//			    }
+//			});
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
     }
 	
-    public void register(Path dir) {
+    public void register(Path dir, Path itemParent) {
 		TreeItem<PathItem> pathTreeItem = PathTreeItem.createNode(new PathItem(dir));
 		if (!isItemExist(pathTreeItem, CTree.treeItem)) {
-			addNewNode(pathTreeItem, CTree.treeItem);
+//			addNewNode(pathTreeItem, CTree.treeItem);
+			addNewNode(pathTreeItem, itemParent);
 		}
     }
-
-    	
-	private void addNewNode(TreeItem<PathItem> pathTreeItem, TreeItem<PathItem> rootTreeItem) {
+	private void addNewNode(TreeItem<PathItem> pathTreeItem, Path itemParent) {
+		TreeItem<PathItem> rootTreeItem = cTree.getTree().getRoot();
 		String pathNewItem = pathTreeItem.getValue().getPath().toString();
-		String rootItem = rootTreeItem.getValue().getPath().toString();
+		String pathItemParent = itemParent.toString();
 			
-//		System.out.println("pathNewItem: " + pathNewItem + " == rootItem: " + rootItem);
+		System.out.println("pathNewItem: " + pathNewItem + " == itemParent: " + pathItemParent);
 			
 		ObservableList<TreeItem<PathItem>> newList = FXCollections.observableArrayList();
 		
-		try (Stream<TreeItem<PathItem>> stream = rootTreeItem.getChildren().stream()){
-			
-			newList = stream.filter(x -> x.getValue().getPath().toString().equalsIgnoreCase(pathNewItem))
-		          .collect(Collectors.toCollection(FXCollections::observableArrayList));
-			stream.close();
-		} catch (Exception e) {
-			// TODO: handle exception
-		}
+//		try (Stream<TreeItem<PathItem>> stream = rootTreeItem.getChildren().stream()){
+//			
+//			newList = stream.filter(x -> x.getValue().getPath().toString().equalsIgnoreCase(pathItemParent))
+//		          .collect(Collectors.toCollection(FXCollections::observableArrayList));
+//			stream.close();
+//		} catch (Exception e) {
+//			// TODO: handle exception
+//		}
 		
-//		System.out.println("newList.size() 1: " + newList.size());
 		
-		if (newList.size() == 0) {
-			addTreeItems(rootTreeItem);
-		}
+		searchItemAndAdd(cTree.getTree().getRoot(), pathItemParent);
 		
-		for (TreeItem<PathItem> item : newList) {
+//		for (Entry<Path, TreeItem<PathItem>> item : listAllItems.entrySet()) {
+//			if (item.getKey().toString().equalsIgnoreCase(pathItemParent)) {
+//				System.out.println("newList.size() 1: " + item.getValue());
+//				addTreeItems(item.getValue());
+//			}
+//		}
+
+//		if (newList.size() == 0) {
+//			System.out.println("newList.size() 0: ");
+//			addTreeItems(rootTreeItem);
+//		}
+//		
+//		for (TreeItem<PathItem> item : newList) {
 //			System.out.println("gefundenes item: " + item.getValue().getPath().toFile());	
-			addTreeItems(item);
-		}
+////			addTreeItems(item);
+//		}
 	}
+	
+    private void searchItemAndAdd(TreeItem<PathItem> root, String itemParent){
+    	
+			String rootString = root.getValue().getPath().toString();
+
+			// is it the root directory
+    		if (rootString.equalsIgnoreCase(itemParent)) {
+    			CTree.createTree(root, false);
+    			return;
+			}
+        
+            for(TreeItem<PathItem> subItem : root.getChildren()){
+            	if (subItem.getValue().getPath().toString().equalsIgnoreCase(itemParent)) {           		
+            		CTree.createTree(subItem, false);
+            		break;
+				} else {
+					searchItemAndAdd(subItem, itemParent);
+				}          
+            }
+    }
+    
+//	private void addNewNode(TreeItem<PathItem> pathTreeItem, TreeItem<PathItem> rootTreeItem) {
+//		String pathNewItem = pathTreeItem.getValue().getPath().toString();
+//		String rootItem = rootTreeItem.getValue().getPath().toString();
+//			
+//		System.out.println("pathNewItem: " + pathNewItem + " == rootItem: " + rootItem);
+//			
+//		ObservableList<TreeItem<PathItem>> newList = FXCollections.observableArrayList();
+//		
+//		try (Stream<TreeItem<PathItem>> stream = rootTreeItem.getChildren().stream()){
+//			
+//			newList = stream.filter(x -> x.getValue().getPath().toString().equalsIgnoreCase(pathNewItem))
+//		          .collect(Collectors.toCollection(FXCollections::observableArrayList));
+//			stream.close();
+//		} catch (Exception e) {
+//			// TODO: handle exception
+//		}
+//		
+//		System.out.println("newList.size() 1: " + newList.size());
+//		
+//		if (newList.size() == 0) {
+//			System.out.println("newList.size() 0: ");
+//			addTreeItems(rootTreeItem);
+//		}
+//		
+//		for (TreeItem<PathItem> item : newList) {
+//			System.out.println("gefundenes item: " + item.getValue().getPath().toFile());	
+//			addTreeItems(item);
+//		}
+//	}
     
 	private void addTreeItems(TreeItem<PathItem> item) {
-
+		System.err.println("treeItem 1: " + item);
         Path rootPath = item.getValue().getPath();
         PathItem pathItem = new PathItem(rootPath);
         TreeItem<PathItem> treeItem = new TreeItem<PathItem>(pathItem);
         
         File treeItemFile =  treeItem.getValue().getPath().toFile();
         
-//        System.err.println("treeItem: " + treeItem);
+        System.err.println("treeItem 2: " + treeItem);
         
         if (treeItemFile.exists()) {
         	
+        	long start = new Date().getTime();
 			CTree.createTree(treeItem, false);    
+			long runningTime = new Date().getTime() - start;
+			cTree.listLoadTime.add(new LoadTimeOperation("createTree in addTreeItems()", runningTime + "", item.getValue().getPath().toString()));
+			System.out.println("createTree in addTreeItems() Ende " + runningTime);
 			
 			item.getChildren().clear();
 			System.out.println("addTreeItems in Item: " + item + " -> " + treeItem);
@@ -623,7 +693,12 @@ public class FileAlterationListenerImpl implements FileAlterationListener, ISuff
 	private boolean isItemExist(TreeItem<PathItem> pathTreeItem, TreeItem<PathItem> rootTreeItem) {
 		String pathNewItem = pathTreeItem.getValue().getPath().toString();
 				
-		getAllItems(rootTreeItem);
+		
+//		getAllItems(rootTreeItem);		
+		long start = new Date().getTime();
+		getAllItems(CTree.treeItem);
+		long runningTime = new Date().getTime() - start;
+		cTree.listLoadTime.add(new LoadTimeOperation("getAllItems()", runningTime + "", ""));
 		
 		// gibt es im Tree, das Item schon, wenn ja -> abbrechen
 		for(Entry<Path, TreeItem<PathItem>> entry: listAllItems.entrySet()) {	
@@ -636,6 +711,10 @@ public class FileAlterationListenerImpl implements FileAlterationListener, ISuff
 		return false;
 	}
 	
+	
+
+	
+	// TODO - hier kann vielleicht noch optimert werden, muss immer im RootNode gesucht werden oder reicht es auch nur im ParentNode?
     private void getAllItems(TreeItem<PathItem> item){
     	listAllItems.clear();
         if(item.getChildren().size() > 0){
@@ -674,6 +753,13 @@ public class FileAlterationListenerImpl implements FileAlterationListener, ISuff
 //	public ObservableList<ModelFileChanges> getListSaveChanges() {return listSaveChanges;}
 	public TreeView<PathItem> getTree() {return tree;}
 	public VBox getvBoxMessage() {return vBoxMessage;}
+
+
+	@Override
+	public void addAllExpandedItems() {
+		// TODO Auto-generated method stub
+		
+	}
 	
 	
 	   

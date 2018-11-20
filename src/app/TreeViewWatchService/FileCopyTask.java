@@ -12,7 +12,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 
 
-public class FileCopyTask extends Task<Void> {
+public class FileCopyTask extends Task<Boolean> {
     private Path source;
     private Path target;
     private boolean isMove;
@@ -23,15 +23,17 @@ public class FileCopyTask extends Task<Void> {
         this.isMove = isMove;
     }
     
+    
+    
     @Override
-    protected Void call() throws Exception {
+    protected Boolean call() throws Exception {
 //        Files.move(this.source, this.target);
-        System.out.println("Start FileCopyTask");
+        System.out.println("Start FileCopyTask: " + source);
         Files.walkFileTree(source, EnumSet.of(FileVisitOption.FOLLOW_LINKS),
                 Integer.MAX_VALUE, new CopyDirectory(source, target, this, isMove));
-        wait();
+//        wait();
         System.out.println("Ende FileCopyTask");
         
-        return null;
+        return true;
     }
 }

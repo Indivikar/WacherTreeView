@@ -1,6 +1,7 @@
-package app.TreeViewWatchService;
+package app.sort;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -8,22 +9,23 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import app.TreeViewWatchService.PathItem;
 import javafx.scene.control.TreeItem;
 
-public class WindowsExplorerComparator implements Comparator<PathItem> {
+public class WinExplorerComparatorPath implements Comparator<Path> {
 
 	// TODO - Sortiert wie in Windows, noch auf die internetseite bringen, als example
 	
     private static final Pattern splitPattern = Pattern.compile("\\d+|\\.|\\s");
 
     @Override
-    public int compare(PathItem pathItem1, PathItem pathItem2) {
+    public int compare(Path pathItem1, Path pathItem2) {
     	
     	String str1 = pathItem1.toString();
     	String str2 = pathItem2.toString();
     	
-    	File file1 = pathItem1.getPath().toFile();
-    	File file2 = pathItem2.getPath().toFile();
+    	File file1 = pathItem1.toFile();
+    	File file2 = pathItem2.toFile();
     	
         Iterator<String> i1 = splitStringPreserveDelimiter(str1).iterator();
         Iterator<String> i2 = splitStringPreserveDelimiter(str2).iterator();

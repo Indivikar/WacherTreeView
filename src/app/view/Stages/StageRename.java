@@ -18,7 +18,7 @@ public class StageRename {
 	
 	
 	
-	public StageRename(PathTreeCell pathTreeCell) {
+	public StageRename(Stage primaryStage, PathTreeCell pathTreeCell) {
 		Stage stage = new Stage();
 		FXMLLoader loader = new FXMLLoader(StartWacherDemo.class.getResource("view/fxml/rename.fxml"));			
 		AnchorPane root = null;
@@ -31,7 +31,7 @@ public class StageRename {
 		Scene scene = new Scene(root);
 
 		controller = loader.getController();
-		controller.set(this, stage, pathTreeCell);
+		controller.set(this, primaryStage, stage, pathTreeCell);
 		
 		
 		stage.setTitle("Rename");

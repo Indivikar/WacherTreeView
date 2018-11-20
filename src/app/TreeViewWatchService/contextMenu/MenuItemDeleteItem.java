@@ -10,30 +10,47 @@ import java.util.Comparator;
 import org.apache.commons.io.FileUtils;
 
 import app.TreeViewWatchService.FileAlterationListenerImpl;
+import app.TreeViewWatchService.PathItem;
 import app.TreeViewWatchService.PathTreeCell;
+import app.interfaces.ICursor;
+import app.threads.DeleteItemTask;
 import app.view.alerts.AlertFilesLocked;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.TreeItem;
+import javafx.stage.Stage;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Alert.AlertType;
 
-public class MenuItemDeleteItem extends MenuItem{
+public class MenuItemDeleteItem extends MenuItem implements ICursor{
 
 	private PathTreeCell pathTreeCell;
 	private ObservableList<String> listAllLockedFiles;
 	
-	public MenuItemDeleteItem(PathTreeCell pathTreeCell, ObservableList<String> listAllLockedFiles) {
+	public MenuItemDeleteItem(Stage primaryStage, PathTreeCell pathTreeCell, ObservableList<String> listAllLockedFiles) {
 		  this.pathTreeCell = pathTreeCell;
 		  this.listAllLockedFiles = listAllLockedFiles;
 		
 		  setText("Delete");
 	      setOnAction((event) -> {
 	    	  FileAlterationListenerImpl.isInternalChange = true;
-	    	  Path filePath = pathTreeCell.getItem().getPath();
-	    	  deleteFileOrDirectory(filePath.toFile());
 	    	  
+	    	  DeleteItemTask DeleteItemTask = new DeleteItemTask(pathTreeCell, listAllLockedFiles);
+	    	  bindUIandService(primaryStage, DeleteItemTask);
+	    	  new Thread(DeleteItemTask).start();
+//	    	  Path filePath = pathTreeCell.getItem().getPath();
+//	    	  deleteFileOrDirectory(filePath.toFile());
+//	    	  removeItem(pathTreeCell);
 	      });
 	}
 
+	private void removeItem(PathTreeCell pathTreeCell) {
+		File file = pathTreeCell.getItem().getPath().toFile();
+		if (!file.exists()) {
+            TreeItem<PathItem> c = (TreeItem<PathItem>) pathTreeCell.getTreeView().getSelectionModel().getSelectedItem();
+            boolean isRemoved = c.getParent().getChildren().remove(c);
+		}
+	}
+	
     private void deleteFileOrDirectory(File file) {
     	System.out.println("Del 1 fertig: " + pathTreeCell.getItem().getPath());
     	try {

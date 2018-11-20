@@ -13,8 +13,11 @@ import org.apache.commons.io.monitor.FileAlterationObserver;
  */
 public class FileAlterationListenerImpl implements FileAlterationListener {
 
+	private long start;
+	
 	@Override
 	public void onStart(final FileAlterationObserver observer) {
+		start = new Date().getTime();
 		System.out.println("The FileListener has started on "
 				+ observer.getDirectory().getAbsolutePath());
 	}
@@ -63,7 +66,8 @@ public class FileAlterationListenerImpl implements FileAlterationListener {
 
 	@Override
 	public void onStop(final FileAlterationObserver observer) {
-		System.out.println("The FileListener has stopped on "
+		long runningTime = new Date().getTime() - start;
+		System.out.println("The FileListener has stopped after " + runningTime + "(ms) on "
 				+ observer.getDirectory().getAbsolutePath());
 	}
 

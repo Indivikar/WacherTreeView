@@ -1,0 +1,64 @@
+2018-11-19 16:15:32  Logger is configured
+2018-11-19 16:15:32  Launching the GUI
+2018-11-19 16:15:43  Root dir chosen: H:\Apps\Java\WorkspaceOxygen\WacherTreeView
+2018-11-19 16:17:20  Root dir chosen: D:\Test3
+2018-11-19 16:17:57  Root dir chosen: D:\Test2
+2018-11-19 16:18:15  Copy dialog...
+2018-11-19 16:18:15  * Copy Files to a Target Directory * 
+Total directories (includes root) and files selected: 119 
+Source directory: D:\Test2 
+
+Select a target directory, apply file filters and copy.
+
+2018-11-19 16:18:43  Target directory: D:\Test3
+2018-11-19 16:19:04  Copying files.
+2018-11-19 16:19:04  File filters: All days, [All]
+2018-11-19 16:19:04  Filters applied. Directories [8], Files [110].
+2018-11-19 16:19:04  Copy in progress...
+2018-11-19 16:19:12  Copy completed. Directories copied [8], Files copied [110]
+2018-11-19 16:19:12  Status: SUCCEEDED
+
+2018-11-19 16:19:12  Select a target directory, apply file filters and copy.
+2018-11-19 16:19:52  The target directory is not empty.
+2018-11-19 16:19:52  Target directory: D:\Test3
+2018-11-19 16:20:42  File filters: All days, [All]
+2018-11-19 16:20:49  Copying files.
+2018-11-19 16:20:49  Filters applied. Directories [8], Files [110].
+2018-11-19 16:20:50  Copy in progress...
+2018-11-19 16:20:57  Creating ZIP file, wait... 
+2018-11-19 16:21:15  ZIP file created: D:\Test3.zip
+2018-11-19 16:21:15  Copy completed. Directories copied [0], Files copied [110]
+2018-11-19 16:21:15  Status: SUCCEEDED
+
+2018-11-19 16:21:15  Select a target directory, apply file filters and copy.
+2018-11-19 16:21:53  Copy dialog...
+2018-11-19 16:21:53  * Copy Files to a Target Directory * 
+Total directories (includes root) and files selected: 119 
+Source directory: D:\Test2 
+
+Select a target directory, apply file filters and copy.
+
+2018-11-19 16:22:18  Target directory: D:\Test3
+2018-11-19 16:22:25  Copying files.
+2018-11-19 16:22:25  File filters: All days, [All]
+2018-11-19 16:22:25  Filters applied. Directories [8], Files [110].
+2018-11-19 16:22:25  Copy in progress...
+2018-11-19 16:22:32  Creating ZIP file, wait... 
+2018-11-19 16:22:49  ZIP file created: D:\Test3.zip
+2018-11-19 16:22:49  Copy completed. Directories copied [8], Files copied [110]
+2018-11-19 16:22:49  Status: SUCCEEDED
+
+2018-11-19 16:22:49  Select a target directory, apply file filters and copy.
+2018-11-19 16:26:02  The target directory is not empty.
+2018-11-19 16:26:02  Target directory: D:\Test3
+2018-11-19 16:26:54  File filters: All days, [All]
+2018-11-19 16:28:06  File filters: All days, [All]
+2018-11-19 16:28:59  File filters: All days, [All]
+2018-11-19 16:30:55  Root dir chosen: D:\Test2\3503
+2018-11-19 16:31:04  Copy dialog...
+2018-11-19 16:31:04  * Copy Files to a Target Directory * 
+Total directories (includes root) and files selected: 118 
+Source directory: D:\Test2\3503 
+
+Select a target directory, apply file filters and copy.
+

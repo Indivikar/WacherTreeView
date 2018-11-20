@@ -52,13 +52,19 @@ public class CopyDirectory extends SimpleFileVisitor<Path> {
 	    }
 	  
 	  
+		
+		
       @Override
-      public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) 
-              throws IOException {
+      public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
                  
+          if (false) {
+        	  // TODO - hier noch ein Button einbauen, der alles isCancelled
+              return FileVisitResult.TERMINATE;
+          }
+    	  
           Path fileTarget = target.resolve(source.relativize(dir));
-          System.out.format("preVisitDirectory: %s  ->  ", dir);   
-          System.out.format("target: %s\n", fileTarget);
+//          System.out.format("preVisitDirectory: %s  ->  ", dir);   
+//          System.out.format("target: %s\n", fileTarget);
           
           if (fileTarget.toFile().exists()) {
   			System.err.println("    exists -> " + fileTarget);
@@ -70,11 +76,18 @@ public class CopyDirectory extends SimpleFileVisitor<Path> {
       }
 
       @Override
-      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) 
-              throws IOException {
+      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+    	  
+          if (false) {
+        	// TODO - hier noch ein Button einbauen, der alles isCancelled
+              // Task's isCancelled() method
+              // terminates the files copy.
+              return FileVisitResult.TERMINATE;
+          }
+    	  
           Path fileTarget = target.resolve(source.relativize(file));
-          System.out.format("visitFile: %s  ->  ", file);   
-          System.out.format("target: %s\n", fileTarget);
+//          System.out.format("visitFile: %s  ->  ", file);   
+//          System.out.format("target: %s\n", fileTarget);
           
           if (fileTarget.toFile().exists()) {
   			System.err.println("    exists -> " + fileTarget);

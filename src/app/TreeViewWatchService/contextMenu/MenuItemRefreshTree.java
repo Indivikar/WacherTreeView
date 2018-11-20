@@ -29,7 +29,7 @@ public class MenuItemRefreshTree extends MenuItem implements IOpenFile{
 		
 		  setText("refresh Tree");
 	      setOnAction((event) -> {	    	  	    	  
-	    	  cTree.loadTree();
+	    	  cTree.refreshTree();
 	      });
 	} 
 }

@@ -30,8 +30,8 @@ public interface ISystemIcon {
 			try {
 				ico = new ImageIcon(sf.getIcon(true), sf.getFolderType());
 			} catch (Exception e) {				
-				e.printStackTrace();
-				System.out.println(file);
+//				e.printStackTrace();
+//				System.out.println(file);
 				return new Image(StartWacherDemo.class.getResourceAsStream("view/images/document.png"));
 			}
 			

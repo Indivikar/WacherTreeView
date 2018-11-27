@@ -67,17 +67,17 @@ public class PathTreeCell extends TreeCell<PathItem> implements ISuffix, ISystem
         } else {
 
         		String name = getString();
-        		indexProperty().addListener(e -> {
-//        			System.out.println("--- Set Index " +  getIndex());
-        			item.setRow(getIndex());
-//        			index = getIndex();
-        		});
+//        		indexProperty().addListener(e -> {
+////        			System.out.println("--- Set Index " +  getIndex());
+//        			item.setRow(getIndex());
+////        			index = getIndex();
+//        		});
         		
 //        		selectedProperty().addListener(e -> {
 //        			System.out.println("selectedProperty");
 //        			cTree.getScrollingByDragNDrop().stopScrolling();
 //        		});
-        		
+        		item.setRow(getIndex());
                 setText(name + " (" + getIndex() + ")");
                 setGraphic(getImage(this.getTreeItem()));
                 setContextMenu(fileMenu);

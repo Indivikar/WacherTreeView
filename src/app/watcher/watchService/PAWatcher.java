@@ -7,7 +7,7 @@ import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 
 import app.controller.CTree;
-import app.threads.AddTreeItems;
+import javafx.application.Platform;
 
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
@@ -25,11 +25,11 @@ public class PAWatcher {
 	
 	private static final String inputDirPath = "D:\\Test\\___DB___";
 	
-	private AddTreeItems addTreeItems;
+//	private AddTreeItems addTreeItems;
 
 	public PAWatcher(CTree cTree) {
 		this.cTree = cTree;
-		addTreeItems = new AddTreeItems(cTree.getPathFileDB(), cTree, this);
+//		addTreeItems = new AddTreeItems(cTree.getPathFileDB(), cTree, this);
 		
 		final Thread mainThread = Thread.currentThread();
 		Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -193,8 +193,12 @@ public class PAWatcher {
 						if (t.getName().equals("FILE_INPUT_DIRECTORY")) {
 							// Process and parse the file
 //							log.info("FILE_INPUT_DIRECTORY: " +  event.context());
-							System.out.println("FILE_INPUT_DIRECTORY: " +  event.context());
-							startAction(event.context().toString());
+							System.out.println("FILE_INPUT_DIRECTORY: " +  event.context() + " -> " + event.kind());
+							
+							if (event.kind().name().equals("ENTRY_MODIFY")) {
+								startAction(event.context().toString());
+							}
+							
 							/**
 							 *  do something here with the file
 							 *  event.context() will give the file name
@@ -215,18 +219,23 @@ public class PAWatcher {
 	private void startAction(String string) {	
 		if (cTree.getFileNameDB().equalsIgnoreCase(string)) {
 			System.out.println("Start Änderung -> " + cTree.getFileNameDB());
-			if (!addTreeItems.isRunning()) {
-				new Thread(addTreeItems).start();
-			}
+//			if (!addTreeItems.isRunning()) {
+//				new Thread(addTreeItems).start();
+				Platform.runLater(() -> {
+//					new Thread(addTreeItems).start();
+					cTree.refreshTree();
+				});
+				
+//			}
 
 		}
 	}
 	
 	// Getter
-	public AddTreeItems getAddTreeItems() {return addTreeItems;}
+//	public AddTreeItems getAddTreeItems() {return addTreeItems;}
 
 	// Setter
-	public void setAddTreeItems(AddTreeItems addTreeItems) {this.addTreeItems = addTreeItems;}
+//	public void setAddTreeItems(AddTreeItems addTreeItems) {this.addTreeItems = addTreeItems;}
 	
 	
 	

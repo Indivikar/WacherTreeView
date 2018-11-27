@@ -3,6 +3,7 @@ package app.view.Stages;
 import java.nio.file.Path;
 
 import app.TreeViewWatchService.CopyDirectory;
+import app.TreeViewWatchService.DragNDropInternal;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -18,7 +19,7 @@ import javafx.stage.Stage;
 
 public class StageFileIsExist {
 
-	public StageFileIsExist(CopyDirectory copyDirectory, Path dir) {
+	public StageFileIsExist(DragNDropInternal dragNDropInternal, Path dir) {
 		
 	 	Platform.runLater(() -> {
 	  			Stage primaryStage = new Stage();
@@ -36,7 +37,7 @@ public class StageFileIsExist {
 				
 				CheckBox checkBox = new CheckBox("same for all files");
 				checkBox.selectedProperty().addListener ( (arg, oldVal, newVal) -> {
-					copyDirectory.setSameForAll(newVal);
+					dragNDropInternal.getCopyOrMoveTask().setSameForAll(newVal);
 				});
 				HBox HBoxCheck = new HBox(checkBox);
 			    AnchorPane.setBottomAnchor(HBoxCheck, 10.0);
@@ -46,15 +47,15 @@ public class StageFileIsExist {
 			    
 				Button buttonYes = new Button("Yes");
 				buttonYes.setOnAction(e -> {
-					copyDirectory.setReplaceYes(true);
-					copyDirectory.next();
+					dragNDropInternal.getCopyOrMoveTask().setReplaceYes(true);
+					dragNDropInternal.getCopyOrMoveTask().next();
 					primaryStage.close();
 				});
 				
 				Button buttonNo = new Button("No");
 				buttonNo.setOnAction(e -> {
-					copyDirectory.setReplaceYes(false);
-					copyDirectory.next();
+					dragNDropInternal.getCopyOrMoveTask().setReplaceYes(false);
+					dragNDropInternal.getCopyOrMoveTask().next();
 					primaryStage.close();
 				});
 				

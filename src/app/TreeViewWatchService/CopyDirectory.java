@@ -97,7 +97,7 @@ public class CopyDirectory extends SimpleFileVisitor<Path> {
 		  			copyOrMove(file, fileTarget, isMove);
 		  		  }        		  
 		  	  }  else {		 		
-		  		  	new StageFileIsExist(this, file);
+//		  		  	new StageFileIsExist(this, file);
 		  		
 					synchronized(lock){
 			            try {

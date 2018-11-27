@@ -339,6 +339,8 @@ public class CopyDialog {
                  */
                 Files.walkFileTree(sourceDir, new SimpleFileVisitor<Path>() {
 
+                	
+                	
                     /*
                      * Copy the directories.
                      */
@@ -347,6 +349,9 @@ public class CopyDialog {
                             BasicFileAttributes attrs)
                             throws IOException {
 
+                    	System.out.println("sourceDir: " + sourceDir);
+                    	System.out.println("dir: " + dir);
+                    	
                         if (isCancelled()) {
                         
                             // Task's isCancelled() method returns true

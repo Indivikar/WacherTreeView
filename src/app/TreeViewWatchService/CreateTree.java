@@ -38,10 +38,14 @@ public class CreateTree implements ITreeItemMethods, ISaveExpandedItems, ISaveSe
 	private PathList pathList;
 	private String pathFileDB;
 	
+	public static boolean wantUpdateTree = true;
+	
 	private final Comparator<Path> NATURAL_SORT = new WinExplorerComparatorPath();
 	private ObservableList<Path> paths = FXCollections.observableArrayList();
 	private HashMap<Path, TreeItem<PathItem>> expandedItemList;
 	private ObservableList<TreeItem<PathItem>> selectedItems = FXCollections.observableArrayList();
+	
+	
 	
 	public CreateTree(String pathFileDB, CTree cTree) {
 		System.out.println("Load -> CreateTree");
@@ -52,7 +56,12 @@ public class CreateTree implements ITreeItemMethods, ISaveExpandedItems, ISaveSe
 
 	
 	
-	public void updatePathListFormDB(TreeItem<PathItem> mainItem, boolean clearTree, boolean saveSelections) {
+	public void updatePathListFormDB(TreeItem<PathItem> mainItem, boolean clearTree, boolean saveSelections) {		
+		
+		if (!wantUpdateTree) {
+			wantUpdateTree = true;
+			return;
+		}
 		
 		CTree.getLoadDBService().setOnSucceeded(e -> {
 			System.out.println("updatePathListFormDB");
@@ -62,7 +71,7 @@ public class CreateTree implements ITreeItemMethods, ISaveExpandedItems, ISaveSe
 		});
 		
 		if (!CTree.getLoadDBService().isRunning()) {
-//			bindUIandService(cTree.getPrimaryStage(), CTree.getLoadDBService());
+			System.out.println("---- updatePathListFormDB ----");
 			CTree.getLoadDBService().start();
 		}
 		
@@ -110,6 +119,7 @@ public class CreateTree implements ITreeItemMethods, ISaveExpandedItems, ISaveSe
 		 }
 		 
 		 addAllExpandedItems();
+		 
 		 if (cTree.getTree().getRoot() != null && clearTree) {			 
 			cTree.getTree().getRoot().getChildren().clear();
 		 }
@@ -134,7 +144,7 @@ public class CreateTree implements ITreeItemMethods, ISaveExpandedItems, ISaveSe
 
 		 
 		long runningTime = new Date().getTime() - start;			
-		CTree.listLoadTime.add(new LoadTimeOperation("startCreateTree()", runningTime + "", pathFileDB));
+		CTree.listLoadTime.add(new LoadTimeOperation("startCreateTree()", runningTime + "", mainItem.getValue().toString()));
 		
 		
 		LoadTime.Start();

@@ -17,16 +17,18 @@ public class SortWinExplorerTask extends Task<Void> {
 	private TreeItem<PathItem> children;
 	
 	public SortWinExplorerTask(TreeItem<PathItem> children) {
-		this.children = children;	
+		this.children = children;			
 	}
 
+	
+	
 	@Override
 	protected Void call() throws Exception {
 		
 		long start1 = new Date().getTime();
 		sortTreeItems(children);
 		long runningTime1 = new Date().getTime() - start1;			
-		CTree.listLoadTime.add(new LoadTimeOperation("sortTreeItems()", runningTime1 + "", ""));
+		CTree.listLoadTime.add(new LoadTimeOperation("sortTreeItems()", runningTime1 + "", children.getValue().getPath().toString()));
 		
 		return null;
 	}

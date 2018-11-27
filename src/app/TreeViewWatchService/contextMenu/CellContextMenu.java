@@ -23,7 +23,7 @@ public class CellContextMenu extends ContextMenu{
 							new MenuItemNewFile(), 
 							new MenuItemNewDirectory(primaryStage, cTree, pathTreeCell), 
 							new MenuItemRename(primaryStage, pathTreeCell), 
-							new MenuItemDeleteItem(primaryStage, pathTreeCell, listAllLockedFiles),
+							new MenuItemDeleteItem(primaryStage, cTree, pathTreeCell, listAllLockedFiles),
 							new SeparatorMenuItem(),
 							new MenuItemRefreshTree(pathTreeCell, cTree));	
 	}

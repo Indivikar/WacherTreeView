@@ -25,6 +25,7 @@ public class AddTreeItems extends Task<Void> implements ISaveSelectedItems {
 	private ObservableList<TreeItem<PathItem>> selectedItems = FXCollections.observableArrayList();
 
 	public AddTreeItems(String pathFileDB, CTree cTree, PAWatcher paWatcher) {
+		System.out.println("init AddTreeItems");
 		this.pathFileDB = pathFileDB;
 		this.cTree = cTree;
 		this.paWatcher = paWatcher;
@@ -56,7 +57,7 @@ public class AddTreeItems extends Task<Void> implements ISaveSelectedItems {
 	
 	@Override
 	protected Void call() throws Exception {
-
+		System.out.println("start AddTreeItems");
 //		saveAllSelectedItems();
 		
 		long start1 = new Date().getTime();

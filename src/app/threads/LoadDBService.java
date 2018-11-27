@@ -59,6 +59,8 @@ public class LoadDBService extends Service<ObservableList<Path>>{
              @Override
              protected ObservableList<Path> call() throws Exception {
                  
+            	 System.out.println("Start LoadDBService");
+            	 
             	LoadTime.Start();
             	 
             	fileList.clear();

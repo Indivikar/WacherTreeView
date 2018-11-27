@@ -1,5 +1,8 @@
 package app.view.alerts;
 
+import java.io.File;
+
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
@@ -9,8 +12,11 @@ import javafx.scene.layout.Priority;
 
 public class AlertFilesLocked extends Alert {
 
-	public AlertFilesLocked(AlertType arg0, ObservableList<String> listAllLockedFiles) {
+	private ObservableList<String> listAllLockedFiles = FXCollections.observableArrayList();
+	
+	public AlertFilesLocked(AlertType arg0) {
 		super(arg0);
+		listAllLockedFiles.clear();
     	setTitle("Exception Dialog");
     	setHeaderText("can not be deleted, it is still being edited");
     	setContentText(null);
@@ -32,11 +38,18 @@ public class AlertFilesLocked extends Alert {
     	// Set expandable Exception into the dialog pane.
     	getDialogPane().setExpandableContent(expContent);
 
-    	showAndWait();
+//    	showAndWait();
 		
 		
 	}
 
+	public void start() {
+		show();
+//		showAndWait();
+	}
 	
-
+	public void addLockedFile(File lockedFile) {
+		listAllLockedFiles.add(lockedFile.getAbsolutePath());
+	}
+	
 }

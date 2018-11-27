@@ -9,10 +9,14 @@ import java.util.Comparator;
 
 import org.apache.commons.io.FileUtils;
 
+import app.TreeViewWatchService.CreateTree;
 import app.TreeViewWatchService.FileAlterationListenerImpl;
 import app.TreeViewWatchService.PathItem;
 import app.TreeViewWatchService.PathTreeCell;
+import app.controller.CTree;
+import app.dialog.CopyDialogProgress;
 import app.interfaces.ICursor;
+import app.interfaces.ISearchLockedFiles;
 import app.threads.DeleteItemTask;
 import app.view.alerts.AlertFilesLocked;
 import javafx.scene.control.MenuItem;
@@ -26,15 +30,15 @@ public class MenuItemDeleteItem extends MenuItem implements ICursor{
 	private PathTreeCell pathTreeCell;
 	private ObservableList<String> listAllLockedFiles;
 	
-	public MenuItemDeleteItem(Stage primaryStage, PathTreeCell pathTreeCell, ObservableList<String> listAllLockedFiles) {
+	public MenuItemDeleteItem(Stage primaryStage, CTree cTree, PathTreeCell pathTreeCell, ObservableList<String> listAllLockedFiles) {
 		  this.pathTreeCell = pathTreeCell;
 		  this.listAllLockedFiles = listAllLockedFiles;
 		
 		  setText("Delete");
 	      setOnAction((event) -> {
-	    	  FileAlterationListenerImpl.isInternalChange = true;
+//	    	  FileAlterationListenerImpl.isInternalChange = true;
 	    	  
-	    	  DeleteItemTask DeleteItemTask = new DeleteItemTask(pathTreeCell, listAllLockedFiles);
+	    	  DeleteItemTask DeleteItemTask = new DeleteItemTask(cTree, pathTreeCell, listAllLockedFiles);
 	    	  bindUIandService(primaryStage, DeleteItemTask);
 	    	  new Thread(DeleteItemTask).start();
 //	    	  Path filePath = pathTreeCell.getItem().getPath();
@@ -55,13 +59,13 @@ public class MenuItemDeleteItem extends MenuItem implements ICursor{
     	System.out.println("Del 1 fertig: " + pathTreeCell.getItem().getPath());
     	try {
 			  if (file.isDirectory()) {
-				    listAllLockedFiles.clear();
-				    recursiveSearch(file);
-				    if (listAllLockedFiles.size() > 0) {
-				    	new AlertFilesLocked(AlertType.ERROR, listAllLockedFiles);
-//						alertFilesLocked();
-						return;
-					}
+//				    listAllLockedFiles.clear();
+//				    recursiveSearch(file);
+//				    if (listAllLockedFiles.size() > 0) {
+//				    	new AlertFilesLocked(AlertType.ERROR, listAllLockedFiles);
+////						alertFilesLocked();
+//						return;
+//					}
 				    				   
 				  	int count = 0;
 					while (file.exists() && count < 10) {
@@ -100,19 +104,19 @@ public class MenuItemDeleteItem extends MenuItem implements ICursor{
 		}
 	}
     
-    private void recursiveSearch(File file) {
-      	 File[] filesList = file.listFiles();
-      	    for (File f : filesList) {
-      	        if (f.isDirectory() && !f.isHidden()) {
-      	            recursiveSearch(f);
-      	        }
-      	        if( f.isFile() ){
-      	        	if (accessFile(f)) {
-      	        		listAllLockedFiles.add(f.getAbsolutePath());
-   					}    	        	
-      	        }
-      	    }
-      	}
+//    private void recursiveSearch(File file) {
+//      	 File[] filesList = file.listFiles();
+//      	    for (File f : filesList) {
+//      	        if (f.isDirectory() && !f.isHidden()) {
+//      	            recursiveSearch(f);
+//      	        }
+//      	        if( f.isFile() ){
+//      	        	if (accessFile(f)) {
+//      	        		listAllLockedFiles.add(f.getAbsolutePath());
+//   					}    	        	
+//      	        }
+//      	    }
+//      	}
 	
 	private boolean accessFile(File name) {
 			System.out.println("is File Locked: " + name);

@@ -30,7 +30,6 @@ import app.interfaces.ISuffix;
 import app.interfaces.ISystemIcon;
 import app.loadTime.LoadTime.LoadTimeOperation;
 import app.sort.WindowsExplorerComparator;
-import app.threads.AddTreeItems;
 import app.threads.LoadDBService;
 import app.threads.SortWinExplorerTask;
 import app.watcher.watchService.PAWatcher;
@@ -181,6 +180,7 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 	}
 	
 	public void refreshTree() {
+			System.out.println("----- refreshTree -----");
 			this.createTree.updatePathListFormDB(treeItem, true, true);
 //			this.createTree.startCreateTree(treeItem, true, true);
 	}
@@ -254,186 +254,7 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
         
 	}
 	
-//	private void sortTree(TreeItem<PathItem> root) {
-//		  if (!root.isLeaf()) {
-//		    FXCollections.sort(root.getChildren(), new Comparator<TreeItem<PathItem>>() {
-//	            
-//
-//	            @Override
-//	            public int compare(TreeItem<PathItem> o1, TreeItem<PathItem> o2) {;
-//	                return NATURAL_SORT.compare(o1.getValue(), o2.getValue());
-//	            }
-//	        });
-//		    root.getChildren().forEach(this::sortTree);
-//		  }
-//		}
-	
-	
-//	 public static void createTree2(TreeItem<PathItem> oldItem1, TreeView<PathItem> tree) {
-//		 	 
-//		 for (Path path : pathList.loadDB()) {
-//			 if (!path.toString().equals("")) {
-//				 List<String> liste = getListParents(path);
-//				 if (!liste.isEmpty()) {
-//					isChild(oldItem1, liste);
-//				 }
-//			}
-//		 }
-//	 }
-	
-//	 private static boolean isChild(TreeItem<PathItem> mainItem, List<String> liste) {	
-//			 if (liste.size() == 0) {
-//				return true;			
-//			 } 
-//
-//		 	if (mainItem.getChildren().isEmpty()) {
-//				TreeItem<PathItem> newItem = null;
-//				if (liste.size() != 0) {
-//					String newPath = liste.get(0);
-//				 	newItem = new TreeItem<PathItem>(new PathItem(new File(newPath).toPath()));					 	
-////				 	System.out.println("add Empty: " + newPath + " ->  in: " + mainItem.getValue().getPath());				 
-//					mainItem.getChildren().add(newItem);
-//					liste.remove(newPath);					
-//				 } 
-//
-//				 isChild(newItem, liste);								
-//			} else {
-//
-//				Pair<Boolean, TreeItem<PathItem>> isChildExists = isChildExists(mainItem, liste);
-//				
-//				if (!isChildExists.getKey()) {
-//					String newPath = liste.get(0);			
-//					TreeItem<PathItem> newItem = isChildExists.getValue();					
-////					System.out.println("add Child: " + newPath + " ->  in: " + mainItem.getValue().getPath());								 
-//					mainItem.getChildren().add(newItem);
-//					liste.remove(newPath);
-//				
-//					isChild(newItem, liste);
-//					if(liste.isEmpty()) {
-//						return true;
-//					} 						
-//				} else {					
-//					TreeItem<PathItem> mainItem1 = isChildExists.getValue();
-//					isChild(mainItem1, liste);
-//				}
-//				
-//			 if (liste.size() != 0) {
-//				 for (TreeItem<PathItem> child : mainItem.getChildren()) {
-//						String childPath = child.getValue().getPath().toString();
-//						String newPath = liste.get(0);
-//						TreeItem<PathItem> newItem = new TreeItem<PathItem>(new PathItem(new File(newPath).toPath()));
-//							if(childPath.equalsIgnoreCase(newPath.toString())) {
-//								liste.remove(newPath);
-//								
-//								isChild(child, liste);
-//								
-//								if(liste.isEmpty()) {
-//									return true;
-//								} 
-//							} else {
-//								System.out.println(4);
-		
-//								continue;
-//								if (!newPath.toString().equals(mainItem.getValue().getPath().toString())) {									 					
-//									System.out.println("add Child: " + newPath + " ->  in: " + mainItem.getValue().getPath());								 
-//									mainItem.getChildren().add(newItem);
-//									liste.remove(newPath);
-//								
-//									isChild(newItem, path, liste);
-//									if(liste.isEmpty()) {
-//										return true;
-//									} 	
-//								}
-//							}
-//								 if (newItem.getChildren().isEmpty()) {
-//								 		TreeItem<PathItem> newItem1 = null;
-////									 	TreeItem<PathItem> newItem = new TreeItem<PathItem>(new PathItem(new File("D:\\test\\ordner").toPath()));
-//											 if (liste.size() != 0) {
-//												Path newPath1 = liste.pop();
-//											 	System.out.println("newPath: " + newPath);
-//											 	newItem1 = new TreeItem<PathItem>(new PathItem(newPath));	
-//											 	
-//											 	System.out.println("add: " + newPath1 + " ->  in: " + mainItem.getValue().getPath());
-//											 
-//												mainItem.getChildren().add(newItem1);
-//												
-//											 } 
-//											 
-//
-//											 isChild(newItem, path, liste);	
-//								 }
-								 
-//								 if (liste.size() != 0) {
-//									liste.pop();
-//								 }
-								 
-//								 continue;
-//							}
-//					}
-//			 } 
-			
-//			return true;
-//	}
-	 
 
-//	 private static Pair<Boolean, TreeItem<PathItem>> isChildExists(TreeItem<PathItem> mainItem, List<String> liste) {
-//		 TreeItem<PathItem> newItem = null;
-//		 if (liste.size() != 0) {
-//			 for (TreeItem<PathItem> child : mainItem.getChildren()) {
-//					String childPath = child.getValue().getPath().toString();
-//					String newPath = liste.get(0);
-//					newItem = new TreeItem<PathItem>(new PathItem(new File(newPath).toPath()));
-//						if(childPath.equalsIgnoreCase(newPath.toString())) {
-//							liste.remove(newPath);
-//							
-////							isChild(child, liste);
-//							
-//							if(liste.isEmpty()) {
-//								return new Pair<Boolean, TreeItem<PathItem>>(false, mainItem);	
-//							} 
-//							return new Pair<Boolean, TreeItem<PathItem>>(true, child);	
-//							
-//						} else {	
-//							continue;
-//						}
-//			 }
-//		 }
-//		return new Pair<Boolean, TreeItem<PathItem>>(false, newItem);		
-//	}
-	 
-	 
-//	 private void addNewChild() {
-//		 if (!newPath.toString().equals(oldItem1.getValue().getPath().toString())) {
-//				 
-//			 System.out.println("add: " + newPath + " ->  in: " + oldItem1.getValue().getPath());
-//				oldItem1.getChildren().add(newItem);
-//			 }
-//			 
-//			 stackPaths.pop();
-//
-//	}
-	 
-//	 private static List<String> getListParents(Path path) {
-//		 List<String> list = new ArrayList<>(); 		 
-//		 int nameCount = path.getNameCount();		 
-//		 Path par = path;		 
-//		 list.add(par.toString());
-//		 for (int i = 0; i < nameCount; i++) {
-//			
-//			par = par.getParent();
-//			if (par.toString().equalsIgnoreCase("D:\\") || par.toString().equalsIgnoreCase("D:\\test")) {
-//				continue;
-//			}
-//			list.add(par.toString());
-//		 }
-//		 
-//		 sortStringListByLength(list);
-//		 return list;
-//	}
-	 
-//	 private static void sortStringListByLength(List<String> list) {
-//        Collections.sort(list, Comparator.comparing(String::length));
-//	 }
 
 	 public static void createTree(TreeItem<PathItem> oldItem1, boolean expand) {
  			
@@ -455,12 +276,8 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 	 		
 	 		String root = rootItem.getValue().getPath().toString();
 	 		String parent = newItem.getValue().getPath().getParent().toString();
-//	 		System.out.println("1 " + root + " == " + parent);
-	 		if (root.equalsIgnoreCase(parent)) {
-	 			
+	 		if (root.equalsIgnoreCase(parent)) {	 			
 	 			rootItem.getChildren().add(newItem);
-//            	File file = newItem.getValue().getPath().toFile();
-//				addSuffixAndImage(file.getName(), ISystemIcon.getSystemImageView(file));
 				return;
 			}
 	 		
@@ -468,129 +285,44 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 		    if(rootItem != null && !rootItem.getChildren().isEmpty()){
 		        for(TreeItem<PathItem> treeItem: rootItem.getChildren()){
 		        	String main = treeItem.getValue().getPath().toString();
-//		        	System.out.println("2 " + main + " == " + parent);
 		        	if (main.equalsIgnoreCase(parent)) {
 		        		treeItem.getChildren().add(newItem);
-//	                	File file = newItem.getValue().getPath().toFile();
-//						addSuffixAndImage(file.getName(), ISystemIcon.getSystemImageView(file));
+
 		        		break;
 					} else {
 						handleSearch(treeItem, newItem);
 					}
-		            
-
 		        }
 		    }		    
 		}
-	 
-//	 	private static void handleSearch(TreeItem<PathItem> rootItem, TreeItem<PathItem> newItem) {
-//
-//	 		String root = rootItem.getValue().getPath().toString();
-//	 		String parent = newItem.getValue().getPath().getParent().toString();
-////	 		System.out.println("1 " + root + " == " + parent);
-//	 		if (root.equalsIgnoreCase(parent)) {
-//	 			
-//	 			rootItem.getChildren().add(newItem);
-////            	File file = newItem.getValue().getPath().toFile();
-////				addSuffixAndImage(file.getName(), ISystemIcon.getSystemImageView(file));
-//				return;
-//			}
-//	 		
-//	 		
-//		    if(rootItem != null && !rootItem.getChildren().isEmpty()){
-//		        for(TreeItem<PathItem> treeItem: rootItem.getChildren()){
-//		        	String main = treeItem.getValue().getPath().toString();
-////		        	System.out.println("2 " + main + " == " + parent);
-//		        	if (main.equalsIgnoreCase(parent)) {
-//		        		treeItem.getChildren().add(newItem);
-////	                	File file = newItem.getValue().getPath().toFile();
-////						addSuffixAndImage(file.getName(), ISystemIcon.getSystemImageView(file));
-//		        		break;
-//					} else {
-//						handleSearch(treeItem, newItem);
-//					}
-//		            
-//
-//		        }
-//		    }		    
-//		}
-	 
-	 
-	    private static TreeItem<PathItem> getExistsItem(TreeItem<PathItem> root, TreeItem<PathItem> newItem){
-	        
-	    	String newItemString = newItem.getValue().getPath().toString();
-	    	
-	        for(TreeItem<PathItem> subItem : root.getChildren()){
-	        	if (subItem.getValue().getPath().toString().equalsIgnoreCase(newItemString)) {      		      		
-	        		return subItem;
-				}        
-	        }
-	        return null;
-	    }
-	 
-	 
-//    public static void createTree(TreeItem<PathItem> oldItem, boolean expand) {
-//
-////    	System.out.println("createTree Star: " + oldItem);
-//    	
-//    	if (oldItem.getValue().getPath().toFile().isDirectory()) {
-//
-//			try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(oldItem.getValue().getPath())){
-//	
-//	            for (Path path : directoryStream) {
-//	                TreeItem<PathItem> newItem = new TreeItem<PathItem>( new PathItem( path));
-//  
-//	                // is File Hidden, add not in Tree
-//	                if (!newItem.getValue().getPath().toFile().isHidden() && !isItemExists(oldItem, newItem)) {
-//	                	
-//						oldItem.getChildren().add(newItem);
-//						System.out.println("createTree Star: " + oldItem.getValue().getPath() + " add -> " + newItem.getValue().getPath());
-//		                sortMyList(oldItem.getChildren());
-//		                if (Files.isDirectory(path)) {
-//		                    createTree(newItem, expand);
-//		                } else {
-//		                	File file = newItem.getValue().getPath().toFile();
-//							addSuffixAndImage(file.getName(), ISystemIcon.getSystemImageView(file));
-//						}
-//					}
-//	                
-//	            }
-//	            directoryStream.close();
-//	            
-//	            
-//	            
-//	            // Expand saved items
-//				for (Entry<Path, TreeItem<PathItem>> item : saveExpandedItems.entrySet()) {	
-//					if (item.getKey().toString().equals(oldItem.getValue().getPath().toString())) {
-//						System.err.println("rootItem expand: " + oldItem);
-//						oldItem.setExpanded(true);
-//					} 
-//				}	
+
+//	    private static TreeItem<PathItem> getExistsItem(TreeItem<PathItem> root, TreeItem<PathItem> newItem){
+//	        
+//	    	String newItemString = newItem.getValue().getPath().toString();
+//	    	
+//	        for(TreeItem<PathItem> subItem : root.getChildren()){
+//	        	if (subItem.getValue().getPath().toString().equalsIgnoreCase(newItemString)) {      		      		
+//	        		return subItem;
+//				}        
 //	        }
-//	        // catch exceptions, e. g. java.nio.file.AccessDeniedException: c:\System Volume Information, c:\$RECYCLE.BIN
-//	        catch( Exception ex) {
-//	            ex.printStackTrace();
-//	        }
-//		}  
+//	        return null;
+//	    }
+
+//    private static boolean isItemExists(TreeItem<PathItem> root, TreeItem<PathItem> newItem){
+//        
+//    	String newItemString = newItem.getValue().getPath().toString();
 //    	
-////    	System.out.println("createTree Ende ");
+//        for(TreeItem<PathItem> subItem : root.getChildren()){
+//        	if (subItem.getValue().getPath().toString().equalsIgnoreCase(newItemString)) {      		      		
+//        		return true;
+//			}        
+//        }
+//        return false;
 //    }
     
-    private static boolean isItemExists(TreeItem<PathItem> root, TreeItem<PathItem> newItem){
-        
-    	String newItemString = newItem.getValue().getPath().toString();
-    	
-        for(TreeItem<PathItem> subItem : root.getChildren()){
-        	if (subItem.getValue().getPath().toString().equalsIgnoreCase(newItemString)) {      		      		
-        		return true;
-			}        
-        }
-        return false;
-    }
-    
-	private static void addSuffixAndImage(String name, Image image) {
-		suffixIcon.put(ISuffix.getSuffix(name), image);
-	}
+//	private static void addSuffixAndImage(String name, Image image) {
+//		suffixIcon.put(ISuffix.getSuffix(name), image);
+//	}
     
 	
 	
@@ -622,17 +354,6 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
         });
     }
 	
-//    public static void sortMyList(ObservableList<TreeItem<PathItem>> children) {
-//        Collections.sort(children, new Comparator<TreeItem<PathItem>>() {
-//            private final Comparator<PathItem> NATURAL_SORT = new WindowsExplorerComparator();
-//
-//            @Override
-//            public int compare(TreeItem<PathItem> o1, TreeItem<PathItem> o2) {;
-//                return NATURAL_SORT.compare(o1.getValue(), o2.getValue());
-//            }
-//        });
-//    }
-    
     // Getter    
     
     // Services

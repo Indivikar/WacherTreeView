@@ -18,6 +18,7 @@ import app.dialog.CopyDialogProgress;
 import app.interfaces.ICursor;
 import app.interfaces.ISearchLockedFiles;
 import app.threads.DeleteItemTask;
+import app.view.Stages.StageDelete;
 import app.view.alerts.AlertFilesLocked;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TreeItem;
@@ -38,9 +39,11 @@ public class MenuItemDeleteItem extends MenuItem implements ICursor{
 	      setOnAction((event) -> {
 //	    	  FileAlterationListenerImpl.isInternalChange = true;
 	    	  
-	    	  DeleteItemTask DeleteItemTask = new DeleteItemTask(cTree, pathTreeCell, listAllLockedFiles);
-	    	  bindUIandService(primaryStage, DeleteItemTask);
-	    	  new Thread(DeleteItemTask).start();
+	    	  new StageDelete(primaryStage, cTree, pathTreeCell, listAllLockedFiles);
+	    	  
+//	    	  DeleteItemTask DeleteItemTask = new DeleteItemTask(cTree, pathTreeCell, listAllLockedFiles);
+//	    	  bindUIandService(primaryStage, DeleteItemTask);
+//	    	  new Thread(DeleteItemTask).start();
 //	    	  Path filePath = pathTreeCell.getItem().getPath();
 //	    	  deleteFileOrDirectory(filePath.toFile());
 //	    	  removeItem(pathTreeCell);

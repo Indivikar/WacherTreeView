@@ -11,6 +11,9 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
+// TODO - bei Rename nach lockfiles schauen
+//TODO - bei copy oder move den Ordner locken nach 
+
 public class StartWacherDemo  extends Application {
 
 	// Config
@@ -24,7 +27,10 @@ public class StartWacherDemo  extends Application {
 
 	@Override
 	public void start(Stage primaryStage) throws Exception {
-		new LoadTime().start(new Stage());
+		if (startLoadTimeList) {
+			new LoadTime().start(new Stage());
+		}
+		
 		
 		FXMLLoader loader = new FXMLLoader(StartWacherDemo.class.getResource("view/fxml/tree.fxml"));			
 		AnchorPane root = loader.load();

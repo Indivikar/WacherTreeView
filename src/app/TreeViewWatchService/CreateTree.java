@@ -22,13 +22,12 @@ import app.interfaces.ISaveExpandedItems;
 import app.interfaces.ISaveSelectedItems;
 import app.interfaces.ITreeItemMethods;
 import app.loadTime.LoadTime.LoadTimeOperation;
+import app.models.ItemsDB;
 import app.sort.WinExplorerComparatorPath;
-import app.sort.WindowsExplorerComparator;
-import app.threads.CreateTreeTask;
+import app.threads.SortWinExplorerTask;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.TreeItem;
-import javafx.scene.control.TreeView;
 import javafx.util.Pair;
 
 public class CreateTree implements ITreeItemMethods, ISaveExpandedItems, ISaveSelectedItems, ICursor {
@@ -41,7 +40,7 @@ public class CreateTree implements ITreeItemMethods, ISaveExpandedItems, ISaveSe
 	public static boolean wantUpdateTree = true;
 	
 	private final Comparator<Path> NATURAL_SORT = new WinExplorerComparatorPath();
-	private ObservableList<Path> paths = FXCollections.observableArrayList();
+	private ObservableList<ItemsDB> paths = FXCollections.observableArrayList();
 	private HashMap<Path, TreeItem<PathItem>> expandedItemList;
 	private ObservableList<TreeItem<PathItem>> selectedItems = FXCollections.observableArrayList();
 	
@@ -64,16 +63,21 @@ public class CreateTree implements ITreeItemMethods, ISaveExpandedItems, ISaveSe
 		}
 		
 		CTree.getLoadDBService().setOnSucceeded(e -> {
-			System.out.println("updatePathListFormDB");
-			this.paths = CTree.getLoadDBService().getValue();
-
-			startCreateTree(mainItem, clearTree, saveSelections);
+				System.out.println("updatePathListFormDB");
+				this.paths = CTree.getLoadDBService().getValue();
+	
+				startCreateTree(mainItem, clearTree, saveSelections);
+			
+		        // delete all lockfiles(folder.lock) that are no longer needed
+				cTree.getLockFileHandler().deleteAllLockfiles(cTree.getTree().getRoot());
 		});
 		
 		if (!CTree.getLoadDBService().isRunning()) {
 			System.out.println("---- updatePathListFormDB ----");
 			CTree.getLoadDBService().start();
 		}
+		
+
 		
 //		long start = new Date().getTime();
 //		this.paths = pathList.loadDB();
@@ -91,14 +95,14 @@ public class CreateTree implements ITreeItemMethods, ISaveExpandedItems, ISaveSe
 				    
 				@Override
 			        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-						paths.add(file);
+						paths.add(new ItemsDB(file, false));
 						return FileVisitResult.CONTINUE;
 					}
 				    
 				@Override
 				public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
 //						Files.delete(dir);
-						paths.add(dir);
+						paths.add(new ItemsDB(dir, true));
 						return FileVisitResult.CONTINUE;
 					}
 			});
@@ -118,6 +122,8 @@ public class CreateTree implements ITreeItemMethods, ISaveExpandedItems, ISaveSe
 			saveAllSelectedItems();
 		 }
 		 
+		 cTree.getTree().getSelectionModel().clearSelection();
+		 
 		 addAllExpandedItems();
 		 
 		 if (cTree.getTree().getRoot() != null && clearTree) {			 
@@ -132,28 +138,30 @@ public class CreateTree implements ITreeItemMethods, ISaveExpandedItems, ISaveSe
 		 
 		 long start = new Date().getTime();
 		 
-		 for (Path path : this.paths) {
-			 if (!path.toString().equals("")) {
-				 List<String> liste = getListParents(path);
+		 for (ItemsDB item : this.paths) {
+			 if (!item.getPath().toString().equals("")) {
+				 List<ItemsDB> liste = getListParents(item);
 				 if (!liste.isEmpty()) {
 					isChild(mainItem, liste);					
 				 }
 			}
 		 }	
 		 
-
 		 
 		long runningTime = new Date().getTime() - start;			
 		CTree.listLoadTime.add(new LoadTimeOperation("startCreateTree()", runningTime + "", mainItem.getValue().toString()));
 		
 		
 		LoadTime.Start();
-		if (cTree.getTree().getRoot() != null) {
+		if (cTree.getTree().getRoot() != null && saveSelections) {
 			 cTree.getTree().getSelectionModel().clearSelection();
 			 select(selectedItems, cTree.getTree().getRoot(), cTree.getTree());
 		 }
 		LoadTime.Stop("select Saved Items", selectedItems.size() + "");
 
+		
+      SortWinExplorerTask task = new SortWinExplorerTask(cTree, mainItem);
+      new Thread(task).start();
 		
 		
 //		long start1 = new Date().getTime();
@@ -163,30 +171,46 @@ public class CreateTree implements ITreeItemMethods, ISaveExpandedItems, ISaveSe
 		
 	 }
 	
-	 private List<String> getListParents(Path path) {
-		 List<String> list = new ArrayList<>(); 		 
-		 int nameCount = path.getNameCount();		 
-		 Path par = path;		 
-		 list.add(par.toString());
+	 private List<ItemsDB> getListParents(ItemsDB item) {
+		 List<ItemsDB> list = new ArrayList<>(); 		 
+		 int nameCount = item.getPath().getNameCount();		 
+		 Path par = item.getPath();		 
+		 list.add(new ItemsDB(par, item.isDirectoryPath()));
 		 for (int i = 0; i < nameCount; i++) {
 			
 			par = par.getParent();
-			// TODO - hier den mainDirectory von CTree holen und den mainDirectory aus der PathListe entfernen
-			if (par.toString().equalsIgnoreCase("D:\\") || par.toString().equalsIgnoreCase("D:\\test")) {
+			if (par == null) {
+				System.out.println("par is null");
 				continue;
 			}
-			list.add(par.toString());
+			// TODO - hier den mainDirectory von CTree holen und den mainDirectory aus der PathListe entfernen
+			File rootDir = new File(cTree.getMainDirectory());
+//			if (par.toString().equalsIgnoreCase("D:\\") || par.toString().equalsIgnoreCase("D:\\test")) {
+			if (par.toString().equalsIgnoreCase(cTree.getDrive()) || par.toString().equalsIgnoreCase(rootDir.getAbsolutePath())) {	
+				continue;
+			}
+			list.add(new ItemsDB(par, item.isDirectoryPath()));
 		 }
 		 
 		 sortStringListByLength(list);
 		 return list;
 	}
 	 
-	private void sortStringListByLength(List<String> list) {
-	        Collections.sort(list, Comparator.comparing(String::length));
+	private void sortStringListByLength(List<ItemsDB> list) {
+//	        Collections.sort(list, Comparator.comparing(String::length));
+	        Collections.sort(list, stringLengthComparator);
 	} 
 	
-	private boolean isChild(TreeItem<PathItem> mainItem, List<String> liste) {	
+	Comparator<ItemsDB> stringLengthComparator = new Comparator<ItemsDB>()
+    {
+        @Override
+        public int compare(ItemsDB o1, ItemsDB o2)
+        {
+            return Integer.compare(o1.getPath().toString().length(), o2.getPath().toString().length());
+        }
+    };
+	
+	private boolean isChild(TreeItem<PathItem> mainItem, List<ItemsDB> liste) {	
 		
 		 if (liste.size() == 0) {
 			return true;			
@@ -199,8 +223,8 @@ public class CreateTree implements ITreeItemMethods, ISaveExpandedItems, ISaveSe
 	 	if (mainItem.getChildren().isEmpty()) {
 			TreeItem<PathItem> newItem = null;
 			if (liste.size() != 0) {
-				String newPath = liste.get(0);
-			 	newItem = new TreeItem<PathItem>(new PathItem(new File(newPath).toPath()));					 	
+				String newPath = liste.get(0).getPath().toString();
+			 	newItem = new TreeItem<PathItem>(new PathItem(new File(newPath).toPath(), liste.get(0).isDirectoryPath()));					 	
 //			 	System.out.println("add Empty: " + newPath + " ->  in: " + mainItem.getValue().getPath());			
 //				if (mainItem.getChildren() == null) {
 //					System.out.println("is added");
@@ -214,6 +238,7 @@ public class CreateTree implements ITreeItemMethods, ISaveExpandedItems, ISaveSe
 //				}
 			 	
 				boolean b = mainItem.getChildren().add(newItem);
+//				System.out.println("add Empty:" + newItem.getValue().getRow() + " -> " + newItem.getValue().getPath());
 //				System.out.println("add Empty:" + selectedItems.size() + " -> " + newItem.getValue().getPath());
 //				selectSavedItem(newItem, selectedItems, cTree.getTree());
 				expandAllSavedItems(newItem, expandedItemList);
@@ -224,7 +249,7 @@ public class CreateTree implements ITreeItemMethods, ISaveExpandedItems, ISaveSe
 //				selectItem(cTree.getTree(), newItem);
 //				cTree.getTree().refresh();
 
-				liste.remove(newPath);					
+				liste.remove(liste.get(0));					
 			 } 
 			
 			 isChild(newItem, liste);								
@@ -237,7 +262,7 @@ public class CreateTree implements ITreeItemMethods, ISaveExpandedItems, ISaveSe
 			}
 			
 			if (!isChildExists.getKey()) {
-				String newPath = liste.get(0);			
+				String newPath = liste.get(0).getPath().toString();			
 				TreeItem<PathItem> newItem = isChildExists.getValue();					
 				if (!newItem.getValue().getPath().toString().equals(mainItem.getValue().getPath().toString())) {
 //					System.out.println("add Child: " + newItem.getValue().getPath() + " ->  in: " + mainItem.getValue().getPath());								 
@@ -252,7 +277,7 @@ public class CreateTree implements ITreeItemMethods, ISaveExpandedItems, ISaveSe
 				} else {
 					newItem = mainItem;
 				}
-				liste.remove(newPath);
+				liste.remove(liste.get(0));
 			
 				isChild(newItem, liste);
 				if(liste.isEmpty()) {
@@ -268,15 +293,15 @@ public class CreateTree implements ITreeItemMethods, ISaveExpandedItems, ISaveSe
 		return true;
 	}
 	
-	private Pair<Boolean, TreeItem<PathItem>> isChildExists(TreeItem<PathItem> mainItem, List<String> liste) {
+	private Pair<Boolean, TreeItem<PathItem>> isChildExists(TreeItem<PathItem> mainItem, List<ItemsDB> liste) {
 		 TreeItem<PathItem> newItem = null;
 		 if (liste.size() != 0) {
 			 for (TreeItem<PathItem> child : mainItem.getChildren()) {
 					String childPath = child.getValue().getPath().toString();
-					String newPath = liste.get(0);
-					newItem = new TreeItem<PathItem>(new PathItem(new File(newPath).toPath()));
+					String newPath = liste.get(0).getPath().toString();
+					newItem = new TreeItem<PathItem>(new PathItem(new File(newPath).toPath(), liste.get(0).isDirectoryPath()));
 						if(childPath.equalsIgnoreCase(newPath.toString())) {
-							liste.remove(newPath);
+							liste.remove(liste.get(0));
 							
 //							isChild(child, liste);
 							

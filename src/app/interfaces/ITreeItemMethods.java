@@ -31,6 +31,18 @@ public interface ITreeItemMethods {
         return null;
     }
 
+    public default TreeItem<PathItem> getItemSearchRecrusive(TreeItem<PathItem> root, String newItemString){
+
+        for(TreeItem<PathItem> subItem : root.getChildren()){
+        	if (subItem.getValue().getPath().toString().equalsIgnoreCase(newItemString)) {      		      		
+        		return subItem;
+			} else {
+				getItemSearchRecrusive(subItem, newItemString);
+			}      
+        }
+        return null;
+    }
+    
     public default void searchAndSelectItem(TreeView<PathItem> treeView, TreeItem<PathItem> root, String newItemString){
 
         for(TreeItem<PathItem> subItem : root.getChildren()){

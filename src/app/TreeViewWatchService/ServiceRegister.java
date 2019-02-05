@@ -73,7 +73,7 @@ public class ServiceRegister extends Task<Void>{
     }
 	
     private void register(Path dir) throws IOException {
-		TreeItem<PathItem> pathTreeItem = PathTreeItem.createNode(new PathItem(dir));
+		TreeItem<PathItem> pathTreeItem = PathTreeItem.createNode(new PathItem(dir, true));
 		if (!isItemExist(pathTreeItem, CTree.treeItem)) {
 			addNewNode(pathTreeItem, CTree.treeItem);
 		}
@@ -116,7 +116,7 @@ public class ServiceRegister extends Task<Void>{
 	private void addTreeItems(TreeItem<PathItem> item) {
 
         Path rootPath = item.getValue().getPath();
-        PathItem pathItem = new PathItem(rootPath);
+        PathItem pathItem = new PathItem(rootPath, item.getValue().isDirectoryItem());
         TreeItem<PathItem> treeItem = new TreeItem<PathItem>(pathItem);
         
         File treeItemFile =  treeItem.getValue().getPath().toFile();

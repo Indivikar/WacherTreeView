@@ -52,6 +52,7 @@ public class CopyOrMoveTask extends Task<Void> implements ICursor, ITreeItemMeth
 	public CopyOrMoveTask(CTree cTree, DragNDropInternal dragNDropInternal, PathTreeCell cell, Set<Path> inputSelectedFiles, Set<SourceTarget> selectedFiles,
 			Path sourceDir, Path targetDir) {
 
+		System.out.println("init CopyOrMoveTask 1");
 		this.cTree = cTree;
 		this.dragNDropInternal = dragNDropInternal;
 		this.cell = cell;
@@ -62,7 +63,7 @@ public class CopyOrMoveTask extends Task<Void> implements ICursor, ITreeItemMeth
 //		this.isMove = isMove;
 		
 		this.pForm = new CopyDialogProgress(null);
-		
+		System.out.println("init CopyOrMoveTask 2");
 	}
 
 	public void next(){
@@ -98,7 +99,7 @@ public class CopyOrMoveTask extends Task<Void> implements ICursor, ITreeItemMeth
 	
 	@Override
 	protected Void call() throws Exception {
-
+			System.out.println("Start CopyOrMoveTask");
         
         
 
@@ -356,29 +357,29 @@ public class CopyOrMoveTask extends Task<Void> implements ICursor, ITreeItemMeth
 	}
 
 	   private void sortItems(PathTreeCell cell, CopyDialogProgress pForm) {
-           SortWinExplorerTask taskSort = new SortWinExplorerTask(cell.getTreeView().getRoot());
+           SortWinExplorerTask taskSort = new SortWinExplorerTask(cTree, pForm, cell.getTreeView().getRoot(), targetDir.toString());
            
            
-           taskSort.setOnSucceeded(evt -> {
-        	   cTree.getScrollingByDragNDrop().stopScrolling();
-               cTree.getTree().refresh();
-               
-//               System.err.println("=== get Index " +  cell.getTreeItem().getValue().getRow());
-               	                           
-               // Select new Item
-               try {
-					Thread.sleep(500);
-				} catch (InterruptedException ex) {
-					// TODO Auto-generated catch block
-					ex.printStackTrace();
-				}
-               selectItemSearchInTreeView(cTree.getTree(), cell.getTreeItem(), targetDir.toString());
-               
-               System.out.println("   Ende Sort");
-               
-               pForm.getDialogStage().close();
-//               doTaskEventCloseRoutine(copyTask);
-           });
+//           taskSort.setOnSucceeded(evt -> {
+//        	   cTree.getScrollingByDragNDrop().stopScrolling();
+//               cTree.getTree().refresh();
+//               
+////               System.err.println("=== get Index " +  cell.getTreeItem().getValue().getRow());
+//               	                           
+//               // Select new Item
+//               try {
+//					Thread.sleep(500);
+//				} catch (InterruptedException ex) {
+//					// TODO Auto-generated catch block
+//					ex.printStackTrace();
+//				}
+//               selectItemSearchInTreeView(cTree.getTree(), cell.getTreeItem(), targetDir.toString());
+//               
+//               System.out.println("   Ende Sort");
+//               
+//               pForm.getDialogStage().close();
+////               doTaskEventCloseRoutine(copyTask);
+//           });
            
            
            try {

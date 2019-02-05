@@ -57,7 +57,7 @@ public class PathTreeItem extends TreeItem<PathItem> {
             ObservableList<TreeItem<PathItem>> children = FXCollections.observableArrayList();
             try (DirectoryStream<Path> dirs = Files.newDirectoryStream(path)) {
                 for (Path dir : dirs) {
-                    PathItem pathItem = new PathItem(dir);
+                    PathItem pathItem = new PathItem(dir, true);
                     children.add(createNode(pathItem));
                 }
             } catch (IOException ex) {

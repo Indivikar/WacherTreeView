@@ -12,9 +12,11 @@ import java.util.concurrent.Executors;
 import app.StartWacherDemo;
 import app.TreeViewWatchService.contextMenu.CellContextMenu;
 import app.controller.CTree;
+import app.interfaces.ILockDir;
 import app.interfaces.IOpenFile;
 import app.interfaces.ISuffix;
 import app.interfaces.ISystemIcon;
+import javafx.application.Platform;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -30,24 +32,27 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 
-public class PathTreeCell extends TreeCell<PathItem> implements ISuffix, ISystemIcon, IOpenFile{
+public class PathTreeCell extends TreeCell<PathItem> implements ISuffix, ISystemIcon, IOpenFile, ILockDir{
 	private Stage primaryStage;
 	private CTree cTree;
+	private CellContextMenu cellContextMenu;
 	
     private TextField textField;
     private Path editingPath;
     private StringProperty messageProp;
-    private ContextMenu dirMenu = new ContextMenu();
+//    private ContextMenu dirMenu = new ContextMenu();
     private ContextMenu fileMenu;
     private ExecutorService service = Executors.newFixedThreadPool(1);
     private ObservableList<String> listAllLockedFiles = FXCollections.observableArrayList();
 
     private int index;
+    private TreeItem<PathItem> levelOneItem;
+    
     
     public PathTreeCell(CTree cTree, Stage primaryStage) {  
     	this.cTree = cTree;
     	this.fileMenu = new CellContextMenu(this, primaryStage, cTree, listAllLockedFiles);
-        DragNDropInternal DragNDropInternal = new DragNDropInternal(primaryStage, service, this);     
+        DragNDropInternal DragNDropInternal = new DragNDropInternal(primaryStage, service, this);                   
     }
 
     public void selectCell() {
@@ -66,27 +71,95 @@ public class PathTreeCell extends TreeCell<PathItem> implements ISuffix, ISystem
             setContextMenu(null);
         } else {
 
-        		String name = getString();
-//        		indexProperty().addListener(e -> {
-////        			System.out.println("--- Set Index " +  getIndex());
-//        			item.setRow(getIndex());
-////        			index = getIndex();
-//        		});
-        		
-//        		selectedProperty().addListener(e -> {
-//        			System.out.println("selectedProperty");
-//        			cTree.getScrollingByDragNDrop().stopScrolling();
-//        		});
-        		item.setRow(getIndex());
-                setText(name + " (" + getIndex() + ")");
-                setGraphic(getImage(this.getTreeItem()));
-                setContextMenu(fileMenu);
+        		setLevelOneItem(getTreeItem());
 
+        		item.setRow(getIndex());
+        		item.setLevel(getTreeView().getTreeItemLevel(getTreeItem()));
+        		
+                setText(getString() + " (" + getIndex() + ")");
+                
+				setContextMenu(fileMenu);       
+				setListenerLockedContextMenu(getTreeItem());              
+                setStartPropertiesContextMenu(item);
+                
+                setGraphic(getImage(this.getTreeItem()));
+                
                 mouseOver(this);                              
 				mouseClick(this);
         }
     }
 
+	private void setListenerLockedContextMenu(TreeItem<PathItem> treeItem) {
+		PathItem item = treeItem.getValue();
+		
+        if (getTreeView().getTreeItemLevel(getTreeItem()) == 1) {
+        	item.getIsLockedProp().addListener((var, oldVar, newVar) -> {
+				cellContextMenu.setIsLocked(newVar);
+				
+    			Platform.runLater(() -> {
+    				setGraphic(getImage(this.getTreeItem()));
+    			});
+   			
+    		});
+		} else if (getTreeView().getTreeItemLevel(getTreeItem()) > 1) {
+			levelOneItem.getValue().getIsLockedProp().addListener((var, oldVar, newVar) -> {   					
+				item.setLocked(newVar);
+				cellContextMenu.setIsLocked(newVar);
+				
+    			Platform.runLater(() -> {
+    				setGraphic(getImage(this.getTreeItem()));
+    			});
+
+    		});
+		}
+		
+	}
+
+	private void setStartPropertiesContextMenu(PathItem item) {
+        if (getTreeView().getTreeItemLevel(getTreeItem()) == 0) {               	
+        	cellContextMenu.setRootMenuItems();
+//        	setGraphic(getImage(this.getTreeItem()));
+        }
+        
+        if (getTreeView().getTreeItemLevel(getTreeItem()) == 1) {
+			boolean b = isDirLocked(getTreeView().getRoot(), getTreeItem().getValue().getPath().toFile());
+			cellContextMenu.setIsLocked(b);
+//			setGraphic(getImage(this.getTreeItem()));
+		} 
+        
+
+        if (getTreeView().getTreeItemLevel(getTreeItem()) > 1) {
+        	item.setLocked(levelOneItem.getValue().isLocked());
+//        	setGraphic(getImage(this.getTreeItem()));
+        }
+	}
+
+	public void setLevelOneItem(TreeItem<PathItem> treeItem) {
+		
+		if (getTreeView().getTreeItemLevel(getTreeItem()) == 1) {
+			getTreeItem().getValue().setLevelOneItem(treeItem);
+		}
+		
+		if (getTreeView().getTreeItemLevel(getTreeItem()) > 1) {
+			getLevelOneItem(getTreeItem());
+			getTreeItem().getValue().setLevelOneItem(levelOneItem);
+		}
+	}
+	
+	private void getLevelOneItem(TreeItem<PathItem> treeItem) {
+		
+		TreeItem<PathItem> parentItem = treeItem.getParent();
+        if (getTreeView().getTreeItemLevel(parentItem) == 1) {
+//        	System.out.println("getLevelOneItem(): " + parentItem);
+        	levelOneItem = parentItem;   
+        	treeItem.getValue().setLevelOneItem(levelOneItem);
+			return;
+		} else {
+			getLevelOneItem(parentItem);
+		}
+	}
+	
+	
 	private void mouseClick(PathTreeCell pathTreeCell) {
 		pathTreeCell.setOnMouseClicked(event -> {
 			File file = pathTreeCell.getTreeItem().getValue().getPath().toFile();
@@ -108,40 +181,55 @@ public class PathTreeCell extends TreeCell<PathItem> implements ISuffix, ISystem
 	}
 	
 	
-	private ImageView getImage(TreeItem<PathItem> treeItem) {
+	public ImageView getImage(TreeItem<PathItem> treeItem) {
     	ImageView imageView = new ImageView();
 
-    	File file = treeItem.getValue().getPath().toFile();
-    	if (file.isDirectory()) {
-    		imageView.setImage(getDirectoryItem(treeItem));
-		} else {
-			if (file.exists()) {
-				imageView.setImage(ISystemIcon.getSystemImage(file));
-			} else {								
-				String itemSuffix = ISuffix.getSuffix(file.getName());
-				if (!itemSuffix.equals("")) {
-					for (Entry<String, Image> item : CTree.getSuffixIcon().entrySet()) {	
-						if (item.getKey().equalsIgnoreCase(itemSuffix)) {							
-							imageView.setImage(item.getValue());
-							return imageView;
-						}					
+    	if (treeItem != null) {
+
+	    	File file = treeItem
+	    			.getValue()
+	    			.getPath()
+	    			.toFile();
+	    	if (file.isDirectory()) {
+	    		imageView.setImage(getDirectoryItem(treeItem));
+			} else {
+				if (file.exists()) {
+					imageView.setImage(ISystemIcon.getSystemImage(file));
+				} else {								
+					String itemSuffix = ISuffix.getSuffix(file.getName());
+					if (!itemSuffix.equals("")) {
+						for (Entry<String, Image> item : CTree.getSuffixIcon().entrySet()) {	
+							if (item.getKey().equalsIgnoreCase(itemSuffix)) {							
+								imageView.setImage(item.getValue());
+								return imageView;
+							}					
+						}
+						// Default File-Icon
+						imageView.setImage(getDefaultDocumentIcon());	
+					} else {
+						imageView.setImage(getDirectoryItem(treeItem));
 					}
-					// Default File-Icon
-					imageView.setImage(getDefaultDocumentIcon());	
-				} else {
-					imageView.setImage(getDirectoryItem(treeItem));
-				}
-			}			
-		}
-    	    	
+				}			
+			}
+		}    	
+    	
 		return imageView;
 	}
 	
 	private Image getDirectoryItem(TreeItem<PathItem> treeItem) {
+		boolean isLocked = treeItem.getValue().isLocked();
 		if (treeItem.isExpanded() && treeItem.getChildren().size() != 0) {
-			return getOpenIcon();
+			if (isLocked) {
+				return getOpenKeyIcon();
+			} else {
+				return getOpenIcon();
+			}			
 		} else {
-			return getCloseIcon();
+			if (isLocked) {
+				return getCloseKeyIcon();
+			} else {
+				return getCloseIcon();
+			}							
 		}
 	}
 
@@ -153,26 +241,34 @@ public class PathTreeCell extends TreeCell<PathItem> implements ISuffix, ISystem
 		return new Image(StartWacherDemo.class.getResourceAsStream("view/images/folderClose.png"));
 	}
 	
+	private Image getOpenKeyIcon() {
+		return new Image(StartWacherDemo.class.getResourceAsStream("view/images/folderOpen_key.png"));
+	}
+	
+	private Image getCloseKeyIcon() {
+		return new Image(StartWacherDemo.class.getResourceAsStream("view/images/folderClose_key.png"));
+	}
+	
 	private Image getDefaultDocumentIcon() {
 		return new Image(StartWacherDemo.class.getResourceAsStream("view/images/document.png"));
 	}
 	
 	
-    @Override
-    public void startEdit() {
-        super.startEdit();
-        if (textField == null){
-            createTextField();
-        }
-        setText(null);
-        setGraphic(textField);
-        textField.selectAll();
-        if (getItem() == null) {
-            editingPath = null;
-        } else {
-            editingPath =getItem().getPath();
-        }
-    }
+//    @Override
+//    public void startEdit() {
+//        super.startEdit();
+//        if (textField == null){
+//            createTextField();
+//        }
+//        setText(null);
+//        setGraphic(textField);
+//        textField.selectAll();
+//        if (getItem() == null) {
+//            editingPath = null;
+//        } else {
+//            editingPath =getItem().getPath();
+//        }
+//    }
 
     @Override
     public void commitEdit(PathItem pathItem) {
@@ -199,20 +295,24 @@ public class PathTreeCell extends TreeCell<PathItem> implements ISuffix, ISystem
         return getItem().toString();
     }
 
-    private void createTextField() {
-        textField = new TextField(getString());
-        textField.setOnKeyReleased((KeyEvent t) -> {
-            if (t.getCode() == KeyCode.ENTER){
-                Path path = Paths.get(getItem().getPath().getParent().toAbsolutePath().toString(), textField.getText());
-                commitEdit(new PathItem(path));
-            } else if (t.getCode() == KeyCode.ESCAPE) {
-                cancelEdit();
-            }
-        });
-    }
+//    private void createTextField() {
+//        textField = new TextField(getString());
+//        textField.setOnKeyReleased((KeyEvent t) -> {
+//            if (t.getCode() == KeyCode.ENTER){
+//                Path path = Paths.get(getItem().getPath().getParent().toAbsolutePath().toString(), textField.getText());
+//                commitEdit(new PathItem(path));
+//            } else if (t.getCode() == KeyCode.ESCAPE) {
+//                cancelEdit();
+//            }
+//        });
+//    }
 
     // Getter
 	public CTree getcTree() {return cTree;}
+
+	public void set(CellContextMenu cellContextMenu) {
+		this.cellContextMenu = cellContextMenu;
+	}
     
 
     

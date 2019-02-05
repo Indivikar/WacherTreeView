@@ -1,11 +1,20 @@
 package app.controller;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.DirectoryStream;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -16,6 +25,7 @@ import java.util.Map.Entry;
 import java.util.ResourceBundle;
 import java.util.Stack;
 
+import app.functions.LockFileHandler;
 import app.StartWacherDemo;
 import app.TreeViewWatchService.CreateTree;
 import app.TreeViewWatchService.FileMonitor;
@@ -25,19 +35,26 @@ import app.TreeViewWatchService.PathTreeCell;
 import app.TreeViewWatchService.ScrollingByDragNDrop;
 import app.db.PathList;
 import app.interfaces.ICursor;
+import app.interfaces.ILockDir;
 import app.interfaces.ISaveExpandedItems;
 import app.interfaces.ISuffix;
 import app.interfaces.ISystemIcon;
+import app.interfaces.ITreeUpdateHandler;
+import app.listeners.ChildrenChangedListener;
 import app.loadTime.LoadTime.LoadTimeOperation;
+import app.models.ItemsDB;
 import app.sort.WindowsExplorerComparator;
 import app.threads.LoadDBService;
+
 import app.threads.SortWinExplorerTask;
+import app.watcher.watchService.LockWatcher;
 import app.watcher.watchService.PAWatcher;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -58,37 +75,46 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import javafx.util.Pair;
 
-public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpandedItems, ICursor {
+public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpandedItems, ICursor, ILockDir, ITreeUpdateHandler {
 
 	public static ObservableList<LoadTimeOperation> listLoadTime = FXCollections.observableArrayList();
 
 //	String mainDirectory = "Y:\\test";
-	private static String mainDirectory = "D:\\test";
+	public static String lockFileName = "folder.lock";
+	public static String refreshFileName = ".startRefesh";
+	private static String drive = "V:\\";
+	private static String mainDirectory = drive + "test";
 	private static String DirectoryNameDB = "___DB___";
-	private static String fileNameDB = "test.txt";
+	private static String fileNameDB = "test.txt";	
 	private String DirectoryDB = mainDirectory + File.separator + DirectoryNameDB;
 	private static String pathFileDB = mainDirectory + File.separator + DirectoryNameDB + File.separator + fileNameDB;
 	
+	// Stages
 	private StartWacherDemo startWacherDemo;
 	private Stage primaryStage;
-	
+
 	// Services
 	private static LoadDBService loadDBService;
 	
 	
 	// Klassen
 //	private static PathList pathList;
+	private LockFileHandler lockFileHandler = new LockFileHandler();
 	private ScrollingByDragNDrop scrollingByDragNDrop;
 	private CreateTree createTree;
 	private final Comparator<PathItem> NATURAL_SORT = new WindowsExplorerComparator();
-	
-//    private ExecutorService service;
 	private PathTreeCell cell;
+	
+	// Listeners
+	private ChildrenChangedListener ChildrenChangedListener = new ChildrenChangedListener(this);
+	
+	public static boolean isInternalChange = false;
+	
 	private Path rootPath;
 	public static TreeItem<PathItem> treeItem;
 
 	private static ObservableList<TreeItem<PathItem>> listFiles = FXCollections.observableArrayList();
-	private static ObservableList<Path> pathsPA = FXCollections.observableArrayList();
+	private static ObservableList<ItemsDB> pathsPA = FXCollections.observableArrayList();
 	
 	private ObservableList<ModelFileChanges> listSaveChanges = FXCollections.observableArrayList();
 	public static HashMap<String, Image> suffixIcon = new HashMap<>();
@@ -121,15 +147,13 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 
 	@Override
 	public void initialize(URL arg0, ResourceBundle arg1) {
-		System.out.println("CTree()");		
+		System.out.println("CTree()");	
 //		pathList = new PathList(pathFileDB);
 		scrollingByDragNDrop = new ScrollingByDragNDrop(tree);
 //		service = Executors.newFixedThreadPool(1);
 //		textFieldRootDirectory.setText("H:\\Test");
 		textFieldRootDirectory.setText(mainDirectory);
 
-		
-		
 		setButtonAction();
 		setPropUpdateMessage();
 	}
@@ -169,16 +193,21 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 		buttonReloadTree.setOnAction(event -> {		
 //			this.createTree.addAllExpandedItems();
 //			tree.getRoot().getChildren().clear();
-			refreshTree();
+			refreshServerPathList(this);
+//			refreshTree();
+			
+			
+			
 		});
 
 		buttonSortList.setOnAction(event -> {
-	        SortWinExplorerTask task = new SortWinExplorerTask(tree.getRoot());
+	        SortWinExplorerTask task = new SortWinExplorerTask(this, tree.getRoot());
 	        new Thread(task).start();
 		});
 		
 	}
 	
+
 	public void refreshTree() {
 			System.out.println("----- refreshTree -----");
 			this.createTree.updatePathListFormDB(treeItem, true, true);
@@ -197,14 +226,13 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 		
 		listLoadTime.add(new LoadTimeOperation("loadTree()", runningTime + "", mainDirectory));
 		System.out.println("loadTree() LadeZeit: " + runningTime);
-		
-		
+
 	}
 	
 	private void loadTree(Stage primaryStage, String rootDirectory) {
 		System.out.println("loadTree()");
         rootPath = Paths.get(rootDirectory);
-        PathItem pathItem = new PathItem(rootPath);
+        PathItem pathItem = new PathItem(rootPath, true);
         treeItem = new TreeItem<PathItem>(pathItem);
         treeItem.setExpanded(false);
 
@@ -223,8 +251,8 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 //        long start1 = new Date().getTime();
 //        sortTreeItems(tree.getRoot());
 //        sortTree(tree.getRoot());
-        SortWinExplorerTask task = new SortWinExplorerTask(tree.getRoot());
-        new Thread(task).start();
+//        SortWinExplorerTask task = new SortWinExplorerTask(this, tree.getRoot());
+//        new Thread(task).start();
 //		long runningTime1 = new Date().getTime() - start1;			
 //		CTree.listLoadTime.add(new LoadTimeOperation("sortTreeItems()", runningTime1 + "", pathFileDB));
         
@@ -235,6 +263,7 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
         	System.out.println(newVal + " - " + o.getValue());
         });
         
+        tree.getRoot().getChildren().addListener(ChildrenChangedListener.listener);
         
         
 		tree.setFixedCellSize(35);
@@ -243,6 +272,13 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
             return cell;
         });
         
+
+        
+        changeIconWhenFolderLocked(tree.getRoot());
+        
+//        SortWinExplorerTask task = new SortWinExplorerTask(this, tree.getRoot());
+//        new Thread(task).start();
+        
         // Apache Watcher
 ////        FileMonitor fileMonitor = new FileMonitor(this, cell, "H:\\Test", 1000);
 //        FileMonitor fileMonitor = new FileMonitor(this, cell, DirectoryDB, 1000);
@@ -250,18 +286,35 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 
         // java.nio.file.WatchService
         PAWatcher paWatcher = new PAWatcher(this);
-        
-        
+        lockWacher(rootPath);
+
 	}
 	
+	
+	private void lockWacher(Path path) {
+		try {
+			FileSystem fs = FileSystems.getDefault(); // sun.nio.fs.WindowsFileSystem			
+	        WatchService watchService = fs.newWatchService(); // sun.nio.fs.WindowsWatchService
+	        
+			WatchKey watchKey = path.register(watchService, StandardWatchEventKinds.ENTRY_CREATE,
+				      StandardWatchEventKinds.ENTRY_DELETE, StandardWatchEventKinds.ENTRY_MODIFY);
+		
+	        LockWatcher wh = new LockWatcher(this, watchService, path);
+	        wh.start();
+        } catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+      
+	}
 
 
 	 public static void createTree(TreeItem<PathItem> oldItem1, boolean expand) {
  			
 			loadDBService.setOnSucceeded(e -> {
 				pathsPA = loadDBService.getValue();
-				for (Path path : pathsPA) {	      
-	                TreeItem<PathItem> newItem = new TreeItem<PathItem>( new PathItem( path));
+				for (ItemsDB item : pathsPA) {	      
+	                TreeItem<PathItem> newItem = new TreeItem<PathItem>( new PathItem( item.getPath(), item.isDirectoryPath()));
 	                handleSearch(oldItem1, newItem);
 	            }
 			});
@@ -326,48 +379,53 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
     
 	
 	
-	public void sortTreeItems(TreeItem<PathItem> item) {
-
-//		SortWinExplorerTask task = new SortWinExplorerTask(item.getChildren());
-//		Thread thread = new Thread(task);
-//		thread.start();
-		
-		sortMyListRecursive(item.getChildren());
-		
-		  for (TreeItem<PathItem> child : item.getChildren()) {
-			  if (!child.isLeaf() && child.getValue().getPath().toFile().isDirectory()) {
-				  sortTreeItems(child);
-			  }
-		  }
-
-	}
+//	public void sortTreeItems(TreeItem<PathItem> item) {
+//
+////		SortWinExplorerTask task = new SortWinExplorerTask(item.getChildren());
+////		Thread thread = new Thread(task);
+////		thread.start();
+//		
+//		sortMyListRecursive(item.getChildren());
+//		
+//		  for (TreeItem<PathItem> child : item.getChildren()) {
+//			  if (!child.isLeaf() && child.getValue().isDirectoryItem()) {
+//				  sortTreeItems(child);
+//			  }
+//		  }
+//
+//	}
+//	
+//    public static void sortMyListRecursive(ObservableList<TreeItem<PathItem>> children) {
+//
+//        Collections.sort(children, new Comparator<TreeItem<PathItem>>() {
+//            private final Comparator<PathItem> NATURAL_SORT = new WindowsExplorerComparator();
+//
+//            @Override
+//            public int compare(TreeItem<PathItem> o1, TreeItem<PathItem> o2) {;
+//                return NATURAL_SORT.compare(o1.getValue(), o2.getValue());
+//            }
+//        });
+//    }
 	
-    public static void sortMyListRecursive(ObservableList<TreeItem<PathItem>> children) {
 
-        Collections.sort(children, new Comparator<TreeItem<PathItem>>() {
-            private final Comparator<PathItem> NATURAL_SORT = new WindowsExplorerComparator();
-
-            @Override
-            public int compare(TreeItem<PathItem> o1, TreeItem<PathItem> o2) {;
-                return NATURAL_SORT.compare(o1.getValue(), o2.getValue());
-            }
-        });
-    }
-	
+    
     // Getter    
     
     // Services
     public static LoadDBService getLoadDBService() {return loadDBService;}
     
+    public String getDrive() {return drive;}
     public String getMainDirectory() {return mainDirectory;}
 	public String getDirectoryNameDB() {return DirectoryNameDB;}
 	public String getFileNameDB() {return fileNameDB;}
 	public String getDirectoryDB() {return DirectoryDB;}  
     public String getPathFileDB() {return pathFileDB;}
 
+    public LockFileHandler getLockFileHandler() {return lockFileHandler;}
 	public ScrollingByDragNDrop getScrollingByDragNDrop() {return scrollingByDragNDrop;}
 	public CreateTree getCreateTree() {return createTree;}
-    
+	public ChildrenChangedListener getChildrenChangedListener() {return ChildrenChangedListener;}
+
 	public TreeView<PathItem> getTree() {return tree;}
 	public PathTreeCell getCell() {return cell;}
 	public Stage getPrimaryStage() {return primaryStage;}

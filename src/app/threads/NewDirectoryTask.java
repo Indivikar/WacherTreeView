@@ -11,13 +11,16 @@ import app.TreeViewWatchService.PathItem;
 import app.TreeViewWatchService.PathTreeCell;
 import app.controller.CTree;
 import app.functions.LoadTime;
+import app.interfaces.ICursor;
+import app.interfaces.ITreeItemMethods;
 import javafx.concurrent.Task;
 import javafx.scene.control.TreeItem;
 
-public class NewDirectoryTask extends Task<Void> {
+public class NewDirectoryTask extends Task<Void> implements ICursor, ITreeItemMethods {
 
 	private CTree cTree;
 	private PathTreeCell pathTreeCell;
+	private TreeItem<PathItem> newItem;
 	
 	public NewDirectoryTask(CTree cTree, PathTreeCell pathTreeCell) {
 		this.pathTreeCell = pathTreeCell;
@@ -35,11 +38,34 @@ public class NewDirectoryTask extends Task<Void> {
 	}
 	
 	@Override
-	protected void succeeded() {
-    	CreateTree createTree = cTree.getCreateTree();
-    	Path path = pathTreeCell.getTreeItem().getValue().getPath();
-    	createTree.updatePathListFormItem(path);
-    	createTree.startCreateTree(pathTreeCell.getTreeView().getRoot(), false, false);
+	protected void succeeded() {   	
+		Path newDir = newItem.getValue().getPath();
+    	Path parentPath = pathTreeCell.getTreeItem().getValue().getPath();
+    	
+    	TreeItem<PathItem> parentItem = getItemSearchRecrusive(pathTreeCell.getTreeView().getRoot(), parentPath.toString());
+//    	TreeItem<PathItem> parentItem = new TreeItem<PathItem>(new PathItem(parentPath));
+
+    	
+    	
+    	if (newDir.toFile().exists()) {
+
+    		cTree.getChildrenChangedListener().setSelectNewDirectoy(true);
+    		
+	    	CreateTree createTree = cTree.getCreateTree();   	
+	    	hier weiter, methode "updatePathListFormItem()" muss überarbeitet werden	  
+	    	createTree.updatePathListFormItem(parentPath);
+	    	createTree.startCreateTree(pathTreeCell.getTreeView().getRoot(), false, false);
+	    	
+//	    	TreeItem<PathItem> item = new TreeItem<PathItem>(new PathItem(newDir));
+//	    	pathTreeCell.getTreeView().getSelectionModel().select(item);
+	    	
+	    	System.out.println("path___: " + pathTreeCell.getTreeView().getRoot().getValue().getPath());
+	    	SortWinExplorerTask sortWinExplorerTask = new SortWinExplorerTask(cTree, null, parentItem, newDir.toString());
+//	    	SortWinExplorerTask sortWinExplorerTask = new SortWinExplorerTask(cTree, null, pathTreeCell.getTreeView().getRoot(), newDir.toString());
+	    	bindUIandService(cTree.getPrimaryStage(), sortWinExplorerTask);
+	    	new Thread(sortWinExplorerTask).start();
+    	}
+    	
 	}
 	
 	@Override
@@ -48,9 +74,13 @@ public class NewDirectoryTask extends Task<Void> {
 		LoadTime.Start();
 		
         Path newDir = createNewDirectory();
-        if (newDir != null) {            	  
-      	  TreeItem<PathItem> newItem = new TreeItem<PathItem>(new PathItem(newDir));
-      	  CTree.createTree(newItem, false);
+        System.out.println(1);
+        if (newDir != null) {   
+        	System.out.println(2);
+      	  	this.newItem = new TreeItem<PathItem>(new PathItem(newDir, true));
+      	  	System.out.println(3);
+//      	  CTree.createTree(newItem, false);
+      	  	System.out.println(99);
         }
 		
         LoadTime.Stop("NewDirectoryTask()", "");

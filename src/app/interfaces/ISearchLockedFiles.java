@@ -3,7 +3,10 @@ package app.interfaces;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
+import app.controller.CTree;
 import app.dialog.CopyDialogProgress;
 import app.view.alerts.AlertFilesLocked;
 import javafx.collections.ObservableList;
@@ -18,7 +21,7 @@ public interface ISearchLockedFiles {
     	
     	if (!file.isDirectory()) {
     		pForm.addLockedFile(file);
-    		return isFileAccess(file);
+    		return isFileLocked(file);
 		}
     	
 	 	 File[] filesList = file.listFiles();
@@ -27,7 +30,7 @@ public interface ISearchLockedFiles {
 	 	            recursiveSearch(f, pForm);
 	 	        }
 	 	        if( f.isFile() ){
-	 	        	if (isFileAccess(f)) {
+	 	        	if (!isFileOnIgnoreList(f.getName()) && isFileLocked(f)) {
 	 	        		pForm.addLockedFile(f);
 	 	        		isAccessFileFounded = true;
 					}    	        	
@@ -36,8 +39,19 @@ public interface ISearchLockedFiles {
 			return isAccessFileFounded;
 	 	}
 	
+    public default boolean isFileOnIgnoreList(String fileName) {
+    	List<String> fileList = new ArrayList<String>();
+    	fileList.add(CTree.lockFileName);
+    	
+    	for (String string : fileList) {
+			if (string.equalsIgnoreCase(fileName)) {
+		    	return true;
+			}
+		}    	
+    	return false;
+    }
     
-    public default boolean isFileAccess(File name) {
+    public default boolean isFileLocked(File name) {
 //		System.out.println("is File Locked: " + name);
 		System.out.println(name.canWrite()); // -> true
 		FileOutputStream fileOutputStream = null;

@@ -81,7 +81,7 @@ public class FileAlterationListenerImpl implements FileAlterationListener, ISuff
 	private ObservableList<ModelFileChanges> data = FXCollections.observableArrayList();
 //	private ObservableList<ModelFileChanges> listSaveChanges = FXCollections.observableArrayList();
 	
-	public static boolean isInternalChange = false;
+//	public static boolean isInternalChange = false;
 	private boolean startUpdate = false;
 
 	private VBox vBoxMessage;

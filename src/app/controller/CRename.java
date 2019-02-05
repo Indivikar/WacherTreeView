@@ -6,11 +6,13 @@ import java.util.ResourceBundle;
 
 import app.TreeViewWatchService.PathTreeCell;
 import app.interfaces.ICursor;
+import app.interfaces.ILockDir;
 import app.interfaces.ISuffix;
 import app.interfaces.ITreeItemMethods;
 import app.threads.RenameTask;
 import app.threads.SortWinExplorerTask;
 import app.view.Stages.StageRename;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Cursor;
@@ -19,9 +21,11 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
-public class CRename implements Initializable, ISuffix, ICursor, ITreeItemMethods{
+public class CRename implements Initializable, ISuffix, ICursor, ITreeItemMethods, ILockDir{
 
+	
 	private StageRename stageRename;
+	private CTree cTree;
 	private Stage mainStage;
 	private Stage stage;
 	private PathTreeCell pathTreeCell;
@@ -33,6 +37,7 @@ public class CRename implements Initializable, ISuffix, ICursor, ITreeItemMethod
 	@FXML private Label labelMassage;
 	@FXML private Button buttonOK;
 	@FXML private Button buttonCancel;
+	
 	
 
 	@Override
@@ -74,28 +79,49 @@ public class CRename implements Initializable, ISuffix, ICursor, ITreeItemMethod
 //				isRenameSuccessful = rename(cellFile.getParentFile(), cellFile.getName(), textFieldName.getText() + "." + suffix);
 //			}
 
-			RenameTask renameTask = new RenameTask(this, pathTreeCell);		
-			bindUIandService(mainStage, renameTask);
-			
-			renameTask.setOnSucceeded(ev -> {
-		        SortWinExplorerTask task = new SortWinExplorerTask(pathTreeCell.getTreeItem().getParent());
-		        bindUIandService(mainStage, task);
-		        new Thread(task).start();
-		        task.setOnSucceeded(event -> {
-		        	selectItemSearchInTreeView(pathTreeCell.getTreeView(), pathTreeCell.getTreeItem(), renameTask.getNewFile().getAbsolutePath());		        	
-		        });
-			});
-			
-			new Thread(renameTask).start();
-			
+			// unlock lockFile to change the name
+//	        Task<Void> unLockTaskask = new Task<Void>() {
+//	            @Override
+//	            protected Void call() throws Exception {
+//	                File levelOneDir = pathTreeCell.getTreeItem().getValue().getLevelOneItem().getValue().getPath().toFile();
+//	                cTree.getLockFileHandler().unlockLockfile(levelOneDir);
+//	                return null;
+//	            }
+//	        };
+//			
+//	        
+//	        unLockTaskask.setOnSucceeded(evt -> {
+		        RenameTask renameTask = new RenameTask(this, cTree, pathTreeCell);		
+				bindUIandService(mainStage, renameTask);
+				
+				renameTask.setOnSucceeded(ev -> {
+					
+			        SortWinExplorerTask task = new SortWinExplorerTask(pathTreeCell.getcTree(), pathTreeCell.getTreeItem().getParent());
+			        bindUIandService(mainStage, task);
+			        new Thread(task).start();
+			        task.setOnSucceeded(event -> {
+			        	selectItemSearchInTreeView(pathTreeCell.getTreeView(), pathTreeCell.getTreeItem(), renameTask.getNewFile().getAbsolutePath());		   		        	
+			        });
+				});
+				
+				new Thread(renameTask).start();
+//	        });
+//	        
+//	        Thread t = new Thread(unLockTaskask);
+//			t.setDaemon(true);
+//			t.start();
 //			if (RenameTask) {
 //				stage.close();
 //			} 			
 		});
 
-		buttonCancel.setOnAction(e -> {
-			stage.close();
-		});
+//		buttonCancel.setOnAction(e -> {		
+//			System.out.println("pathTreeCell: " + pathTreeCell);
+//			unlockDir(cTree.getLockFileHandler(), 
+//					pathTreeCell.getTreeItem().getValue().getLevelOneItem());
+//			stage.close();
+//
+//		});
 	}
 	
 	
@@ -129,8 +155,9 @@ public class CRename implements Initializable, ISuffix, ICursor, ITreeItemMethod
 	// Setter
 	public void setTextFieldName(TextField textFieldName) {this.textFieldName = textFieldName;}	
 	
-	public void set(StageRename stageRename, Stage mainStage, Stage stage, PathTreeCell pathTreeCell) {
+	public void set(StageRename stageRename, CTree cTree, Stage mainStage, Stage stage, PathTreeCell pathTreeCell) {
 		this.stageRename = stageRename;
+		this.cTree = cTree;
 		this.mainStage = mainStage;
 		this.stage = stage;	
 		this.pathTreeCell = pathTreeCell;
@@ -144,7 +171,19 @@ public class CRename implements Initializable, ISuffix, ICursor, ITreeItemMethod
 			textFieldName.setText(name);
 		}
 		
+	
+		
 		textFieldListener();
+		lockDir(cTree.getLockFileHandler(), pathTreeCell.getTreeItem().getValue().getLevelOneItem());
+		
+		
+		buttonCancel.setOnAction(e -> {		
+			System.out.println("pathTreeCell: " + this.pathTreeCell);
+			unlockDir(cTree.getLockFileHandler(), 
+					this.pathTreeCell.getTreeItem().getValue().getLevelOneItem());
+			stage.close();
+
+		});
 		
 	}
 

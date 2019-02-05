@@ -23,8 +23,9 @@ public class PAWatcher {
 //	static Logger log = Logger.getLogger(FolderWatcher.class);
 	public static Integer mExecId = 0;
 	
-	private static final String inputDirPath = "D:\\Test\\___DB___";
+//	private static final String inputDirPath = "V:\\Test\\___DB___";
 	
+//	private static final String inputDirPath = cTree.getDirectoryDB();
 //	private AddTreeItems addTreeItems;
 
 	public PAWatcher(CTree cTree) {
@@ -49,7 +50,8 @@ public class PAWatcher {
 		Path pathToFolder = null;
 
 		try {
-			pathToFolder = Paths.get(inputDirPath);
+//			pathToFolder = Paths.get(inputDirPath);
+			pathToFolder = Paths.get(cTree.getDirectoryDB());
 			// FileUtil.pathValidator("FILE_INPUT_DIRECTORY");
 		} catch (Exception e) {
 			String lLogMsg = "Error in reading Input directories, ensure directories " +
@@ -76,7 +78,8 @@ public class PAWatcher {
 			// application was not running
 			// The following code will trigger the watch service for any
 			// existing file
-			File dir = new File(inputDirPath);
+//			File dir = new File(inputDirPath);
+			File dir = new File(cTree.getDirectoryDB());
 			triggerWatchService(dir);
 		} catch (IOException ioex) {
 			String lLogMsg = "IOException in File Watcher service";
@@ -196,6 +199,7 @@ public class PAWatcher {
 							System.out.println("FILE_INPUT_DIRECTORY: " +  event.context() + " -> " + event.kind());
 							
 							if (event.kind().name().equals("ENTRY_MODIFY")) {
+								
 								startAction(event.context().toString());
 							}
 							

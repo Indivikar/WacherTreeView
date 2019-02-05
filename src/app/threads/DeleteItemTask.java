@@ -22,6 +22,7 @@ import app.controller.CTree;
 import app.dialog.CopyDialogProgress;
 import app.functions.LoadTime;
 import app.interfaces.ICursor;
+import app.interfaces.ILockDir;
 import app.interfaces.ISearchLockedFiles;
 import app.loadTime.LoadTime.LoadTimeOperation;
 import app.sort.WindowsExplorerComparator;
@@ -32,8 +33,7 @@ import javafx.concurrent.Task;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.Alert.AlertType;
 
-public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, ICursor {
-
+public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, ICursor, ILockDir {
 	
 	private DeleteItemTask deleteItemTask;
 	private CTree cTree;
@@ -68,6 +68,7 @@ public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, IC
 	protected void cancelled() {
 		System.out.println("Del cancelled");	
 		this.cancelTask = true;
+		unlockDir(cTree.getLockFileHandler(), pathTreeCell.getTreeItem().getValue().getLevelOneItem());
 		updateMessage("Cancelled");
 		// TODO - wenn cancelled dann komplett refresh, der refresh soll von der DB angestossen werden
 		// 		- und danach Dialog Close
@@ -76,6 +77,7 @@ public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, IC
 	@Override
 	protected void failed() {
 		System.err.println("Failed");
+		unlockDir(cTree.getLockFileHandler(), pathTreeCell.getTreeItem().getValue().getLevelOneItem());
 		updateMessage("Failed");
 		// TODO - wenn cancelled dann komplett refresh, der refresh soll von der DB angestossen werden
 		// 		- und danach Dialog Close
@@ -84,6 +86,7 @@ public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, IC
 	@Override
 	protected void succeeded() {
 		removeItem();
+		unlockDir(cTree.getLockFileHandler(), pathTreeCell.getTreeItem().getValue().getLevelOneItem());
 		CreateTree.wantUpdateTree = false;
 		sleep(1000);
 		pForm.close();
@@ -96,8 +99,12 @@ public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, IC
 
 		LoadTime.Start();
 		
+		
+		
 		for (TreeItem<PathItem> item : pathTreeCell.getTreeView().getSelectionModel().getSelectedItems()) {
 			System.out.println("add item: " + item.getValue().getPath() +  " (" + item.getValue().getRow() + ")");
+			
+			unlockLockFile(cTree.getLockFileHandler(), pathTreeCell);
 			
 			selectedItems.add(item);
 			rows.add(item.getValue().getRow());

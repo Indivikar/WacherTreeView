@@ -18,6 +18,7 @@ import app.controller.CRename;
 import app.controller.CTree;
 import app.functions.LoadTime;
 import app.interfaces.ICursor;
+import app.interfaces.ILockDir;
 import app.interfaces.ITreeItemMethods;
 import app.loadTime.LoadTime.LoadTimeOperation;
 import app.sort.WindowsExplorerComparator;
@@ -28,33 +29,37 @@ import javafx.concurrent.Task;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.Alert.AlertType;
 
-public class RenameTask extends Task<Boolean> implements ITreeItemMethods, ICursor {
+public class RenameTask extends Task<Boolean> implements ITreeItemMethods, ICursor, ILockDir {
 
 	private CRename cRename;
+	private CTree cTree;
 	private PathTreeCell pathTreeCell;
 	private File cellFile;
 	private File newFile;
 	private ObservableList<String> listAllLockedFiles;
 	
 	
-	public RenameTask(CRename cRename, PathTreeCell pathTreeCell) {
+	public RenameTask(CRename cRename, CTree cTree, PathTreeCell pathTreeCell) {
 		this.cRename = cRename;
+		this.cTree = cTree;
 		this.pathTreeCell = pathTreeCell;	  
 		this.cellFile = pathTreeCell.getItem().getPath().toFile();
 	}
 
 	@Override
 	protected void cancelled() {
-
+		unlockDir(cTree.getLockFileHandler(), pathTreeCell.getTreeItem().getValue().getLevelOneItem());
 	}
 	
 	@Override
 	protected void failed() {
-
+		cRename.getLabelMassage().setText("Fail");
+		unlockDir(cTree.getLockFileHandler(), pathTreeCell.getTreeItem().getValue().getLevelOneItem());
 	}
 	
 	@Override
-	protected void succeeded() {
+	protected void succeeded() {			
+		unlockDir(cTree.getLockFileHandler(), pathTreeCell.getTreeItem().getValue().getLevelOneItem());
 		cRename.getStage().close();
 
 		pathTreeCell.getTreeView().getSelectionModel().clearSelection();
@@ -73,6 +78,9 @@ public class RenameTask extends Task<Boolean> implements ITreeItemMethods, ICurs
 
 		LoadTime.Start();
 		
+		// unlock lockFile to change the name
+		unlockLockFile(cTree.getLockFileHandler(), pathTreeCell);
+        
 		boolean isRenameSuccessful = false;
 		if (cellFile.isDirectory()) {
 			isRenameSuccessful = rename(cellFile.getParentFile(), cellFile.getName(), cRename.getTextFieldName().getText());

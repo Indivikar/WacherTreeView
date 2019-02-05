@@ -1,6 +1,7 @@
 package app.sort;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -23,8 +24,8 @@ public class WindowsExplorerComparator implements Comparator<PathItem> {
     	String str1 = pathItem1.toString();
     	String str2 = pathItem2.toString();
     	
-    	File file1 = pathItem1.getPath().toFile();
-    	File file2 = pathItem2.getPath().toFile();
+//    	File file1 = pathItem1.getPath().toFile();
+//    	File file2 = pathItem2.getPath().toFile();
     	
         Iterator<String> i1 = splitStringPreserveDelimiter(str1).iterator();
         Iterator<String> i2 = splitStringPreserveDelimiter(str2).iterator();
@@ -57,10 +58,19 @@ public class WindowsExplorerComparator implements Comparator<PathItem> {
                 result = data1.compareToIgnoreCase(data2);
             }
 
-            if (file1.isDirectory() && !file2.isDirectory()) {
+//            if (file1.isDirectory() && !file2.isDirectory()) {
+//                // Directory before non-directory
+//            	result = -1;
+//              } else if (!file1.isDirectory() && file2.isDirectory()) {
+//                // Non-directory after directory
+//            	  result = 1;
+//              } 
+            
+//            System.out.println(pathItem1.getPath() + " -> " + pathItem1.isDirectoryItem());
+            if (pathItem1.isDirectoryItem() && !pathItem2.isDirectoryItem()) {
                 // Directory before non-directory
             	result = -1;
-              } else if (!file1.isDirectory() && file2.isDirectory()) {
+              } else if (!pathItem1.isDirectoryItem() && pathItem2.isDirectoryItem()) {
                 // Non-directory after directory
             	  result = 1;
               } 

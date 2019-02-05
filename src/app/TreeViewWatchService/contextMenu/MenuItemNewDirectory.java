@@ -12,6 +12,7 @@ import app.TreeViewWatchService.PathTreeCell;
 import app.controller.CTree;
 import app.interfaces.ICursor;
 import app.interfaces.ISaveExpandedItems;
+import app.interfaces.ITreeUpdateHandler;
 import app.threads.NewDirectoryTask;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -19,7 +20,7 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.TreeItem;
 import javafx.stage.Stage;
 
-public class MenuItemNewDirectory extends MenuItem implements ISaveExpandedItems, ICursor{
+public class MenuItemNewDirectory extends MenuItem implements ISaveExpandedItems, ICursor, ITreeUpdateHandler{
 
 	public MenuItemNewDirectory(Stage primaryStage, CTree cTree, PathTreeCell pathTreeCell) {
 		  setText("new directory");
@@ -29,7 +30,8 @@ public class MenuItemNewDirectory extends MenuItem implements ISaveExpandedItems
 	        	  
 //	        	  addAllExpandedItems(pathTreeCell.getTreeView().getRoot());
 	        	  
-	        	  FileAlterationListenerImpl.isInternalChange = true;
+//	        	  FileAlterationListenerImpl.isInternalChange = true;
+	        	  wantUpdateTree(false);
 	        	  NewDirectoryTask newDirectoryTask = new NewDirectoryTask(cTree, pathTreeCell);
 	        	  bindUIandService(primaryStage, newDirectoryTask);
 	        	  new Thread(newDirectoryTask).start();

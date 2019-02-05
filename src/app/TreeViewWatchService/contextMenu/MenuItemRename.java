@@ -4,19 +4,20 @@ import java.nio.file.Path;
 
 import app.TreeViewWatchService.FileAlterationListenerImpl;
 import app.TreeViewWatchService.PathTreeCell;
+import app.controller.CTree;
+import app.interfaces.ILockDir;
 import app.view.Stages.StageRename;
 import javafx.scene.control.MenuItem;
 import javafx.stage.Stage;
 
-public class MenuItemRename extends MenuItem{
+public class MenuItemRename extends MenuItem {
 
-	public MenuItemRename(Stage primaryStage, PathTreeCell pathTreeCell) {
+	public MenuItemRename(CTree cTree, Stage primaryStage, PathTreeCell pathTreeCell) {
 		  setText("Rename");
-	      setOnAction((event) -> {
-	    	  FileAlterationListenerImpl.isInternalChange = true;
+	      setOnAction((event) -> {	    
+	    	  CTree.isInternalChange = true;	
 	    	  Path filePath = pathTreeCell.getItem().getPath();
-	    	  StageRename stageRename = new StageRename(primaryStage, pathTreeCell);
-
+	    	  StageRename stageRename = new StageRename(cTree, primaryStage, pathTreeCell);
 	      });
 	}
 

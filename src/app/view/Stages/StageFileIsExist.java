@@ -15,6 +15,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 public class StageFileIsExist {
@@ -25,7 +26,8 @@ public class StageFileIsExist {
 	  			Stage primaryStage = new Stage();
 	  		  
 				primaryStage.setTitle("Info");
-	
+				primaryStage.initModality(Modality.APPLICATION_MODAL);
+				
 				AnchorPane root = new AnchorPane();
 	
 				Label label = new Label("This file \"" + dir + "\" already exists.\n\nDo you want to replace this file?");

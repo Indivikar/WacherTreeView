@@ -32,7 +32,7 @@ public class CellContextMenu extends ContextMenu {
 		
 		this.menuItemOpen = new MenuItemOpen(pathTreeCell);
 		this.separatorMenuItem_1 = new SeparatorMenuItem();
-		this.menuItemNewFile = new MenuItemNewFile();
+		this.menuItemNewFile = new MenuItemNewFile(pathTreeCell);
 		this.menuItemNewDirectory = new MenuItemNewDirectory(primaryStage, cTree, pathTreeCell);
 		this.menuItemRename = new MenuItemRename(cTree, primaryStage, pathTreeCell);
 		this.menuItemDeleteItem = new MenuItemDeleteItem(primaryStage, cTree, pathTreeCell, listAllLockedFiles);

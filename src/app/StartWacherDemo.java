@@ -29,6 +29,7 @@ import javafx.stage.Stage;
 // OK TODO - bei Rename -> wenn der name ein leerzeichen am ende hat, gibt es ein Fehler z.B.: "new "
 // OK TODO - DragNDrop -> Programm > Programm, wenn es bei MoveOrCopy die Files schon gibt, blockt der Dialog das Fenster nicht
 
+
 public class StartWacherDemo  extends Application {
 
 	// Config

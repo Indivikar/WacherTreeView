@@ -6,7 +6,11 @@ import java.util.Collections;
 import java.util.List;
 
 import app.TreeViewWatchService.PathItem;
+import app.TreeViewWatchService.PathTreeCell;
+import app.controller.CTree;
 import app.functions.LoadTime;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 
@@ -16,7 +20,7 @@ public interface ITreeItemMethods {
     	String newItemString = newItem.getValue().getPath().toString();
     	return getExistsItem(root, newItemString);
     }
-	
+    
     public default TreeItem<PathItem> getExistsItem(TreeItem<PathItem> root, Path path){
     	return getExistsItem(root, path.toString());
     }
@@ -101,5 +105,20 @@ public interface ITreeItemMethods {
     	LoadTime.Start();
     	searchAndSelectItem(treeView, treeView.getRoot(), newItemString);
     	LoadTime.Stop("selectItemSearchInTreeView()", "");
+	}
+    
+    public default boolean isOnlyOneItemSelected(PathTreeCell pathTreeCell) {
+    	int i = pathTreeCell.getTreeView().getSelectionModel().getSelectedItems().size();
+    	if (i == 1) {
+    		return true; 
+		} else {
+			Alert alert = new Alert(AlertType.WARNING);
+			alert.setTitle("Achtung");
+			alert.setHeaderText(null);
+			alert.setContentText("Bitte nur eine Markierung setzen.");
+
+			alert.showAndWait();
+			return false;
+		}   	
 	}
 }

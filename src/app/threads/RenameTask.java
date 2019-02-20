@@ -53,7 +53,8 @@ public class RenameTask extends Task<Boolean> implements ITreeItemMethods, ICurs
 	
 	@Override
 	protected void failed() {
-		cRename.getLabelMassage().setText("Fail");
+		// TODO - ein Alert einbauen
+		cRename.getLabelMassage().setText("Fail");		
 		unlockDir(cTree.getLockFileHandler(), pathTreeCell.getTreeItem().getValue().getLevelOneItem());
 	}
 	
@@ -82,10 +83,12 @@ public class RenameTask extends Task<Boolean> implements ITreeItemMethods, ICurs
 		unlockLockFile(cTree.getLockFileHandler(), pathTreeCell);
         
 		boolean isRenameSuccessful = false;
+		
+		String newName = cRename.getTextFieldName().getText().trim();
 		if (cellFile.isDirectory()) {
-			isRenameSuccessful = rename(cellFile.getParentFile(), cellFile.getName(), cRename.getTextFieldName().getText());
+			isRenameSuccessful = rename(cellFile.getParentFile(), cellFile.getName(), newName);
 		} else {
-			isRenameSuccessful = rename(cellFile.getParentFile(), cellFile.getName(), cRename.getTextFieldName().getText() + "." + cRename.getSuffix());
+			isRenameSuccessful = rename(cellFile.getParentFile(), cellFile.getName(), newName + "." + cRename.getSuffix());
 		}
 
 		LoadTime.Stop("RenameTask()", "");

@@ -16,17 +16,18 @@ import javafx.stage.Stage;
 // Getestet
 // - Multi-Select DragNDrop  Desktop > Programm
 
-// TODO - DragNDrop -> Programm > Programm, wenn das Dialog-Fenster auf geht und es dann mit dem X schliesst, wird das File dennnoch kopiert
+// TODO - DragNDrop -> Programm > Programm, MoveOrCopy ausprogrammieren
 // TODO - beim starten der app mit Threads arbeiten, um den Inhalt zu laden und cursor wait einbauen
-// TODO - bei Rename -> wenn der name ein leerzeichen am ende hat, gibt es ein Fehler z.B.: "new "
+
 // TODO - bei Rename nach lockfiles schauen
 // TODO - bei copy oder move den Ordner locken nach 
 // TODO - multi-delete -> wird nur eine datei gelockt
 // TODO - Multi-Select DragNDrop vom Programm auf den Desktop klappt noch nicht
 // TODO - Multi-Select bei Rename meldung einbauen, das nur ein item selectet werden darf
 
-// OK
+// gefixte Fehler
 // OK TODO - es gibt noch Probleme beim popupmenu, manche items werden nicht aktiv, obwohl sie es sein sollten
+// OK TODO - bei Rename -> wenn der name ein leerzeichen am ende hat, gibt es ein Fehler z.B.: "new "
 
 public class StartWacherDemo  extends Application {
 

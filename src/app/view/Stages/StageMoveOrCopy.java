@@ -52,6 +52,7 @@ public class StageMoveOrCopy {
 		});
 		
 		stage.setOnCloseRequest(e -> {
+			stage.close();
 			System.out.println("Close");
 		});
 		

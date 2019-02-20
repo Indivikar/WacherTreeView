@@ -98,6 +98,7 @@ public class LoadDBService extends Service<ObservableList<ItemsDB>>{
 
                      br.close();
                  } catch (IOException e) {
+                	 // TODO - V:\test\___DB___\test.txt (Das System kann den angegebenen Pfad nicht finden)
                      e.printStackTrace();
                  }
          		LoadTime.Stop("updatePathList()", "");

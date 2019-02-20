@@ -1,5 +1,7 @@
 package app;
 
+import java.io.File;
+
 import app.controller.CTree;
 import app.loadTime.LoadTime;
 import javafx.application.Application;
@@ -11,8 +13,20 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
+// Getestet
+// - Multi-Select DragNDrop  Desktop > Programm
+
+// TODO - DragNDrop -> Programm > Programm, wenn das Dialog-Fenster auf geht und es dann mit dem X schliesst, wird das File dennnoch kopiert
+// TODO - beim starten der app mit Threads arbeiten, um den Inhalt zu laden und cursor wait einbauen
+// TODO - bei Rename -> wenn der name ein leerzeichen am ende hat, gibt es ein Fehler z.B.: "new "
 // TODO - bei Rename nach lockfiles schauen
-//TODO - bei copy oder move den Ordner locken nach 
+// TODO - bei copy oder move den Ordner locken nach 
+// TODO - multi-delete -> wird nur eine datei gelockt
+// TODO - Multi-Select DragNDrop vom Programm auf den Desktop klappt noch nicht
+// TODO - Multi-Select bei Rename meldung einbauen, das nur ein item selectet werden darf
+
+// OK
+// OK TODO - es gibt noch Probleme beim popupmenu, manche items werden nicht aktiv, obwohl sie es sein sollten
 
 public class StartWacherDemo  extends Application {
 
@@ -44,7 +58,10 @@ public class StartWacherDemo  extends Application {
 		
 		primaryStage.setTitle("Watch Dir Demo");
 		primaryStage.setScene(scene);
-		primaryStage.setX(7050);
+		File f = new File("C:\\Users\\DH\\AppData\\Roaming\\IndivikarAG\\dev");
+		if (f.exists()) {
+			primaryStage.setX(7050);
+		}		
 		primaryStage.setY(10);
 		primaryStage.show();
 

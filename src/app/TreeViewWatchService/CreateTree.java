@@ -21,6 +21,7 @@ import app.interfaces.ICursor;
 import app.interfaces.ISaveExpandedItems;
 import app.interfaces.ISaveSelectedItems;
 import app.interfaces.ITreeItemMethods;
+import app.interfaces.ITreeUpdateHandler;
 import app.loadTime.LoadTime.LoadTimeOperation;
 import app.models.ItemsDB;
 import app.sort.WinExplorerComparatorPath;
@@ -30,7 +31,7 @@ import javafx.collections.ObservableList;
 import javafx.scene.control.TreeItem;
 import javafx.util.Pair;
 
-public class CreateTree implements ITreeItemMethods, ISaveExpandedItems, ISaveSelectedItems, ICursor {
+public class CreateTree implements ITreeItemMethods, ISaveExpandedItems, ISaveSelectedItems, ICursor, ITreeUpdateHandler {
 	
 	private CTree cTree;
 	
@@ -88,7 +89,7 @@ public class CreateTree implements ITreeItemMethods, ISaveExpandedItems, ISaveSe
 	public void updatePathListFormItem(Path target) {
 
 		long start = new Date().getTime();
-		System.out.println("target: " + target);
+		System.out.println("targetDir: " + target);
 		paths.clear();
 		try {
 			Files.walkFileTree(target, new SimpleFileVisitor<Path>() {
@@ -138,14 +139,20 @@ public class CreateTree implements ITreeItemMethods, ISaveExpandedItems, ISaveSe
 		 
 		 long start = new Date().getTime();
 		 
-		 for (ItemsDB item : this.paths) {
-			 if (!item.getPath().toString().equals("")) {
-				 List<ItemsDB> liste = getListParents(item);
-				 if (!liste.isEmpty()) {
-					isChild(mainItem, liste);					
-				 }
-			}
-		 }	
+		 try {
+			for (ItemsDB item : this.paths) {
+				 if (!item.getPath().toString().equals("")) {
+					 List<ItemsDB> liste = getListParents(item);
+					 if (!liste.isEmpty()) {
+						isChild(mainItem, liste);					
+					 }
+				}
+			}	
+		 } catch (Exception e) {
+			 refreshServerPathList(cTree);
+			 e.getStackTrace();		
+		 }
+
 		 
 		 
 		long runningTime = new Date().getTime() - start;			

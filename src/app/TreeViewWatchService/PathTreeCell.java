@@ -68,7 +68,7 @@ public class PathTreeCell extends TreeCell<PathItem> implements ISuffix, ISystem
         if (empty) {
             setText(null);
             setGraphic(null);
-            setContextMenu(null);
+            setContextMenu(null);           
         } else {
 
         		setLevelOneItem(getTreeItem());
@@ -76,16 +76,23 @@ public class PathTreeCell extends TreeCell<PathItem> implements ISuffix, ISystem
         		item.setRow(getIndex());
         		item.setLevel(getTreeView().getTreeItemLevel(getTreeItem()));
         		
-                setText(getString() + " (" + getIndex() + ")");
+                setText(getString() + " (" + getIndex() + " - " + item.getLevel() + ")");
                 
-				setContextMenu(fileMenu);       
+				      
 				setListenerLockedContextMenu(getTreeItem());              
                 setStartPropertiesContextMenu(item);
+                setContextMenu(fileMenu); 
+                
                 
                 setGraphic(getImage(this.getTreeItem()));
                 
                 mouseOver(this);                              
 				mouseClick(this);
+//				if (item.getPath().toString().contains("A0")) {
+//					System.out.println(item.toString2());
+//				}
+				
+				
         }
     }
 
@@ -119,7 +126,9 @@ public class PathTreeCell extends TreeCell<PathItem> implements ISuffix, ISystem
         if (getTreeView().getTreeItemLevel(getTreeItem()) == 0) {               	
         	cellContextMenu.setRootMenuItems();
 //        	setGraphic(getImage(this.getTreeItem()));
-        }
+        } else {
+        	cellContextMenu.setMenuItems();
+		}
         
         if (getTreeView().getTreeItemLevel(getTreeItem()) == 1) {
 			boolean b = isDirLocked(getTreeView().getRoot(), getTreeItem().getValue().getPath().toFile());

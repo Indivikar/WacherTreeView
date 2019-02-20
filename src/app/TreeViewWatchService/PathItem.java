@@ -57,6 +57,14 @@ public class PathItem {
             return path.getFileName().toString();
         }
     }
+	
+
+	public String toString2() {
+		return "PathItem [path=" + path + ", isDirectoryItem=" + isDirectoryItem + ", levelOneItem=" + levelOneItem
+				+ ", countNewDir=" + countNewDir + ", level=" + level + ", row=" + row + ", isLocked=" + isLocked
+				+ ", rowProp=" + rowProp + ", isLockedProp=" + isLockedProp + "]";
+	}
+	
     public int getCountNewDir() {
         return ++this.countNewDir;
     }

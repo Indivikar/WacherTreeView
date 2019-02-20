@@ -306,6 +306,7 @@ public class CopyOrMoveTask extends Task<Void> implements ICursor, ITreeItemMeth
             	
             	// create the new Item
             	CreateTree createTree = cTree.getCreateTree();
+            	System.out.println("targetDir: " + targetDir);
             	createTree.updatePathListFormItem(targetDir);
 //            	System.out.println("cell.getTreeItem(): " + cell.getTreeItem().getValue().getPath() + "  ->  " + cell.getTreeItem().getChildren().get(0).getChildren().size());
 //            	TreeItem<PathItem> mainCell = null;

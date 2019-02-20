@@ -50,9 +50,19 @@ public class CellContextMenu extends ContextMenu {
 	}
 
 	public void setRootMenuItems() {
+		menuItemOpen.setDisable(false);
 		menuItemNewFile.setDisable(true);
+		menuItemNewDirectory.setDisable(false);
 		menuItemRename.setDisable(true);
 		menuItemDeleteItem.setDisable(true);
+	}
+	
+	public void setMenuItems() {
+		menuItemOpen.setDisable(false);
+		menuItemNewFile.setDisable(false);
+		menuItemNewDirectory.setDisable(false);
+		menuItemRename.setDisable(false);
+		menuItemDeleteItem.setDisable(false);		
 	}
 	
 	public void setIsLocked(boolean isLocked) {

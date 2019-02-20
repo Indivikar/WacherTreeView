@@ -52,8 +52,9 @@ public class NewDirectoryTask extends Task<Void> implements ICursor, ITreeItemMe
     		cTree.getChildrenChangedListener().setSelectNewDirectoy(true);
     		
 	    	CreateTree createTree = cTree.getCreateTree();   	
-	    	hier weiter, methode "updatePathListFormItem()" muss überarbeitet werden	  
-	    	createTree.updatePathListFormItem(parentPath);
+//	    	hier weiter, methode "updatePathListFormItem()" muss überarbeitet werden	  
+	    	createTree.updatePathListFormItem(newDir);
+//	    	createTree.updatePathListFormItem(parentPath);
 	    	createTree.startCreateTree(pathTreeCell.getTreeView().getRoot(), false, false);
 	    	
 //	    	TreeItem<PathItem> item = new TreeItem<PathItem>(new PathItem(newDir));

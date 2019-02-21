@@ -4,7 +4,9 @@ import java.awt.MouseInfo;
 import java.awt.Point;
 
 import app.TreeViewWatchService.DragNDropInternal;
+import app.TreeViewWatchService.PathTreeCell;
 import app.controller.CTree;
+import app.interfaces.ILockDir;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -14,9 +16,9 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
-public class StageMoveOrCopy {
+public class StageMoveOrCopy implements ILockDir{
 
-	public StageMoveOrCopy(CTree cTree, DragNDropInternal dragNDropInternal) {
+	public StageMoveOrCopy(CTree cTree, DragNDropInternal dragNDropInternal, PathTreeCell cell) {
 		Point p = MouseInfo.getPointerInfo().getLocation();
 		
 		Stage stage = new Stage();
@@ -52,6 +54,8 @@ public class StageMoveOrCopy {
 		});
 		
 		stage.setOnCloseRequest(e -> {
+			unlockDir(cTree.getLockFileHandler(), 
+					cell.getTreeItem().getValue().getLevelOneItem());
 			stage.close();
 			System.out.println("Close");
 		});
@@ -69,4 +73,6 @@ public class StageMoveOrCopy {
 		
 	}
 
+	
+	
 }

@@ -19,7 +19,6 @@ import javafx.stage.Stage;
 // TODO - DragNDrop -> Programm > Programm, MoveOrCopy ausprogrammieren
 // TODO - beim starten der app mit Threads arbeiten, um den Inhalt zu laden und cursor wait einbauen
 // TODO - bei Rename nach lockfiles schauen
-// TODO - bei copy oder move den Ordner locken nach 
 // TODO - multi-delete -> wird nur eine datei gelockt und bei cancel wird das lock-icon nicht gewechselt, auf unlock
 
 
@@ -30,6 +29,7 @@ import javafx.stage.Stage;
 // OK TODO - DragNDrop -> Programm > Programm, wenn es bei MoveOrCopy die Files schon gibt, blockt der Dialog das Fenster nicht
 // OK TODO - Multi-Select bei Rename meldung einbauen, das nur ein item selectet werden darf
 // OK TODO - Multi-Select DragNDrop vom Programm auf den Desktop klappt noch nicht
+// OK TODO - bei copy oder move den Ordner locken
 
 public class StartWacherDemo  extends Application {
 

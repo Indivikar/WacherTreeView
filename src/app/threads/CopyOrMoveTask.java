@@ -20,6 +20,7 @@ import app.TreeViewWatchService.PathTreeCell;
 import app.controller.CTree;
 import app.dialog.CopyDialogProgress;
 import app.interfaces.ICursor;
+import app.interfaces.ILockDir;
 import app.interfaces.ITreeItemMethods;
 import app.models.SourceTarget;
 import app.view.Stages.StageFileIsExist;
@@ -29,7 +30,7 @@ import javafx.concurrent.Task;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.Alert.AlertType;
 
-public class CopyOrMoveTask extends Task<Void> implements ICursor, ITreeItemMethods {
+public class CopyOrMoveTask extends Task<Void> implements ICursor, ITreeItemMethods, ILockDir {
 
 	private CTree cTree;
 	private DragNDropInternal dragNDropInternal;
@@ -76,11 +77,15 @@ public class CopyOrMoveTask extends Task<Void> implements ICursor, ITreeItemMeth
 	protected void failed() {
         new DefaultAlert(AlertType.ERROR, "ERROR", "There was an error during the copy process", "");
         sortItems(cell, pForm);
+		unlockDir(cTree.getLockFileHandler(), 
+				cell.getTreeItem().getValue().getLevelOneItem());
 	}
 	
 	@Override
 	protected void cancelled() {
 		sortItems(cell, pForm);
+		unlockDir(cTree.getLockFileHandler(), 
+				cell.getTreeItem().getValue().getLevelOneItem());
 	}
 	
 	@Override
@@ -92,6 +97,8 @@ public class CopyOrMoveTask extends Task<Void> implements ICursor, ITreeItemMeth
     protected void succeeded() {
 		 Platform.runLater(() -> {
 			 sortItems(cell, pForm);
+				unlockDir(cTree.getLockFileHandler(), 
+						cell.getTreeItem().getValue().getLevelOneItem());
 		 });
     }
 	

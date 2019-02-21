@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 import app.controller.CTree;
 import app.dialog.CopyDialogProgress;
 import app.interfaces.ICursor;
+import app.interfaces.ILockDir;
 import app.interfaces.ISaveExpandedItems;
 import app.interfaces.ITreeItemMethods;
 import app.models.ExistFiles;
@@ -74,7 +75,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
-public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, ICursor{
+public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, ICursor, ILockDir{
 
 	private CTree cTree;
 	private ScrollingByDragNDrop scrollingByDragNDrop;
@@ -123,7 +124,7 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 	
 	private void setDragDetected(PathTreeCell cell) {
         cell.setOnDragDetected(event -> {
-//        	System.out.println("setDragDetected");
+        	System.out.println("setDragDetected");
         	ObservableList<TreeItem<PathItem>> selItems = cell.getTreeView().getSelectionModel().getSelectedItems();
 
             TreeItem<PathItem> item = cell.getTreeItem();
@@ -243,8 +244,9 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 	            	
 	            	copyOrMoveTask = new CopyOrMoveTask(cTree, this, cell, filesCounter, selectedFiles, sourceDir, targetDir);
 	            	
-	             	if (isInternal) {	             		
-	             		new StageMoveOrCopy(cTree, this);
+	             	if (isInternal) {	         
+	             		lockDir(cTree.getLockFileHandler(), cell.getTreeItem().getValue().getLevelOneItem());
+	             		new StageMoveOrCopy(cTree, this, cell);
 //	    				openContextMenu(); 
 	    			}
 	            		            	

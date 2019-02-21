@@ -205,7 +205,6 @@ public class PathTreeCell extends TreeCell<PathItem> implements ISuffix, ISystem
 	
 	
 	public ImageView getImage(TreeItem<PathItem> treeItem) {
-		boolean isLocked = treeItem.getValue().isLocked();
     	ImageView imageView = new ImageView();
 
     	if (treeItem != null) {

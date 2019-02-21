@@ -1,5 +1,6 @@
 package app.view.Stages;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -40,7 +41,10 @@ public class StageRename implements ILockDir {
 		
 		stage.setTitle("Rename");
 		stage.setScene(scene);
-		stage.setX(6800);
+		File f = new File("C:\\Users\\DH\\AppData\\Roaming\\IndivikarAG\\dev");
+		if (f.exists()) {
+			stage.setX(6800);
+		}
 		stage.show();
 	}
 

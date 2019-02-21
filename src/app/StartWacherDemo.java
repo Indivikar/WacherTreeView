@@ -18,9 +18,11 @@ import javafx.stage.Stage;
 
 // TODO - DragNDrop -> Programm > Programm, MoveOrCopy ausprogrammieren
 // TODO - beim starten der app mit Threads arbeiten, um den Inhalt zu laden und cursor wait einbauen
-// TODO - bei Rename nach lockfiles schauen
-// TODO - multi-delete -> wird nur eine datei gelockt und bei cancel wird das lock-icon nicht gewechselt, auf unlock
 
+// TODO - multi-delete -> wird nur eine datei gelockt und bei cancel wird das lock-icon nicht gewechselt, auf unlock
+// TODO - LockFile -> wenn ein programm geändert wird, dann soll das logfile gelöscht werden
+// TODO - ab und zu kommt ein fehler, wenn bei einem Client die ganze zeit das rename-fenster auf ist und ein anderer client beendet und neu gestartet wird,
+//			ist wohl in der zeile 183 klasse CRename "this.pathTreeCell.getTreeItem().getValue().getLevelOneItem());"
 
 
 // gefixte Fehler
@@ -30,6 +32,7 @@ import javafx.stage.Stage;
 // OK TODO - Multi-Select bei Rename meldung einbauen, das nur ein item selectet werden darf
 // OK TODO - Multi-Select DragNDrop vom Programm auf den Desktop klappt noch nicht
 // OK TODO - bei copy oder move den Ordner locken
+// OK TODO - bei Rename nach lockfiles schauen
 
 public class StartWacherDemo  extends Application {
 

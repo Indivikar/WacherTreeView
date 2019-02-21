@@ -76,14 +76,12 @@ public class PathTreeCell extends TreeCell<PathItem> implements ISuffix, ISystem
         		item.setRow(getIndex());
         		item.setLevel(getTreeView().getTreeItemLevel(getTreeItem()));
         		
-                setText(getString() + " (" + getIndex() + " - " + item.getLevel() + ")");
+                setText(getString() + " (" + getIndex() + " - " + item.getLevel() + " -> " + item.isLocked() + ")");
                 
-				      
+				setContextMenu(fileMenu);       
 				setListenerLockedContextMenu(getTreeItem());              
                 setStartPropertiesContextMenu(item);
-                setContextMenu(fileMenu); 
-                
-                
+
                 setGraphic(getImage(this.getTreeItem()));
                 
                 mouseOver(this);                              
@@ -98,28 +96,34 @@ public class PathTreeCell extends TreeCell<PathItem> implements ISuffix, ISystem
 
 	private void setListenerLockedContextMenu(TreeItem<PathItem> treeItem) {
 		PathItem item = treeItem.getValue();
+		boolean isLocked = item.isLocked();
 		
+
         if (getTreeView().getTreeItemLevel(getTreeItem()) == 1) {
         	item.getIsLockedProp().addListener((var, oldVar, newVar) -> {
-				cellContextMenu.setIsLocked(newVar);
-				
+        		item.setLocked(newVar);
+
     			Platform.runLater(() -> {
+    				// Image und ContextMenu wechsel
     				setGraphic(getImage(this.getTreeItem()));
     			});
    			
     		});
-		} else if (getTreeView().getTreeItemLevel(getTreeItem()) > 1) {
-			levelOneItem.getValue().getIsLockedProp().addListener((var, oldVar, newVar) -> {   					
-				item.setLocked(newVar);
-				cellContextMenu.setIsLocked(newVar);
-				
-    			Platform.runLater(() -> {
+		} 
+        
+        if (getTreeView().getTreeItemLevel(getTreeItem()) > 1) {
+			levelOneItem.getValue().getIsLockedProp().addListener((var, oldVar, newVar) -> {   		
+//				System.out.println(item + " -> " + newVar);
+				item.setLocked(newVar);			
+
+    			Platform.runLater(() -> {   	
+    				// Image und ContextMenu wechsel
     				setGraphic(getImage(this.getTreeItem()));
     			});
 
     		});
 		}
-		
+        getTreeView().refresh();
 	}
 
 	private void setStartPropertiesContextMenu(PathItem item) {
@@ -127,12 +131,22 @@ public class PathTreeCell extends TreeCell<PathItem> implements ISuffix, ISystem
         	cellContextMenu.setRootMenuItems();
 //        	setGraphic(getImage(this.getTreeItem()));
         } else {
-        	cellContextMenu.setMenuItems();
+        	if (item.isDirectoryItem()) {
+				cellContextMenu.setMenuItemsDir();
+			} else {
+				cellContextMenu.setMenuItemsFile();
+			}
+        	
 		}
         
         if (getTreeView().getTreeItemLevel(getTreeItem()) == 1) {
 			boolean b = isDirLocked(getTreeView().getRoot(), getTreeItem().getValue().getPath().toFile());
-			cellContextMenu.setIsLocked(b);
+			if (item.isDirectoryItem()) {
+				cellContextMenu.setLockedDir(b);
+			} else {
+				cellContextMenu.setLockedFile(b);
+			}
+			
 //			setGraphic(getImage(this.getTreeItem()));
 		} 
         
@@ -191,6 +205,7 @@ public class PathTreeCell extends TreeCell<PathItem> implements ISuffix, ISystem
 	
 	
 	public ImageView getImage(TreeItem<PathItem> treeItem) {
+		boolean isLocked = treeItem.getValue().isLocked();
     	ImageView imageView = new ImageView();
 
     	if (treeItem != null) {
@@ -199,10 +214,11 @@ public class PathTreeCell extends TreeCell<PathItem> implements ISuffix, ISystem
 	    			.getValue()
 	    			.getPath()
 	    			.toFile();
-	    	if (file.isDirectory()) {
-	    		imageView.setImage(getDirectoryItem(treeItem));
+	    	if (file.isDirectory()) {	    		
+	    		imageView.setImage(getDirectoryItem(treeItem));	    		
 			} else {
 				if (file.exists()) {
+					setContextMenuFileProperties(treeItem);
 					imageView.setImage(ISystemIcon.getSystemImage(file));
 				} else {								
 					String itemSuffix = ISuffix.getSuffix(file.getName());
@@ -214,6 +230,7 @@ public class PathTreeCell extends TreeCell<PathItem> implements ISuffix, ISystem
 							}					
 						}
 						// Default File-Icon
+						setContextMenuFileProperties(treeItem);
 						imageView.setImage(getDefaultDocumentIcon());	
 					} else {
 						imageView.setImage(getDirectoryItem(treeItem));
@@ -229,19 +246,42 @@ public class PathTreeCell extends TreeCell<PathItem> implements ISuffix, ISystem
 		boolean isLocked = treeItem.getValue().isLocked();
 		if (treeItem.isExpanded() && treeItem.getChildren().size() != 0) {
 			if (isLocked) {
+				cellContextMenu.setLockedDir(true);
 				return getOpenKeyIcon();
 			} else {
+				cellContextMenu.setLockedDir(false);
 				return getOpenIcon();
 			}			
 		} else {
 			if (isLocked) {
+				cellContextMenu.setLockedDir(true);
 				return getCloseKeyIcon();
 			} else {
+				cellContextMenu.setLockedDir(false);
 				return getCloseIcon();
 			}							
 		}
 	}
 
+	private void setContextMenuFileProperties(TreeItem<PathItem> treeItem) {
+		boolean isLocked = treeItem.getValue().isLocked();
+		System.out.println(treeItem + " -> " + isLocked);
+		if (treeItem.isExpanded()) {
+			if (isLocked) {
+				cellContextMenu.setLockedFile(true);
+			} else {
+				cellContextMenu.setLockedFile(false);
+			}			
+		} else {
+			if (isLocked) {
+				cellContextMenu.setLockedFile(true);
+			} else {
+				cellContextMenu.setLockedFile(false);
+			}							
+		}
+
+	}
+	
 	private Image getOpenIcon() {
 		return new Image(StartWacherDemo.class.getResourceAsStream("view/images/folderOpen.png"));
 	}

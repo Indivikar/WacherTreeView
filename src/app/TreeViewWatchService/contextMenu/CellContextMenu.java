@@ -57,7 +57,7 @@ public class CellContextMenu extends ContextMenu {
 		menuItemDeleteItem.setDisable(true);
 	}
 	
-	public void setMenuItems() {
+	public void setMenuItemsDir() {
 		menuItemOpen.setDisable(false);
 		menuItemNewFile.setDisable(false);
 		menuItemNewDirectory.setDisable(false);
@@ -65,16 +65,28 @@ public class CellContextMenu extends ContextMenu {
 		menuItemDeleteItem.setDisable(false);		
 	}
 	
-	public void setIsLocked(boolean isLocked) {
-		
-//		isLocked = !isLocked;
-		
+	public void setMenuItemsFile() {
+		menuItemOpen.setDisable(false);
+		menuItemNewFile.setDisable(true);
+		menuItemNewDirectory.setDisable(true);
+		menuItemRename.setDisable(false);
+		menuItemDeleteItem.setDisable(false);		
+	}
+	
+	public void setLockedDir(boolean isLocked) {
 		menuItemOpen.setDisable(isLocked);
 		menuItemNewFile.setDisable(isLocked);
 		menuItemNewDirectory.setDisable(isLocked);
 		menuItemRename.setDisable(isLocked);
 		menuItemDeleteItem.setDisable(isLocked);
-
+	}
+	
+	public void setLockedFile(boolean isLocked) {
+		menuItemOpen.setDisable(isLocked);
+		menuItemNewFile.setDisable(true);
+		menuItemNewDirectory.setDisable(true);
+		menuItemRename.setDisable(isLocked);
+		menuItemDeleteItem.setDisable(isLocked);
 	}
 	
 }

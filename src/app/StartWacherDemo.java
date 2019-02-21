@@ -21,14 +21,15 @@ import javafx.stage.Stage;
 // TODO - bei Rename nach lockfiles schauen
 // TODO - bei copy oder move den Ordner locken nach 
 // TODO - multi-delete -> wird nur eine datei gelockt und bei cancel wird das lock-icon nicht gewechselt, auf unlock
-// TODO - Multi-Select DragNDrop vom Programm auf den Desktop klappt noch nicht
-// TODO - Multi-Select bei Rename meldung einbauen, das nur ein item selectet werden darf
+
+
 
 // gefixte Fehler
 // OK TODO - es gibt noch Probleme beim popupmenu, manche items werden nicht aktiv, obwohl sie es sein sollten
 // OK TODO - bei Rename -> wenn der name ein leerzeichen am ende hat, gibt es ein Fehler z.B.: "new "
 // OK TODO - DragNDrop -> Programm > Programm, wenn es bei MoveOrCopy die Files schon gibt, blockt der Dialog das Fenster nicht
-
+// OK TODO - Multi-Select bei Rename meldung einbauen, das nur ein item selectet werden darf
+// OK TODO - Multi-Select DragNDrop vom Programm auf den Desktop klappt noch nicht
 
 public class StartWacherDemo  extends Application {
 

@@ -13,6 +13,7 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -122,25 +123,46 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 	
 	private void setDragDetected(PathTreeCell cell) {
         cell.setOnDragDetected(event -> {
+//        	System.out.println("setDragDetected");
+        	ObservableList<TreeItem<PathItem>> selItems = cell.getTreeView().getSelectionModel().getSelectedItems();
+
             TreeItem<PathItem> item = cell.getTreeItem();
 //            if (item != null && item.isLeaf()) {
-            if (item != null) {
+            
+            if (selItems != null) {
                 Dragboard db = cell.startDragAndDrop(TransferMode.COPY);
                 ClipboardContent content = new ClipboardContent();
-//                System.out.println(cell.getTreeItem().getValue().getPath().toFile());
-                List<File> files = Arrays.asList(cell.getTreeItem().getValue().getPath().toFile());
-                content.putFiles(files);
+
+                List<File> allFiles = new ArrayList<>();
+                
+                for (TreeItem<PathItem> treeItem : selItems) {
+                	List<File> files = Arrays.asList(treeItem.getValue().getPath().toFile());
+                	allFiles.addAll(files);
+				}
+                
+                content.putFiles(allFiles);
                 db.setContent(content);
                 db.setDragView(cell.snapshot(null, null));
                 event.consume();
             }
+            
+//            if (item != null) {
+//                Dragboard db = cell.startDragAndDrop(TransferMode.COPY);
+//                ClipboardContent content = new ClipboardContent();
+////                System.out.println(cell.getTreeItem().getValue().getPath().toFile());
+//                List<File> files = Arrays.asList(cell.getTreeItem().getValue().getPath().toFile());
+//                content.putFiles(files);
+//                db.setContent(content);
+//                db.setDragView(cell.snapshot(null, null));
+//                event.consume();
+//            }
         });
 	}
 	
 	private void setDragOver(PathTreeCell cell) {
         cell.setOnDragOver(event -> {
         	Dragboard db = event.getDragboard();
-        	
+//        	System.out.println("setDragOver");
             TreeItem<PathItem> item = cell.getTreeItem();
             if (item != null && event.getGestureSource() != cell && event.getDragboard().hasFiles()) {
                 Path targetPath = cell.getTreeItem().getValue().getPath();                
@@ -180,6 +202,7 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 	
 	private void setDragEntered(PathTreeCell cell) {
         cell.setOnDragEntered(event -> {
+//        	System.out.println("setDragEntered");
         	scrollingByDragNDrop.stopScrolling();
             TreeItem<PathItem> item = cell.getTreeItem();
             if (item != null &&
@@ -325,54 +348,54 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 		return false;		
 	}
 	
-	private void openContextMenu() {
-		Point p = MouseInfo.getPointerInfo().getLocation();
-		
-		Stage stage = new Stage();
-		
-		AnchorPane root = new AnchorPane();
-		
-		stage.initModality(Modality.WINDOW_MODAL);
-		stage.initStyle(StageStyle.UTILITY);
-		stage.resizableProperty().setValue(Boolean.FALSE);
-//		stage.initStyle(StageStyle.UNDECORATED);
-		stage.initOwner(cTree.getPrimaryStage());
-		
-		Scene scene = new Scene(root, 100, 80);
-		
-		VBox vBox = new VBox();
-		AnchorPane.setTopAnchor(vBox, 10.0);
-		AnchorPane.setLeftAnchor(vBox, 10.0);
-		AnchorPane.setRightAnchor(vBox, 10.0);
-		AnchorPane.setBottomAnchor(vBox, 10.0);
-		vBox.setAlignment(Pos.CENTER);
-		vBox.setSpacing(10);
-		
-		Button buttonCopy = new Button("Copy");
-		buttonCopy.setOnAction(e -> {
-			stage.close();
-		});
-
-		Button buttonMove = new Button("Move");
-		buttonCopy.setOnAction(e -> {
-			
-			stage.close();
-		});
-		
-		stage.setOnCloseRequest(e -> {
-			System.out.println("Close");
-		});
-		
-		// Fügen den Button zu unserem StackPane (Fenster) hinzu
-		vBox.getChildren().addAll(buttonCopy, buttonMove);
-		root.getChildren().addAll(vBox);
-
-		// nun Setzen wir die Scene zu unserem Stage und zeigen ihn an
-		stage.setScene(scene);
-		stage.setX(p.getX());
-		stage.setY(p.getY() + 30.0);
-		stage.showAndWait();
-	}
+//	private void openContextMenu() {
+//		Point p = MouseInfo.getPointerInfo().getLocation();
+//		
+//		Stage stage = new Stage();
+//		
+//		AnchorPane root = new AnchorPane();
+//		
+//		stage.initModality(Modality.WINDOW_MODAL);
+//		stage.initStyle(StageStyle.UTILITY);
+//		stage.resizableProperty().setValue(Boolean.FALSE);
+////		stage.initStyle(StageStyle.UNDECORATED);
+//		stage.initOwner(cTree.getPrimaryStage());
+//		
+//		Scene scene = new Scene(root, 100, 80);
+//		
+//		VBox vBox = new VBox();
+//		AnchorPane.setTopAnchor(vBox, 10.0);
+//		AnchorPane.setLeftAnchor(vBox, 10.0);
+//		AnchorPane.setRightAnchor(vBox, 10.0);
+//		AnchorPane.setBottomAnchor(vBox, 10.0);
+//		vBox.setAlignment(Pos.CENTER);
+//		vBox.setSpacing(10);
+//		
+//		Button buttonCopy = new Button("Copy");
+//		buttonCopy.setOnAction(e -> {
+//			stage.close();
+//		});
+//
+//		Button buttonMove = new Button("Move");
+//		buttonCopy.setOnAction(e -> {
+//			
+//			stage.close();
+//		});
+//		
+//		stage.setOnCloseRequest(e -> {
+//			System.out.println("Close");
+//		});
+//		
+//		// Fügen den Button zu unserem StackPane (Fenster) hinzu
+//		vBox.getChildren().addAll(buttonCopy, buttonMove);
+//		root.getChildren().addAll(vBox);
+//
+//		// nun Setzen wir die Scene zu unserem Stage und zeigen ihn an
+//		stage.setScene(scene);
+//		stage.setX(p.getX());
+//		stage.setY(p.getY() + 30.0);
+//		stage.showAndWait();
+//	}
 
 	private void addAllPaths(Path sourceDir, Path target) {
 		try {
@@ -409,42 +432,42 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 
 	    }
 	
-	   private void sortItems(PathTreeCell cell, CopyDialogProgress pForm) {
-           SortWinExplorerTask taskSort = new SortWinExplorerTask(cTree, cell.getTreeView().getRoot());
-           
-           
-           taskSort.setOnSucceeded(evt -> {
-               scrollingByDragNDrop.stopScrolling();
-               cTree.getTree().refresh();
-               
-//               System.err.println("=== get Index " +  cell.getTreeItem().getValue().getRow());
-               	                           
-               // Select new Item
-               try {
-					Thread.sleep(500);
-				} catch (InterruptedException ex) {
-					// TODO Auto-generated catch block
-					ex.printStackTrace();
-				}
-               selectItemSearchInTreeView(cTree.getTree(), cell.getTreeItem(), targetDir.toString());
-               
-               System.out.println("   Ende Sort");
-               
-               pForm.getDialogStage().close();
-               doTaskEventCloseRoutine(copyTask);
-           });
-           
-           
-           try {
-				Thread.sleep(50);
-			} catch (InterruptedException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-           bindUIandService(pForm.getDialogStage(), taskSort);
-           new Thread(taskSort).start();
-
-	   }
+//	   private void sortItems(PathTreeCell cell, CopyDialogProgress pForm) {
+//           SortWinExplorerTask taskSort = new SortWinExplorerTask(cTree, cell.getTreeView().getRoot());
+//           
+//           
+//           taskSort.setOnSucceeded(evt -> {
+//               scrollingByDragNDrop.stopScrolling();
+//               cTree.getTree().refresh();
+//               
+////               System.err.println("=== get Index " +  cell.getTreeItem().getValue().getRow());
+//               	                           
+//               // Select new Item
+//               try {
+//					Thread.sleep(500);
+//				} catch (InterruptedException ex) {
+//					// TODO Auto-generated catch block
+//					ex.printStackTrace();
+//				}
+//               selectItemSearchInTreeView(cTree.getTree(), cell.getTreeItem(), targetDir.toString());
+//               
+//               System.out.println("   Ende Sort");
+//               
+//               pForm.getDialogStage().close();
+//               doTaskEventCloseRoutine(copyTask);
+//           });
+//           
+//           
+//           try {
+//				Thread.sleep(50);
+//			} catch (InterruptedException e1) {
+//				// TODO Auto-generated catch block
+//				e1.printStackTrace();
+//			}
+//           bindUIandService(pForm.getDialogStage(), taskSort);
+//           new Thread(taskSort).start();
+//
+//	   }
 	   
 
 //	   private void walker(SourceTarget item, int dirsCount, int filesCount, int currentCounter) throws IOException {
@@ -532,32 +555,32 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 //           });
 //
 //	   }
+//	   
+//	    private Set<Path> applyFileFilters(Set<Path> selectedFiles, Path sourceDir)
+//	            throws IOException {
+//	    
+//	        if (fileFilters == null) {
+//
+//	            fileFilters = FileFilters.getDefault();
+////	            logger.info("File filters: " + fileFilters.toString());
+//	        }
+//	        
+//	        return new FileFilterApplication().apply(sourceDir, 
+//	                                                    selectedFiles,
+//	                                                    fileFilters);
+//	    }
 	   
-	    private Set<Path> applyFileFilters(Set<Path> selectedFiles, Path sourceDir)
-	            throws IOException {
-	    
-	        if (fileFilters == null) {
-
-	            fileFilters = FileFilters.getDefault();
-//	            logger.info("File filters: " + fileFilters.toString());
-	        }
-	        
-	        return new FileFilterApplication().apply(sourceDir, 
-	                                                    selectedFiles,
-	                                                    fileFilters);
-	    }
 	   
-	   
-	    private void doTaskEventCloseRoutine(Task copyTask) {
-	        
-//	        logger.info("Status: " + copyTask.getState() + "\n");
-//	        logger.info("Select a target directory, apply file filters and copy.");
-	        Platform.runLater(() -> {
-//	            selectTargetBtn.setDisable(false);
-//	            closeBtn.setDisable(false);
-//	            cancelBtn.setDisable(true);
-	        });    
-	    }
+//	    private void doTaskEventCloseRoutine(Task copyTask) {
+//	        
+////	        logger.info("Status: " + copyTask.getState() + "\n");
+////	        logger.info("Select a target directory, apply file filters and copy.");
+//	        Platform.runLater(() -> {
+////	            selectTargetBtn.setDisable(false);
+////	            closeBtn.setDisable(false);
+////	            cancelBtn.setDisable(true);
+//	        });    
+//	    }
 	    
 	    
 	private void setDragDone(PathTreeCell cell) {
@@ -573,14 +596,14 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 	}
 
 	
-	 private void sleep(int ms) {
-			try {
-				Thread.sleep(ms);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
+//	 private void sleep(int ms) {
+//			try {
+//				Thread.sleep(ms);
+//			} catch (InterruptedException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//		}
 	
 	
 	private Path getRootDirectory(Path path) {

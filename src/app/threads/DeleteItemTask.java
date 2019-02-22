@@ -27,6 +27,7 @@ import app.interfaces.ISearchLockedFiles;
 import app.loadTime.LoadTime.LoadTimeOperation;
 import app.sort.WindowsExplorerComparator;
 import app.view.alerts.AlertFilesLocked;
+import app.view.alerts.DefaultAlert;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -213,6 +214,12 @@ public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, IC
 				                     if (isCancelled()) {
 				                         updateMessage("Cancelled");
 				                         this.cancelTask = true;
+				                         // TODO - den namen "folder.lock" zentralisieren
+				                         File lockFile = new File(ordner + File.separator + "folder.lock");
+				                         if (lockFile.exists()) {
+				                        	 // TODO - Alert Layout ändern
+											new DefaultAlert(AlertType.ERROR, "Fehler", "Die Lock-Datei im Ordner \"" + ordner + "\" konnte nicht gelöscht werden.");
+										 }
 				                         return;
 				                     } else {
 				                    	 e.printStackTrace();

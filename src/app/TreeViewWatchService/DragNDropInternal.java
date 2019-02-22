@@ -130,7 +130,7 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
             TreeItem<PathItem> item = cell.getTreeItem();
 //            if (item != null && item.isLeaf()) {
             
-            if (selItems != null) {
+            if (selItems != null && !item.getValue().isLocked()) {
                 Dragboard db = cell.startDragAndDrop(TransferMode.COPY);
                 ClipboardContent content = new ClipboardContent();
 
@@ -165,7 +165,7 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
         	Dragboard db = event.getDragboard();
 //        	System.out.println("setDragOver");
             TreeItem<PathItem> item = cell.getTreeItem();
-            if (item != null && event.getGestureSource() != cell && event.getDragboard().hasFiles()) {
+            if (item != null && event.getGestureSource() != cell && event.getDragboard().hasFiles() && !item.getValue().isLocked()) {
                 Path targetPath = cell.getTreeItem().getValue().getPath();                
                 PathTreeCell sourceCell = (PathTreeCell) event.getGestureSource();
                 Path source = db.getFiles().get(0).toPath();
@@ -203,7 +203,7 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 	
 	private void setDragEntered(PathTreeCell cell) {
         cell.setOnDragEntered(event -> {
-//        	System.out.println("setDragEntered");
+        	System.out.println("setDragEntered");
         	scrollingByDragNDrop.stopScrolling();
             TreeItem<PathItem> item = cell.getTreeItem();
             if (item != null &&
@@ -227,7 +227,7 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 		 cell.setOnDragDropped(event -> {
 			 scrollingByDragNDrop.stopScrolling();
 
-//			 System.out.println(2);
+			 System.out.println(2);
 //			 	addAllExpandedItems(cell.getTreeView().getRoot());
 	        Dragboard db = event.getDragboard();
 	            

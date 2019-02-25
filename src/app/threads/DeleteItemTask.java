@@ -39,6 +39,7 @@ public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, IC
 	private DeleteItemTask deleteItemTask;
 	private CTree cTree;
 	private PathTreeCell pathTreeCell;
+	private TreeItem<PathItem> treeItem;
 	private CopyDialogProgress pForm;
 	
 	private ObservableList<String> listAllLockedFiles;
@@ -51,11 +52,12 @@ public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, IC
 	private boolean cancelTask = false;
 	private boolean skip = false;
 	
-	public DeleteItemTask(CTree cTree, PathTreeCell pathTreeCell, ObservableList<String> listAllLockedFiles) {
+	public DeleteItemTask(CTree cTree, PathTreeCell pathTreeCell, TreeItem<PathItem> treeItem, ObservableList<String> listAllLockedFiles) {
 		  System.out.println("new Task");		  
 		  this.deleteItemTask = this;		  
 		  this.cTree = cTree;
 		  this.pathTreeCell = pathTreeCell;
+		  this.treeItem = treeItem;
 		  this.listAllLockedFiles = listAllLockedFiles;
 		  
     	  pForm = new CopyDialogProgress(deleteItemTask);
@@ -69,7 +71,8 @@ public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, IC
 	protected void cancelled() {
 		System.out.println("Del cancelled");	
 		this.cancelTask = true;
-		unlockDir(cTree.getLockFileHandler(), pathTreeCell.getTreeItem().getValue().getLevelOneItem());
+//		unlockDir(cTree.getLockFileHandler(), pathTreeCell.getTreeItem().getValue().getLevelOneItem());
+		unlockDir(cTree.getLockFileHandler(), treeItem.getValue().getLevelOneItem());
 		updateMessage("Cancelled");
 		// TODO - wenn cancelled dann komplett refresh, der refresh soll von der DB angestossen werden
 		// 		- und danach Dialog Close
@@ -78,7 +81,8 @@ public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, IC
 	@Override
 	protected void failed() {
 		System.err.println("Failed");
-		unlockDir(cTree.getLockFileHandler(), pathTreeCell.getTreeItem().getValue().getLevelOneItem());
+//		unlockDir(cTree.getLockFileHandler(), pathTreeCell.getTreeItem().getValue().getLevelOneItem());
+		unlockDir(cTree.getLockFileHandler(), treeItem.getValue().getLevelOneItem());
 		updateMessage("Failed");
 		// TODO - wenn cancelled dann komplett refresh, der refresh soll von der DB angestossen werden
 		// 		- und danach Dialog Close
@@ -87,9 +91,25 @@ public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, IC
 	@Override
 	protected void succeeded() {
 		removeItem();
-		unlockDir(cTree.getLockFileHandler(), pathTreeCell.getTreeItem().getValue().getLevelOneItem());
-		CreateTree.wantUpdateTree = false;
+//		unlockDir(cTree.getLockFileHandler(), pathTreeCell.getTreeItem().getValue().getLevelOneItem());		
+		unlockDir(cTree.getLockFileHandler(), treeItem.getValue().getLevelOneItem());
+
+		// Tree nur updaten, wenn das LevelOne Node leer ist, weil sonst das Lock-Icon nicht auf unlock wechselt, wenn das LevelOne Node leer ist
+		int levelOneSize = treeItem.getValue().getLevelOneItem().getChildren().size();
+		if(levelOneSize == 0) {
+			cTree.refreshTree(true);
+		} else {
+			CreateTree.wantUpdateTree = false;
+		}
+		
 		sleep(1000);
+		
+
+//		cTree.refreshTree();
+//		if (b) {
+//			treeItem.getValue().getLevelOneItem().getValue().setLocked(false);
+//		}
+//		System.out.println("succeeded: " + treeItem.getValue().getLevelOneItem().getValue().isLocked());
 		pForm.close();
 	}
 	
@@ -105,7 +125,8 @@ public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, IC
 		for (TreeItem<PathItem> item : pathTreeCell.getTreeView().getSelectionModel().getSelectedItems()) {
 			System.out.println("add item: " + item.getValue().getPath() +  " (" + item.getValue().getRow() + ")");
 			
-			unlockLockFile(cTree.getLockFileHandler(), pathTreeCell);
+//			unlockLockFile(cTree.getLockFileHandler(), pathTreeCell);
+			unlockLockFile(cTree.getLockFileHandler(), treeItem);
 			
 			selectedItems.add(item);
 			rows.add(item.getValue().getRow());
@@ -143,7 +164,7 @@ public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, IC
 		rows.sort(Comparator.reverseOrder());
 		
 		for (Integer row : rows) {
-			TreeItem<PathItem> item = pathTreeCell.getTreeView().getTreeItem(row);
+			TreeItem<PathItem> item = pathTreeCell.getTreeView().getTreeItem(row);		
 			if (!item.getValue().getPath().toFile().exists()) {
 				boolean isRemoved = item.getParent().getChildren().remove(item);
 	            if (isRemoved) {
@@ -275,7 +296,10 @@ public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, IC
 		updateTitle(file.getAbsolutePath());
 		updateProgress(countDeletedDir, pathsCounter); 
 		int percent = (int)((countDeletedDir * 100.0f) / pathsCounter);
-		updateMessage(percent + "%");
+		if (percent <= 100) {
+			updateMessage(percent + "%");
+		}
+		
 	}
     
     public void cancelTask() {

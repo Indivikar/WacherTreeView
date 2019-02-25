@@ -3,6 +3,7 @@ package app.controller;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import app.TreeViewWatchService.PathItem;
 import app.TreeViewWatchService.PathTreeCell;
 import app.interfaces.ICursor;
 import app.interfaces.ILockDir;
@@ -14,6 +15,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.TreeItem;
 import javafx.stage.Stage;
 
 public class CDelete implements Initializable, ICursor, ILockDir{
@@ -23,11 +25,12 @@ public class CDelete implements Initializable, ICursor, ILockDir{
 	private Stage primaryStage;
 	private Stage stage;
 	private PathTreeCell pathTreeCell;
-	
+	private TreeItem<PathItem> treeItem;
 	private ObservableList<String> listAllLockedFiles;
 	
 	private @FXML Button buttonOK;
 	private @FXML Button buttonCancel;
+	
 	
 	public CDelete() {
 
@@ -41,29 +44,32 @@ public class CDelete implements Initializable, ICursor, ILockDir{
 
 	private void setAction() {
 		buttonOK.setOnAction(e -> {
-    	    DeleteItemTask DeleteItemTask = new DeleteItemTask(cTree, pathTreeCell, listAllLockedFiles);
+    	    DeleteItemTask DeleteItemTask = new DeleteItemTask(cTree, pathTreeCell, treeItem, listAllLockedFiles);
     	    bindUIandService(primaryStage, DeleteItemTask);
     	    new Thread(DeleteItemTask).start();
 			stage.close();
 		});
 		
 		buttonCancel.setOnAction(e -> {
-			unlockDir(cTree.getLockFileHandler(), pathTreeCell.getTreeItem().getValue().getLevelOneItem());
+//			unlockDir(cTree.getLockFileHandler(), pathTreeCell.getTreeItem().getValue().getLevelOneItem());
+			unlockDir(cTree.getLockFileHandler(), treeItem.getValue().getLevelOneItem());
 			stage.close();
 		});
 		
 	}
 
-	public void set(CTree cTree, StageDelete stageDelete, Stage primaryStage, Stage stage, PathTreeCell pathTreeCell, ObservableList<String> listAllLockedFiles) {
+	public void set(CTree cTree, StageDelete stageDelete, Stage primaryStage, Stage stage, 
+			PathTreeCell pathTreeCell, TreeItem<PathItem> treeItem, ObservableList<String> listAllLockedFiles) {
 		this.cTree = cTree;
 		this.stageDelete = stageDelete;
 		this.primaryStage = primaryStage;
 		this.stage = stage;
 		this.pathTreeCell = pathTreeCell;
+		this.treeItem = treeItem;
 		this.listAllLockedFiles = listAllLockedFiles;
 		
-		lockDir(cTree.getLockFileHandler(), 
-				pathTreeCell.getTreeItem().getValue().getLevelOneItem());
+//		lockDir(cTree.getLockFileHandler(), pathTreeCell.getTreeItem().getValue().getLevelOneItem());
+		lockDir(cTree.getLockFileHandler(), treeItem.getValue().getLevelOneItem());
 	}
 
 	

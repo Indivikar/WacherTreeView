@@ -20,10 +20,12 @@ public class NewDirectoryTask extends Task<Void> implements ICursor, ITreeItemMe
 
 	private CTree cTree;
 	private PathTreeCell pathTreeCell;
+	private TreeItem<PathItem> treeItem;
 	private TreeItem<PathItem> newItem;
 	
-	public NewDirectoryTask(CTree cTree, PathTreeCell pathTreeCell) {
+	public NewDirectoryTask(CTree cTree, PathTreeCell pathTreeCell, TreeItem<PathItem> treeItem) {
 		this.pathTreeCell = pathTreeCell;
+		this.treeItem = treeItem;
 		this.cTree = cTree;
 	}
 
@@ -40,7 +42,8 @@ public class NewDirectoryTask extends Task<Void> implements ICursor, ITreeItemMe
 	@Override
 	protected void succeeded() {   	
 		Path newDir = newItem.getValue().getPath();
-    	Path parentPath = pathTreeCell.getTreeItem().getValue().getPath();
+//    	Path parentPath = pathTreeCell.getTreeItem().getValue().getPath();
+    	Path parentPath = treeItem.getValue().getPath();
     	
     	TreeItem<PathItem> parentItem = getItemSearchRecrusive(pathTreeCell.getTreeView().getRoot(), parentPath.toString());
 //    	TreeItem<PathItem> parentItem = new TreeItem<PathItem>(new PathItem(parentPath));
@@ -77,7 +80,7 @@ public class NewDirectoryTask extends Task<Void> implements ICursor, ITreeItemMe
         Path newDir = createNewDirectory();
         System.out.println(1);
         if (newDir != null) {   
-        	System.out.println(2);
+        	System.err.println("NewDirectory: " + newDir);
       	  	this.newItem = new TreeItem<PathItem>(new PathItem(newDir, true));
       	  	System.out.println(3);
 //      	  CTree.createTree(newItem, false);
@@ -92,8 +95,10 @@ public class NewDirectoryTask extends Task<Void> implements ICursor, ITreeItemMe
          Path newDir = null;
          
          while (true) {
-             Path path = pathTreeCell.getTreeItem().getValue().getPath();
-             newDir = Paths.get(path.toAbsolutePath().toString(), "new directory " + String.valueOf(pathTreeCell.getItem().getCountNewDir()));
+//             Path path = pathTreeCell.getTreeItem().getValue().getPath();
+             Path path = treeItem.getValue().getPath();
+//             newDir = Paths.get(path.toAbsolutePath().toString(), "new directory " + String.valueOf(pathTreeCell.getItem().getCountNewDir()));
+             newDir = Paths.get(path.toAbsolutePath().toString(), "new directory " + String.valueOf(treeItem.getValue().getCountNewDir()));
              try {
                  Files.createDirectory(newDir);
                  break;

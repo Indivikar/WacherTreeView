@@ -21,6 +21,18 @@ public interface ICursor {
                 );
     }
 	
+    public default void bindUIandService(Node node, Service<?> service) {
+    	node.getScene()
+                .getRoot()
+                .cursorProperty()
+                .bind(
+                        Bindings
+                            .when(service.runningProperty())
+                                .then(Cursor.WAIT)
+                                .otherwise(Cursor.DEFAULT)
+                );
+    }
+    
     public default void bindUIandService(Stage node, Task<?> task) {
     	node.getScene()
                 .getRoot()

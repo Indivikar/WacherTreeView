@@ -60,6 +60,11 @@ public interface ILockDir {
 		   unlockLockFile(lockFileHandler, levelOneDir);
 	   }
 	   
+	   public default void unlockLockFile(LockFileHandler lockFileHandler, TreeItem<PathItem> treeItem) {
+		   File levelOneDir = treeItem.getValue().getLevelOneItem().getValue().getPath().toFile();
+		   unlockLockFile(lockFileHandler, levelOneDir);
+	   }
+	   
 	   public default void unlockLockFile(LockFileHandler lockFileHandler, File levelOneDirOrLockFilePath) {
 		   lockFileHandler.unlockLockfile(levelOneDirOrLockFilePath);
 	   }

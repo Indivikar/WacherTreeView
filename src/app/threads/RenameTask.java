@@ -34,33 +34,39 @@ public class RenameTask extends Task<Boolean> implements ITreeItemMethods, ICurs
 	private CRename cRename;
 	private CTree cTree;
 	private PathTreeCell pathTreeCell;
+	private TreeItem<PathItem> cellTreeItem;
 	private File cellFile;
 	private File newFile;
 	private ObservableList<String> listAllLockedFiles;
 	
 	
-	public RenameTask(CRename cRename, CTree cTree, PathTreeCell pathTreeCell) {
+	public RenameTask(CRename cRename, CTree cTree, PathTreeCell pathTreeCell, TreeItem<PathItem> cellTreeItem) {
 		this.cRename = cRename;
 		this.cTree = cTree;
-		this.pathTreeCell = pathTreeCell;	  
-		this.cellFile = pathTreeCell.getItem().getPath().toFile();
+		this.pathTreeCell = pathTreeCell;	
+		this.cellTreeItem = cellTreeItem;
+		this.cellFile = cellTreeItem.getValue().getPath().toFile();
+		System.err.println("Rename70: " + cellFile);
 	}
 
 	@Override
 	protected void cancelled() {
-		unlockDir(cTree.getLockFileHandler(), pathTreeCell.getTreeItem().getValue().getLevelOneItem());
+//		unlockDir(cTree.getLockFileHandler(), pathTreeCell.getTreeItem().getValue().getLevelOneItem());
+		unlockDir(cTree.getLockFileHandler(), cellTreeItem.getValue().getLevelOneItem());
 	}
 	
 	@Override
 	protected void failed() {
 		// TODO - ein Alert einbauen
 		cRename.getLabelMassage().setText("Fail");		
-		unlockDir(cTree.getLockFileHandler(), pathTreeCell.getTreeItem().getValue().getLevelOneItem());
+//		unlockDir(cTree.getLockFileHandler(), pathTreeCell.getTreeItem().getValue().getLevelOneItem());
+		unlockDir(cTree.getLockFileHandler(), cellTreeItem.getValue().getLevelOneItem());
 	}
 	
 	@Override
 	protected void succeeded() {			
-		unlockDir(cTree.getLockFileHandler(), pathTreeCell.getTreeItem().getValue().getLevelOneItem());
+//		unlockDir(cTree.getLockFileHandler(), pathTreeCell.getTreeItem().getValue().getLevelOneItem());
+		unlockDir(cTree.getLockFileHandler(), cellTreeItem.getValue().getLevelOneItem());
 		cRename.getStage().close();
 
 		pathTreeCell.getTreeView().getSelectionModel().clearSelection();
@@ -80,12 +86,13 @@ public class RenameTask extends Task<Boolean> implements ITreeItemMethods, ICurs
 		LoadTime.Start();
 		
 		// unlock lockFile to change the name
-		unlockLockFile(cTree.getLockFileHandler(), pathTreeCell);
+		unlockLockFile(cTree.getLockFileHandler(), cellTreeItem);
         
 		boolean isRenameSuccessful = false;
 		
 		String newName = cRename.getTextFieldName().getText().trim();
 		if (cellFile.isDirectory()) {
+			System.err.println("Rename80: " + cellFile.getParentFile() + " > " + cellFile.getName());
 			isRenameSuccessful = rename(cellFile.getParentFile(), cellFile.getName(), newName);
 		} else {
 			isRenameSuccessful = rename(cellFile.getParentFile(), cellFile.getName(), newName + "." + cRename.getSuffix());
@@ -102,16 +109,19 @@ public class RenameTask extends Task<Boolean> implements ITreeItemMethods, ICurs
 		File oldFile = new File(path + File.separator + oldName);
 		newFile = new File(path + File.separator + newName);	
 				
+		System.err.println("Rename90: " + oldFile + " > " + newFile);
+		
 		boolean isRenameSuccessful = oldFile.renameTo(newFile);
 		
 	    if (isRenameSuccessful) {
 	        System.out.println("renamed");
-	        pathTreeCell.getTreeItem().getValue().setPath(newFile.toPath());
-	        
+//	        pathTreeCell.getTreeItem().getValue().setPath(newFile.toPath());
+	        cellTreeItem.getValue().setPath(newFile.toPath());
 	        
 	        if (newFile.isDirectory()) {
 	        	LoadTime.Start();
-	        	setNewPathsForChildrens(pathTreeCell.getTreeItem(), oldFile, newFile);
+//	        	setNewPathsForChildrens(pathTreeCell.getTreeItem(), oldFile, newFile);
+	        	setNewPathsForChildrens(cellTreeItem, oldFile, newFile);
 	        	LoadTime.Stop("setNewPathsForChildrens()", "");
 			}
 

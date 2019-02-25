@@ -39,7 +39,7 @@ public class MenuItemDeleteItem extends MenuItem implements ICursor{
 	      setOnAction((event) -> {
 //	    	  FileAlterationListenerImpl.isInternalChange = true;
 	    	  
-	    	  new StageDelete(primaryStage, cTree, pathTreeCell, listAllLockedFiles);
+	    	  new StageDelete(primaryStage, cTree, pathTreeCell, pathTreeCell.getTreeItem(), listAllLockedFiles);
 	    	  
 //	    	  DeleteItemTask DeleteItemTask = new DeleteItemTask(cTree, pathTreeCell, listAllLockedFiles);
 //	    	  bindUIandService(primaryStage, DeleteItemTask);

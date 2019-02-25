@@ -33,7 +33,8 @@ public class StageRename implements ILockDir {
 		Scene scene = new Scene(root);
 
 		controller = loader.getController();
-		controller.set(this, cTree, primaryStage, stage, pathTreeCell);
+		System.err.println("Rename50: " + pathTreeCell.getTreeItem().getValue().getPath());
+		controller.set(this, cTree, primaryStage, stage, pathTreeCell, pathTreeCell.getTreeItem());
 		
 		stage.setOnCloseRequest(e -> {
 			unlockDir(cTree.getLockFileHandler(), pathTreeCell.getTreeItem().getValue().getLevelOneItem());

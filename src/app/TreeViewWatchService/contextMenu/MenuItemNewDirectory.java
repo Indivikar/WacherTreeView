@@ -29,13 +29,14 @@ public class MenuItemNewDirectory extends MenuItem implements ISaveExpandedItems
 	          @Override
 	          public void handle(ActionEvent t) {	        	  
 	        	  if(isOnlyOneItemSelected(pathTreeCell)) {
-//	        	  addAllExpandedItems(pathTreeCell.getTreeView().getRoot());
-	        	  
-//	        	  FileAlterationListenerImpl.isInternalChange = true;
-	        	  wantUpdateTree(false);
-	        	  NewDirectoryTask newDirectoryTask = new NewDirectoryTask(cTree, pathTreeCell);
-	        	  bindUIandService(primaryStage, newDirectoryTask);
-	        	  new Thread(newDirectoryTask).start();
+	//	        	  addAllExpandedItems(pathTreeCell.getTreeView().getRoot());
+		        	  
+	//	        	  FileAlterationListenerImpl.isInternalChange = true;
+	        		  System.out.println(pathTreeCell.getTreeItem().getValue().getPath().toString());	        		  
+		        	  wantUpdateTree(false);
+		        	  NewDirectoryTask newDirectoryTask = new NewDirectoryTask(cTree, pathTreeCell, pathTreeCell.getTreeItem());
+		        	  bindUIandService(primaryStage, newDirectoryTask);
+		        	  new Thread(newDirectoryTask).start();
 	        	  }
 	        	  	              
 	          }	          

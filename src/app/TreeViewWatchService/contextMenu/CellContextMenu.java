@@ -25,6 +25,12 @@ public class CellContextMenu extends ContextMenu {
 	
 	public CellContextMenu(PathTreeCell pathTreeCell, Stage primaryStage, CTree cTree, ObservableList<String> listAllLockedFiles) {
 		
+		// wurde eingebaut, damit die celle selected wird, wo ein rechts-Klick auf den Pfeil vom Node gemacht wird
+		showingProperty().addListener((ov, oldVal, newVal) -> {
+			cTree.getTree().getSelectionModel().clearSelection();
+			cTree.getTree().getSelectionModel().select(pathTreeCell.getTreeItem().getValue().getRow());
+		});
+		
 		pathTreeCell.set(this);
 		this.primaryStage = primaryStage;
 		this.pathTreeCell = pathTreeCell;

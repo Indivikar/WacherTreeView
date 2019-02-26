@@ -56,6 +56,7 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Orientation;
@@ -66,10 +67,13 @@ import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -263,7 +267,7 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
         
         tree.getRoot().setExpanded(true);    
         tree.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-        
+        tree.addEventHandler(MouseEvent.MOUSE_CLICKED, mouseEventHandle); 
         tree.getRoot().expandedProperty().addListener((o, oldVal, newVal) -> {
         	System.out.println(newVal + " - " + o.getValue());
         });
@@ -293,6 +297,20 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
         PAWatcher paWatcher = new PAWatcher(this);
         lockWacher(rootPath);
 
+	}
+	
+	EventHandler<MouseEvent> mouseEventHandle = (MouseEvent event) -> {
+	    handleMouseClicked(event);
+	};
+	
+	private void handleMouseClicked(MouseEvent event) {
+	    Node node = event.getPickResult().getIntersectedNode();
+	    System.out.println("click");
+	    // Accept clicks only on node cells, and not on empty spaces of the TreeView
+	    if (node instanceof Text || (node instanceof TreeCell && ((TreeCell) node).getText() != null)) {
+	        String name = tree.getSelectionModel().getSelectedItem().getValue().getPath().toString();
+	        System.out.println("Node click: " + name);
+	    }
 	}
 	
 	

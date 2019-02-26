@@ -58,10 +58,9 @@ public interface ILockDir {
 				for (int i = 0; i < files.length; i++) {
 					if (files[i].isDirectory()) {
 						File lockFile = new File(files[i] + File.separator + CTree.lockFileName);
-						System.out.println(lockFile);
+//						System.out.println(lockFile);
 						if (lockFile.exists()) {							
 							lockFile.delete();
-							System.out.print(" (Deleted)\n");	
 						}						
 					}					
 				}

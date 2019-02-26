@@ -3,12 +3,14 @@ package app;
 import java.io.File;
 
 import app.controller.CTree;
+import app.interfaces.ICursor;
 import app.interfaces.ILockDir;
 import app.loadTime.LoadTime;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -17,17 +19,18 @@ import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
 
-public class StartWacherDemo extends Application implements ILockDir {
+public class StartWacherDemo extends Application implements ILockDir, ICursor {
 
 	// Config
-	boolean startLoadTimeList = true;
+	boolean startLoadTimeList = false;
 	
+	private StartWacherDemo startWacherDemo;
 	private CTree controller;
 	
 	public static ObservableList<File> myLockFiles = FXCollections.observableArrayList(); // für Interface ILockDir
 	
 	public StartWacherDemo() {
-		// TODO Auto-generated constructor stub
+		this.startWacherDemo = this;
 	}
 
 	@Override
@@ -42,8 +45,7 @@ public class StartWacherDemo extends Application implements ILockDir {
 		
 		Scene scene = new Scene(root);
 		
-		controller = loader.getController();
-		controller.set(this, primaryStage);
+		addController(primaryStage, loader);		
 			
 //		controller.getScrollingByDragNDrop().stopScrolling(root);
 		
@@ -62,14 +64,32 @@ public class StartWacherDemo extends Application implements ILockDir {
     public void stop() throws Exception {
     	System.out.println("Stop");
     	delAllLockFiles(controller);
-    	Platform.exit();
-    	System.exit(0);
+ 
 //    	controller.getService().shutdownNow();
     }
 
+    public void addController(Stage primaryStage, FXMLLoader loader) {
+    	Task<Void> task = new Task<Void>() {
+		    @Override public Void call() {
+		    	Platform.runLater(() -> {
+		    				controller = loader.getController();
+		    				controller.set(startWacherDemo, primaryStage);
+		    	});
+		        return null;
+		    }
+		};
+		
+		Platform.runLater(() -> {
+			bindUIandService(primaryStage, task);
+			new Thread(task).start();
+		});
+	}
+    
 
 	public static void main(String[] args) {
         launch(args);
+        Platform.exit();
+        System.exit(0);
     }
 	
 }

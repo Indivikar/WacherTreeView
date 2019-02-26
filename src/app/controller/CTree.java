@@ -45,17 +45,20 @@ import app.loadTime.LoadTime.LoadTimeOperation;
 import app.models.ItemsDB;
 import app.sort.WindowsExplorerComparator;
 import app.threads.LoadDBService;
-
+import app.threads.NewDirectoryTask;
 import app.threads.SortWinExplorerTask;
+import app.threads.TreeLoaderTask;
 import app.watcher.watchService.LockWatcher;
 import app.watcher.watchService.PAWatcher;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -250,7 +253,10 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 //        AddTreeItems threadAddItems = new AddTreeItems(pathFileDB, this);
 //        new Thread(threadAddItems).start();
         createTree = new CreateTree(pathFileDB, this);
+        
         createTree.updatePathListFormDB(treeItem, false, false);
+//        updateTree();
+
 //        createTree.startCreateTree(treeItem, false, false);
 //        createTree2(treeItem, tree);
         tree.setRoot(treeItem);
@@ -297,6 +303,17 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
         PAWatcher paWatcher = new PAWatcher(this);
         lockWacher(rootPath);
 
+	}
+	
+	private void updateTree() {
+		try {
+	        TreeLoaderTask treeLoaderTask = new TreeLoaderTask(this, treeItem);
+	  	  	bindUIandService(primaryStage, treeLoaderTask);
+	  	  	new Thread(treeLoaderTask).start();        	
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.getStackTrace();
+		}
 	}
 	
 	EventHandler<MouseEvent> mouseEventHandle = (MouseEvent event) -> {
@@ -472,8 +489,26 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 
 		loadTree();
 		
+//		try {
+//		Platform.runLater(() -> {
+//				bindUIandService(primaryStage, task);
+//				new Thread(task).start();
+//		});
+
+//		} catch (Exception e) {
+//			e.getStackTrace();
+//		}
 	}
 
+	Task<Void> task = new Task<Void>() {
+	    @Override public Void call() {
+	    	Platform.runLater(() -> {
+	    		loadTree();
+	    	});
+	        return null;
+	    }
+	};
+	
 	@Override
 	public void addAllExpandedItems() {
 		// TODO Auto-generated method stub

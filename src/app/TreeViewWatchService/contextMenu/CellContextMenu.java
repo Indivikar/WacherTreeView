@@ -1,11 +1,13 @@
 package app.TreeViewWatchService.contextMenu;
 
+import app.TreeViewWatchService.PathItem;
 import app.TreeViewWatchService.PathTreeCell;
 import app.controller.CTree;
 import app.interfaces.ILockDir;
 import javafx.collections.ObservableList;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.control.TreeItem;
 import javafx.stage.Stage;
 
 public class CellContextMenu extends ContextMenu {
@@ -27,8 +29,18 @@ public class CellContextMenu extends ContextMenu {
 		
 		// wurde eingebaut, damit die celle selected wird, wo ein rechts-Klick auf den Pfeil vom Node gemacht wird
 		showingProperty().addListener((ov, oldVal, newVal) -> {
-			cTree.getTree().getSelectionModel().clearSelection();
-			cTree.getTree().getSelectionModel().select(pathTreeCell.getTreeItem().getValue().getRow());
+			TreeItem<PathItem> selItem = cTree.getTree().getSelectionModel().getSelectedItem();
+			if (selItem != null) {
+				String selItemString = selItem.getValue().getPath().toString();
+				String cellItem = pathTreeCell.getTreeItem().getValue().getPath().toString();
+				
+				int row = pathTreeCell.getTreeItem().getValue().getRow();
+				if (!selItemString.equals(cellItem)) {
+					cTree.getTree().getSelectionModel().clearSelection();
+					cTree.getTree().getSelectionModel().select(row);
+				}
+			}
+
 		});
 		
 		pathTreeCell.set(this);
@@ -36,7 +48,7 @@ public class CellContextMenu extends ContextMenu {
 		this.pathTreeCell = pathTreeCell;
 		this.listAllLockedFiles = listAllLockedFiles;
 		
-		this.menuItemOpen = new MenuItemOpen(pathTreeCell);
+		this.menuItemOpen = new MenuItemOpen(primaryStage, pathTreeCell);
 		this.separatorMenuItem_1 = new SeparatorMenuItem();
 		this.menuItemNewFile = new MenuItemNewFile(pathTreeCell);
 		this.menuItemNewDirectory = new MenuItemNewDirectory(primaryStage, cTree, pathTreeCell);

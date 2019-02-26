@@ -304,13 +304,13 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 	};
 	
 	private void handleMouseClicked(MouseEvent event) {
-	    Node node = event.getPickResult().getIntersectedNode();
-	    System.out.println("click");
-	    // Accept clicks only on node cells, and not on empty spaces of the TreeView
-	    if (node instanceof Text || (node instanceof TreeCell && ((TreeCell) node).getText() != null)) {
-	        String name = tree.getSelectionModel().getSelectedItem().getValue().getPath().toString();
-	        System.out.println("Node click: " + name);
-	    }
+//	    Node node = event.getPickResult().getIntersectedNode();
+//	    System.out.println("click");
+//	    // Accept clicks only on node cells, and not on empty spaces of the TreeView
+//	    if (node instanceof Text || (node instanceof TreeCell && ((TreeCell) node).getText() != null)) {
+//	        String name = tree.getSelectionModel().getSelectedItem().getValue().getPath().toString();
+//	        System.out.println("Node click: " + name);
+//	    }
 	}
 	
 	
@@ -437,7 +437,9 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
     // Services
     public static LoadDBService getLoadDBService() {return loadDBService;}
     
-    public String getDrive() {return drive;}
+    
+//    public static String getLockFileName() {return lockFileName;}
+	public String getDrive() {return drive;}
     public String getMainDirectory() {return mainDirectory;}
 	public String getDirectoryNameDB() {return DirectoryNameDB;}
 	public String getFileNameDB() {return fileNameDB;}

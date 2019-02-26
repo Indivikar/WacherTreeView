@@ -10,6 +10,7 @@ import app.controller.CDelete;
 import app.controller.CRename;
 import app.controller.CTree;
 import app.interfaces.ILockDir;
+import app.interfaces.IWindowEigenschaften;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -18,7 +19,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-public class StageDelete implements ILockDir {
+public class StageDelete implements IWindowEigenschaften, ILockDir {
 
 	private CDelete controller;
 	
@@ -45,7 +46,7 @@ public class StageDelete implements ILockDir {
 		
 		stage.setTitle("Delete");
 		stage.setScene(scene);
-		stage.setX(6800);
+		setOpenWindowInWindowCenter(primaryStage, stage);
 		stage.showAndWait();
 	}
 

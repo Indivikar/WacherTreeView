@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 
+import app.StartWacherDemo;
 import app.TreeViewWatchService.PathItem;
 import app.TreeViewWatchService.PathTreeCell;
 import app.controller.CTree;
@@ -19,7 +20,6 @@ import app.functions.LockFileHandler;
 import javafx.scene.control.TreeItem;
 
 public interface ILockDir {
-
 	
 	   public default boolean lockDir(LockFileHandler lockFileHandler, TreeItem<PathItem> levelOneItem) {
 		   try {
@@ -31,7 +31,10 @@ public interface ILockDir {
 				   lockFileHandler.lockFile(f);
 			        //set hidden attribute
 //			        Files.setAttribute(f.toPath(), "dos:hidden", true, LinkOption.NOFOLLOW_LINKS);
-			        return b;
+				   if (b) {
+					   addLockFileToList(f);
+				   }
+			       return b;
 			   }			   
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -40,12 +43,53 @@ public interface ILockDir {
 		    return false;
 	   }
 	
+	   public default void addLockFileToList(File file) {
+		   StartWacherDemo.myLockFiles.add(file);
+	   };
+	   
+	   public default void removeLockFileFromList(File file) {
+		   StartWacherDemo.myLockFiles.remove(file);
+	   };
+	   
+	   public default void delAllLockFiles(CTree cTree) {
+		   // es werden nur die LockFiles gelöscht, die kein Besitzer mehr haben
+		   File[] files = new File(cTree.getMainDirectory()).listFiles();
+			if (files != null) { 
+				for (int i = 0; i < files.length; i++) {
+					if (files[i].isDirectory()) {
+						File lockFile = new File(files[i] + File.separator + CTree.lockFileName);
+						System.out.println(lockFile);
+						if (lockFile.exists()) {							
+							lockFile.delete();
+							System.out.print(" (Deleted)\n");	
+						}						
+					}					
+				}
+			}
+		   
+//		   for (File f : StartWacherDemo.myLockFiles) {
+//				  if (f.exists()) {
+//						try {					
+//							boolean b = Files.deleteIfExists(f.toPath());
+//							if (b) {
+//								removeLockFileFromList(f);
+//							}
+//						} catch (IOException e) {
+//							e.printStackTrace();
+//						}
+//				 }
+//		   }
+	   };
+	   
 	   public default boolean unlockDir(LockFileHandler lockFileHandler, TreeItem<PathItem> levelOneItem) {
 		   File f = new File(levelOneItem.getValue().getPath() + File.separator + CTree.lockFileName);
 		   if (f.exists()) {
 			   try {
 				unlockLockFile(lockFileHandler, f);
-				Files.deleteIfExists(f.toPath());
+				boolean b = Files.deleteIfExists(f.toPath());
+				if (b) {
+					removeLockFileFromList(f);
+				}
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

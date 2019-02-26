@@ -239,7 +239,8 @@ public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, IC
 				                         File lockFile = new File(ordner + File.separator + "folder.lock");
 				                         if (lockFile.exists()) {
 				                        	 // TODO - Alert Layout ändern
-											new DefaultAlert(AlertType.ERROR, "Fehler", "Die Lock-Datei im Ordner \"" + ordner + "\" konnte nicht gelöscht werden.");
+											new DefaultAlert(cTree.getPrimaryStage(), 
+													AlertType.ERROR, "Fehler", "Die Lock-Datei im Ordner \"" + ordner + "\" konnte nicht gelöscht werden.");
 										 }
 				                         return;
 				                     } else {

@@ -9,10 +9,13 @@ import app.TreeViewWatchService.PathItem;
 import app.TreeViewWatchService.PathTreeCell;
 import app.controller.CTree;
 import app.functions.LoadTime;
+import app.view.alerts.DefaultAlert;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
+import javafx.stage.Stage;
+import javafx.stage.Window;
 
 public interface ITreeItemMethods {
 
@@ -107,17 +110,12 @@ public interface ITreeItemMethods {
     	LoadTime.Stop("selectItemSearchInTreeView()", "");
 	}
     
-    public default boolean isOnlyOneItemSelected(PathTreeCell pathTreeCell) {
+    public default boolean isOnlyOneItemSelected(Stage stageMain, PathTreeCell pathTreeCell) {
     	int i = pathTreeCell.getTreeView().getSelectionModel().getSelectedItems().size();
     	if (i == 1) {
     		return true; 
 		} else {
-			Alert alert = new Alert(AlertType.WARNING);
-			alert.setTitle("Achtung");
-			alert.setHeaderText(null);
-			alert.setContentText("Bitte nur eine Markierung setzen.");
-
-			alert.showAndWait();
+			new DefaultAlert(stageMain, AlertType.WARNING, "Achtung", "Bitte nur eine Markierung setzen.");
 			return false;
 		}   	
 	}

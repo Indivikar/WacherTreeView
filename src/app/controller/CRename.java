@@ -11,6 +11,7 @@ import app.interfaces.ICursor;
 import app.interfaces.ILockDir;
 import app.interfaces.ISuffix;
 import app.interfaces.ITreeItemMethods;
+import app.interfaces.IWindowEigenschaften;
 import app.threads.RenameTask;
 import app.threads.SortWinExplorerTask;
 import app.view.Stages.StageRename;
@@ -24,7 +25,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.TreeItem;
 import javafx.stage.Stage;
 
-public class CRename implements Initializable, ISuffix, ICursor, ITreeItemMethods, ILockDir{
+public class CRename implements Initializable, ISuffix, ICursor, ITreeItemMethods, ILockDir, IWindowEigenschaften{
 
 	
 	private StageRename stageRename;
@@ -177,7 +178,7 @@ public class CRename implements Initializable, ISuffix, ICursor, ITreeItemMethod
 			textFieldName.setText(name);
 		}
 		
-	
+//		setOpenWindowInWindowCenter(mainStage, stage);
 		
 		textFieldListener();
 		lockDir(cTree.getLockFileHandler(), pathTreeCell.getTreeItem().getValue().getLevelOneItem());

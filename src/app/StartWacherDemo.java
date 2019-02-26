@@ -3,9 +3,12 @@ package app;
 import java.io.File;
 
 import app.controller.CTree;
+import app.interfaces.ILockDir;
 import app.loadTime.LoadTime;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -14,12 +17,14 @@ import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
 
-public class StartWacherDemo  extends Application {
+public class StartWacherDemo extends Application implements ILockDir {
 
 	// Config
 	boolean startLoadTimeList = true;
 	
 	private CTree controller;
+	
+	public static ObservableList<File> myLockFiles = FXCollections.observableArrayList(); // für Interface ILockDir
 	
 	public StartWacherDemo() {
 		// TODO Auto-generated constructor stub
@@ -55,6 +60,8 @@ public class StartWacherDemo  extends Application {
 
     @Override
     public void stop() throws Exception {
+    	System.out.println("Stop");
+    	delAllLockFiles(controller);
     	Platform.exit();
     	System.exit(0);
 //    	controller.getService().shutdownNow();

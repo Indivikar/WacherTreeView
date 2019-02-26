@@ -17,19 +17,20 @@ import app.view.alerts.AlertFilesLocked;
 import javafx.scene.control.MenuItem;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Alert.AlertType;
+import javafx.stage.Stage;
 
 public class MenuItemOpen extends MenuItem implements IOpenFile, ITreeItemMethods{
 
 	private PathTreeCell pathTreeCell;
 	private ObservableList<String> listAllLockedFiles;
 	
-	public MenuItemOpen(PathTreeCell pathTreeCell) {
+	public MenuItemOpen(Stage primaryStage, PathTreeCell pathTreeCell) {
 		  this.pathTreeCell = pathTreeCell;
 		  this.listAllLockedFiles = listAllLockedFiles;
 		
 		  setText("open...");
 	      setOnAction((event) -> {	 
-	    	  if (isOnlyOneItemSelected(pathTreeCell)) {
+	    	  if (isOnlyOneItemSelected(primaryStage, pathTreeCell)) {
 		    	  System.out.println(pathTreeCell.getTreeItem().getValue().getPath());
 		    	  open(pathTreeCell.getTreeItem().getValue().getPath().toFile());
 	    	  }

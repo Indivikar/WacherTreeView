@@ -9,12 +9,15 @@ import app.TreeViewWatchService.PathTreeCell;
 import app.controller.CRename;
 import app.controller.CTree;
 import app.interfaces.ILockDir;
+import app.interfaces.IWindowEigenschaften;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.layout.AnchorPane;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-public class StageRename implements ILockDir {
+public class StageRename implements IWindowEigenschaften, ILockDir {
 
 	private CRename controller;
 	
@@ -41,11 +44,14 @@ public class StageRename implements ILockDir {
 		});
 		
 		stage.setTitle("Rename");
+		stage.initModality(Modality.APPLICATION_MODAL);
 		stage.setScene(scene);
-		File f = new File("C:\\Users\\DH\\AppData\\Roaming\\IndivikarAG\\dev");
-		if (f.exists()) {
-			stage.setX(6800);
-		}
+		setOpenWindowInWindowCenter(primaryStage, stage);
+		
+//		File f = new File("C:\\Users\\DH\\AppData\\Roaming\\IndivikarAG\\dev");
+//		if (f.exists()) {
+//			stage.setX(6800);
+//		}
 		stage.show();
 	}
 

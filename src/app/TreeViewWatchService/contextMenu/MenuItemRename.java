@@ -17,7 +17,7 @@ public class MenuItemRename extends MenuItem implements ITreeItemMethods {
 		  setText("Rename");
 	      setOnAction((event) -> {	    
 	    	  CTree.isInternalChange = true;	
-	    	  if (isOnlyOneItemSelected(pathTreeCell)) {
+	    	  if (isOnlyOneItemSelected(primaryStage, pathTreeCell)) {
 	    		  Path filePath = pathTreeCell.getItem().getPath();
 	    		  System.err.println("Rename40: " + pathTreeCell.getTreeItem().getValue().getPath());
 	    		  StageRename stageRename = new StageRename(cTree, primaryStage, pathTreeCell);

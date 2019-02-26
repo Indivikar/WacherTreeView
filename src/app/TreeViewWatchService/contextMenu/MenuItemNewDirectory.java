@@ -28,7 +28,7 @@ public class MenuItemNewDirectory extends MenuItem implements ISaveExpandedItems
 	      setOnAction(new EventHandler<ActionEvent>() {
 	          @Override
 	          public void handle(ActionEvent t) {	        	  
-	        	  if(isOnlyOneItemSelected(pathTreeCell)) {
+	        	  if(isOnlyOneItemSelected(primaryStage, pathTreeCell)) {
 	//	        	  addAllExpandedItems(pathTreeCell.getTreeView().getRoot());
 		        	  
 	//	        	  FileAlterationListenerImpl.isInternalChange = true;

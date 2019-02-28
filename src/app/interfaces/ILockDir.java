@@ -25,9 +25,10 @@ public interface ILockDir {
 		   try {
 			   LockFileHandler lockFileHandler = cTree.getLockFileHandler();	
 			   TreeItem<PathItem> levelOneItem = treeItem.getValue().getLevelOneItem();
-			   
+			   String path = levelOneItem.getValue().getPath().toString();			   
 			   File f = new File(levelOneItem.getValue().getPath() + File.separator + CTree.lockFileName);
-			   if (!f.exists()) {
+			   
+			   if (!f.exists() && !cTree.getMainDirectory().equalsIgnoreCase(path)) {
 				   boolean b =  f.createNewFile();
 //				   	BufferedReader br = new BufferedReader(new FileReader(f));
 //				   	FileInputStream inputStream = new FileInputStream(f);
@@ -197,5 +198,7 @@ public interface ILockDir {
 			}
 			return false;
 	   };
+	   
+	   
 	   
 }

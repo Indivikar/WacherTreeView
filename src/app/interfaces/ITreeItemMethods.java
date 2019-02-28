@@ -104,6 +104,14 @@ public interface ITreeItemMethods {
 		}
 	}
     
+    public default void updateTreeIfLevelOneNodeEmpty(CTree cTree, TreeItem<PathItem> levelOneItem) {
+		// Tree nur updaten, wenn das LevelOne Node leer ist, weil sonst das Lock-Icon nicht auf unlock wechselt, wenn das LevelOne Node leer ist
+		int levelOneSize = levelOneItem.getChildren().size();			
+		if(levelOneSize == 0) {
+			cTree.refreshTree(true);
+		}
+	}
+    
     public default void selectItemSearchInTreeView(TreeView<PathItem> treeView, TreeItem<PathItem> item, String newItemString) {
     	LoadTime.Start();
     	searchAndSelectItem(treeView, treeView.getRoot(), newItemString);

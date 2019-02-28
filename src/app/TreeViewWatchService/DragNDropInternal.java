@@ -97,7 +97,9 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 	private Path sourceDir = null;
 	private Path targetDir = null;
 	private CopyOrMoveTask copyOrMoveTask;
+	private boolean cancelCopyRoutine = false;
 	
+	private ObservableList<TreeItem<PathItem>> sourceItems = FXCollections.observableArrayList();
 	
 	public DragNDropInternal(Stage stage, ExecutorService service, final PathTreeCell cell) {
 		this.cTree = cell.getcTree();
@@ -124,29 +126,39 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 	
 	private void setDragDetected(PathTreeCell cell) {
         cell.setOnDragDetected(event -> {
-        	System.out.println("setDragDetected");
+        	System.out.println("setDragDetected 1");
+       	
         	ObservableList<TreeItem<PathItem>> selItems = cell.getTreeView().getSelectionModel().getSelectedItems();
+        	cTree.getSaveSelectedDragNDropFiles().clear();
+        	cTree.getSaveSelectedDragNDropFiles().addAll(selItems);
 
-            TreeItem<PathItem> item = cell.getTreeItem();
+        	
+
+        	System.out.println("setDragDetected 2 " + sourceItems.size());
+        	
+        	
+            TreeItem<PathItem> treeItem = cell.getTreeItem();
 //            if (item != null && item.isLeaf()) {
             
-            if (selItems != null && !item.getValue().isLocked()) {
+            if (selItems != null && !treeItem.getValue().isLocked()) {
                 Dragboard db = cell.startDragAndDrop(TransferMode.COPY);
                 ClipboardContent content = new ClipboardContent();
 
                 List<File> allFiles = new ArrayList<>();
                 
-                for (TreeItem<PathItem> treeItem : selItems) {
-                	List<File> files = Arrays.asList(treeItem.getValue().getPath().toFile());
+                for (TreeItem<PathItem> item : selItems) {
+                	List<File> files = Arrays.asList(item.getValue().getPath().toFile());               	
                 	allFiles.addAll(files);
 				}
                 
-                content.putFiles(allFiles);
+                List<File> result = allFiles.stream().filter(x -> !x.getName().equalsIgnoreCase(CTree.lockFileName)).collect(Collectors.toList());
+                
+                content.putFiles(result);
                 db.setContent(content);
                 db.setDragView(cell.snapshot(null, null));
                 event.consume();
             }
-            
+            System.out.println("setDragDetected 2");
 //            if (item != null) {
 //                Dragboard db = cell.startDragAndDrop(TransferMode.COPY);
 //                ClipboardContent content = new ClipboardContent();
@@ -164,9 +176,10 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
         cell.setOnDragOver(event -> {
         	Dragboard db = event.getDragboard();
 //        	System.out.println("setDragOver");
-            TreeItem<PathItem> item = cell.getTreeItem();
-            if (item != null && event.getGestureSource() != cell && event.getDragboard().hasFiles() && !item.getValue().isLocked()) {
-                Path targetPath = cell.getTreeItem().getValue().getPath();                
+            TreeItem<PathItem> treeItem = cell.getTreeItem();
+            if (treeItem != null && event.getGestureSource() != cell && event.getDragboard().hasFiles() && !treeItem.getValue().isLocked()) {
+//                Path targetPath = cell.getTreeItem().getValue().getPath(); 
+                Path targetPath = treeItem.getValue().getPath(); 
                 PathTreeCell sourceCell = (PathTreeCell) event.getGestureSource();
                 Path source = db.getFiles().get(0).toPath();
 //                System.out.println(source);
@@ -179,7 +192,7 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 				} else {
 					// internal Drag N Drop
 //					System.out.println("internal");
-					Path sourceParentPath = sourceCell.getTreeItem().getValue().getPath();
+//					Path sourceParentPath = sourceCell.getTreeItem().getValue().getPath();
 //					System.out.println(targetPath.toString() + " == " +  sourceParentPath.toString());
 					if (!targetPath.equals(source.getParent()) && !targetPath.equals(source)) {
 	//	                if (sourceParentPath.compareTo(targetPath) != 0) {
@@ -205,11 +218,11 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
         cell.setOnDragEntered(event -> {
         	System.out.println("setDragEntered");
         	scrollingByDragNDrop.stopScrolling();
-            TreeItem<PathItem> item = cell.getTreeItem();
-            if (item != null &&
-                    event.getGestureSource() != cell &&
+            TreeItem<PathItem> treeItem = cell.getTreeItem();
+            if (treeItem != null &&
+                    event.getGestureSource() != cell &&                   
                     event.getDragboard().hasFiles()) {
-                Path targetPath = cell.getTreeItem().getValue().getPath();
+//                Path targetPath = cell.getTreeItem().getValue().getPath();
                 PathTreeCell sourceCell = (PathTreeCell) event.getGestureSource();   
                 System.out.println(sourceCell);
             }
@@ -225,9 +238,11 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 	
 	private void setDragDropped(Stage stage, ExecutorService service, PathTreeCell cell) {
 		 cell.setOnDragDropped(event -> {
+			 TreeItem<PathItem> treeItem = cell.getTreeItem();
+			 
 			 scrollingByDragNDrop.stopScrolling();
 
-			 System.out.println(2);
+			 System.out.println("2 " + cell.getTreeItem().getValue().getPath().toAbsolutePath());
 //			 	addAllExpandedItems(cell.getTreeView().getRoot());
 	        Dragboard db = event.getDragboard();
 	            
@@ -241,11 +256,12 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 	            if (db.hasFiles()) {
 	            	filesCounter.clear();
 	            	Set<SourceTarget> selectedFiles = new HashSet<SourceTarget>();
-	            	
-	            	copyOrMoveTask = new CopyOrMoveTask(cTree, this, cell, filesCounter, selectedFiles, sourceDir, targetDir);
+	            	System.out.println("selItems: " + cTree.getSaveSelectedDragNDropFiles().size());
+	            	copyOrMoveTask = new CopyOrMoveTask(cTree, this, cell, treeItem, filesCounter, selectedFiles, sourceDir, targetDir, cTree.getSaveSelectedDragNDropFiles());
 	            	
 	             	if (isInternal) {	         
-	             		lockDir(cTree.getLockFileHandler(), cell.getTreeItem().getValue().getLevelOneItem());
+	             		lockDir(cTree.getLockFileHandler(), treeItem.getValue().getLevelOneItem());
+	             		lockDir(cTree.getLockFileHandler(), cTree.getSaveSelectedDragNDropFiles().get(0).getValue().getLevelOneItem());
 	             		new StageMoveOrCopy(cTree, this, cell);
 //	    				openContextMenu(); 
 	    			}
@@ -254,9 +270,11 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 						System.out.println("db.getFiles(): " + existFiles);
 //						selectedFiles.add(existFiles.toPath());
 		                final Path source = existFiles.toPath();
-		                final Path target = Paths.get(cell.getTreeItem().getValue().getPath().toAbsolutePath().toString(), source.getFileName().toString());
+		                
+		                final Path target = Paths.get(treeItem.getValue().getPath().toAbsolutePath().toString(), source.getFileName().toString());
 
 		                System.out.println("source: " + source);
+		                System.out.println("target: " + treeItem.getValue().getPath().toAbsolutePath().toString() + " - " + source.getFileName().toString());
 		                System.out.println("target: " + target);
 						
 		                selectedFiles.add(new SourceTarget(source, target));
@@ -264,7 +282,7 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 						addAllPaths(existFiles.toPath(), target);
 					}
 	            	
-	            	
+	            	copyRoutine(filesCounter, selectedFiles);
 	            	
 //	                final Path source = db.getFiles().get(0).toPath();
 //	                final Path target = Paths.get(cell.getTreeItem().getValue().getPath().toAbsolutePath().toString(), source.getFileName().toString());
@@ -274,7 +292,7 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 //	                
 	            	
 	            	
-	                copyRoutine(cell, filesCounter, selectedFiles);
+	                
 	                
 //	                	System.out.println(3);
 //	                	FileAlterationListenerImpl.isInternalChange = true;
@@ -423,15 +441,18 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 
 	}
 	
-	   private void copyRoutine(PathTreeCell cell, Set<Path> inputSelectedFiles, Set<SourceTarget> selectedFiles) {
+	   private void copyRoutine(Set<Path> inputSelectedFiles, Set<SourceTarget> selectedFiles) {
 		   CreateTree.wantUpdateTree = false;
 		   System.out.println("copyRoutine");
 
 	        copiedFilesCount = 0;
 	        copiedDirsCount = 0;
 
-	        new Thread(copyOrMoveTask).start();
-
+	        if (!cancelCopyRoutine) {
+				new Thread(copyOrMoveTask).start();
+			}
+	        
+	        cancelCopyRoutine = false;
 	    }
 	
 //	   private void sortItems(PathTreeCell cell, CopyDialogProgress pForm) {
@@ -637,11 +658,14 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 	
 //	public boolean isSameForAll() {return isSameForAll;}
 //	public boolean isReplaceYes() {return replaceYes;}
-	
+	// Getter
 	public DragNDropInternal getDragNDropInternal() {return this;};
 	public ScrollingByDragNDrop getScrollingByDragNDrop() {return scrollingByDragNDrop;}
 	public CopyOrMoveTask getCopyOrMoveTask() {return copyOrMoveTask;}
 
+	// Setter
+	public void setCancelCopyRoutine(boolean cancelCopyRoutine) {this.cancelCopyRoutine = cancelCopyRoutine;}
+	
 	//	public void setReplaceYes(boolean replaceYes) {this.replaceYes = replaceYes;}
 //	public void setSameForAll(boolean isSameForAll) {this.isSameForAll = isSameForAll;}
 //	public void setMove(boolean isMove) {this.isMove = isMove;}  

@@ -17,6 +17,7 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.util.Map.Entry;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableMap;
 import javafx.scene.control.TreeItem;
@@ -30,6 +31,8 @@ public class LockFileHandler implements ISearchLockedFiles {
 	}
 
 	public void unlockLockfile(File f) {
+		
+		System.out.println("Key unlockLockfile: " + inputStreamList.size() + " == " + f);
 		for (Entry<String, MLockFile> inputStream : inputStreamList.entrySet()) {
 			System.out.println("Key unlockLockfile: " + inputStreamList.size());
 			
@@ -43,7 +46,10 @@ public class LockFileHandler implements ISearchLockedFiles {
 					
 					inputStream.getValue().getLock().release();
 					inputStream.getValue().getRaf().close();
-					inputStreamList.remove(inputStream.getKey());
+					Platform.runLater(() -> {
+						inputStreamList.remove(inputStream.getKey());
+					});	
+					System.out.println("Key unlockLockfile remove: " + inputStream.getKey() + " == " + inputStreamList.size());
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

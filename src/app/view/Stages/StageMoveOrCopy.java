@@ -3,20 +3,24 @@ package app.view.Stages;
 import java.awt.MouseInfo;
 import java.awt.Point;
 
+import app.TreeViewWatchService.CreateTree;
 import app.TreeViewWatchService.DragNDropInternal;
+import app.TreeViewWatchService.PathItem;
 import app.TreeViewWatchService.PathTreeCell;
 import app.controller.CTree;
 import app.interfaces.ILockDir;
+import app.interfaces.ITreeItemMethods;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.TreeItem;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
-public class StageMoveOrCopy implements ILockDir{
+public class StageMoveOrCopy implements ILockDir, ITreeItemMethods{
 
 	public StageMoveOrCopy(CTree cTree, DragNDropInternal dragNDropInternal, PathTreeCell cell) {
 		Point p = MouseInfo.getPointerInfo().getLocation();
@@ -41,24 +45,41 @@ public class StageMoveOrCopy implements ILockDir{
 		vBox.setAlignment(Pos.CENTER);
 		vBox.setSpacing(10);
 		
-		Button buttonCopy = new Button("Copy");
+		TreeItem<PathItem> levelOneItem = cell.getTreeItem().getValue().getLevelOneItem();
+		
+		Button buttonCopy = new Button("Copy 1");
 		buttonCopy.setOnAction(e -> {
 			dragNDropInternal.getCopyOrMoveTask().setMove(false);
+
+			// Tree nur updaten, wenn das LevelOne Node leer ist, weil sonst das Lock-Icon nicht auf unlock wechselt, wenn das LevelOne Node leer ist
+			updateTreeIfLevelOneNodeEmpty(cTree, levelOneItem);
+			
 			stage.close();
 		});
 
-		Button buttonMove = new Button("Move");
+		Button buttonMove = new Button("Move 1");
 		buttonMove.setOnAction(e -> {
 			dragNDropInternal.getCopyOrMoveTask().setMove(true);
+			
+			// Tree nur updaten, wenn das LevelOne Node leer ist, weil sonst das Lock-Icon nicht auf unlock wechselt, wenn das LevelOne Node leer ist
+			updateTreeIfLevelOneNodeEmpty(cTree, levelOneItem);
+			
 			stage.close();
 		});
 		
 		stage.setOnCloseRequest(e -> {
-			unlockDir(cTree.getLockFileHandler(), 
-					cell.getTreeItem().getValue().getLevelOneItem());
+			dragNDropInternal.setCancelCopyRoutine(true);
+
+			unlockDir(cTree.getLockFileHandler(), levelOneItem);
+			
+			// Tree nur updaten, wenn das LevelOne Node leer ist, weil sonst das Lock-Icon nicht auf unlock wechselt, wenn das LevelOne Node leer ist
+			updateTreeIfLevelOneNodeEmpty(cTree, levelOneItem);
+			
 			stage.close();
 			System.out.println("Close");
 		});
+		
+		
 		
 		// Fügen den Button zu unserem StackPane (Fenster) hinzu
 		vBox.getChildren().addAll(buttonCopy, buttonMove);
@@ -72,7 +93,15 @@ public class StageMoveOrCopy implements ILockDir{
 		
 		
 	}
-
+	
+//	private void updateTree(CTree cTree, TreeItem<PathItem> levelOneItem) {
+//		// Tree nur updaten, wenn das LevelOne Node leer ist, weil sonst das Lock-Icon nicht auf unlock wechselt, wenn das LevelOne Node leer ist
+//		int levelOneSize = levelOneItem.getChildren().size();			
+//		if(levelOneSize == 0) {
+//			cTree.refreshTree(true);
+//		}
+//	
+//	}
 	
 	
 }

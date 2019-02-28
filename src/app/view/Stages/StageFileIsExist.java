@@ -4,6 +4,7 @@ import java.nio.file.Path;
 
 import app.TreeViewWatchService.CopyDirectory;
 import app.TreeViewWatchService.DragNDropInternal;
+import app.interfaces.IWindowEigenschaften;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -18,15 +19,18 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-public class StageFileIsExist {
+public class StageFileIsExist implements IWindowEigenschaften {
 
-	public StageFileIsExist(DragNDropInternal dragNDropInternal, Path dir) {
-		
+	private Stage primaryStage;
+	
+	public StageFileIsExist(Stage primaryStage, DragNDropInternal dragNDropInternal, Path dir) {
+		this.primaryStage = primaryStage;
+				
 	 	Platform.runLater(() -> {
-	  			Stage primaryStage = new Stage();
+	  			Stage stage = new Stage();
 	  		  
-				primaryStage.setTitle("Info");
-				primaryStage.initModality(Modality.APPLICATION_MODAL);
+				stage.setTitle("Info");
+				stage.initModality(Modality.APPLICATION_MODAL);
 				
 				AnchorPane root = new AnchorPane();
 	
@@ -51,14 +55,14 @@ public class StageFileIsExist {
 				buttonYes.setOnAction(e -> {
 					dragNDropInternal.getCopyOrMoveTask().setReplaceYes(true);
 					dragNDropInternal.getCopyOrMoveTask().next();
-					primaryStage.close();
+					stage.close();
 				});
 				
 				Button buttonNo = new Button("No");
 				buttonNo.setOnAction(e -> {
 					dragNDropInternal.getCopyOrMoveTask().setReplaceYes(false);
 					dragNDropInternal.getCopyOrMoveTask().next();
-					primaryStage.close();
+					stage.close();
 				});
 				
 				HBox hBoxButtons = new HBox(buttonYes, buttonNo);
@@ -71,8 +75,9 @@ public class StageFileIsExist {
 	
 				Scene scene = new Scene(root,300,150);
 				
-				primaryStage.setScene(scene);
-				primaryStage.show();
+				setOpenWindowInWindowCenter(primaryStage, stage);
+				stage.setScene(scene);
+				stage.show();
 	  	}); 
 		
 	}

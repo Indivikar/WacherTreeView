@@ -123,6 +123,8 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 	private static ObservableList<TreeItem<PathItem>> listFiles = FXCollections.observableArrayList();
 	private static ObservableList<ItemsDB> pathsPA = FXCollections.observableArrayList();
 	
+	private ObservableList<TreeItem<PathItem>> saveSelectedDragNDropFiles = FXCollections.observableArrayList();
+	
 	private ObservableList<ModelFileChanges> listSaveChanges = FXCollections.observableArrayList();
 	public static HashMap<String, Image> suffixIcon = new HashMap<>();
 	
@@ -480,6 +482,11 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 	public TableColumn<ModelFileChanges, String> getColumnFile() {return columnFile;}
 	public TableColumn<ModelFileChanges, String> getColumnTime() {return columnTime;}
 	public Button getButtonReloadTree() {return buttonReloadTree;}
+	
+	public ObservableList<TreeItem<PathItem>> getSaveSelectedDragNDropFiles() {return saveSelectedDragNDropFiles;}
+
+	// Setter
+	public void setSaveSelectedDragNDropFiles(ObservableList<TreeItem<PathItem>> saveSelectedDragNDropFiles) {this.saveSelectedDragNDropFiles = saveSelectedDragNDropFiles;}
 
 	public void set(StartWacherDemo startWacherDemo, Stage primaryStage) {
 		this.startWacherDemo = startWacherDemo;

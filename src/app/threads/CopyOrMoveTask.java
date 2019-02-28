@@ -68,7 +68,9 @@ public class CopyOrMoveTask extends Task<Void> implements ICursor, ITreeItemMeth
 		this.selItems = selItems;
 //		this.isMove = isMove;
 		
+		
 		this.pForm = new CopyDialogProgress(null);
+		bindUIandService(pForm.getDialogStage(), this);
 		System.out.println("init CopyOrMoveTask 2");
 	}
 

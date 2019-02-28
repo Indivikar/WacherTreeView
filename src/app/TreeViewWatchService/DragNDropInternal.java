@@ -452,7 +452,7 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 	        copiedFilesCount = 0;
 	        copiedDirsCount = 0;
 
-	        if (!cancelCopyRoutine) {	        	
+	        if (!cancelCopyRoutine) {	    
 				new Thread(copyOrMoveTask).start();
 			}
 	        

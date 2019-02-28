@@ -151,9 +151,9 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
                 	allFiles.addAll(files);
 				}
                 
-                List<File> result = allFiles.stream().filter(x -> !x.getName().equalsIgnoreCase(CTree.lockFileName)).collect(Collectors.toList());
+//                List<File> result = allFiles.stream().filter(x -> !x.getName().equalsIgnoreCase(CTree.lockFileName)).collect(Collectors.toList());
                 
-                content.putFiles(result);
+                content.putFiles(allFiles);
                 db.setContent(content);
                 db.setDragView(cell.snapshot(null, null));
                 event.consume();
@@ -256,12 +256,15 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 	            if (db.hasFiles()) {
 	            	filesCounter.clear();
 	            	Set<SourceTarget> selectedFiles = new HashSet<SourceTarget>();
-	            	System.out.println("selItems: " + cTree.getSaveSelectedDragNDropFiles().size());
+	            	System.out.println("selItems: " + cTree.getSaveSelectedDragNDropFiles().size() + " -> " + isInternal);
 	            	copyOrMoveTask = new CopyOrMoveTask(cTree, this, cell, treeItem, filesCounter, selectedFiles, sourceDir, targetDir, cTree.getSaveSelectedDragNDropFiles());
 	            	
-	             	if (isInternal) {	         
-	             		lockDir(cTree.getLockFileHandler(), treeItem.getValue().getLevelOneItem());
-	             		lockDir(cTree.getLockFileHandler(), cTree.getSaveSelectedDragNDropFiles().get(0).getValue().getLevelOneItem());
+	             	if (isInternal) {	    
+	             		System.out.println("isInternal 1");
+	             		lockDir(cTree, treeItem);
+	             		System.out.println("isInternal 2");
+	             		lockDir(cTree, cTree.getSaveSelectedDragNDropFiles().get(0));
+	             		System.out.println("isInternal 3");
 	             		new StageMoveOrCopy(cTree, this, cell);
 //	    				openContextMenu(); 
 	    			}

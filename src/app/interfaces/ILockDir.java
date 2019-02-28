@@ -21,8 +21,11 @@ import javafx.scene.control.TreeItem;
 
 public interface ILockDir {
 	
-	   public default boolean lockDir(LockFileHandler lockFileHandler, TreeItem<PathItem> levelOneItem) {
+	   public default boolean lockDir(CTree cTree, TreeItem<PathItem> treeItem) {
 		   try {
+			   LockFileHandler lockFileHandler = cTree.getLockFileHandler();	
+			   TreeItem<PathItem> levelOneItem = treeItem.getValue().getLevelOneItem();
+			   
 			   File f = new File(levelOneItem.getValue().getPath() + File.separator + CTree.lockFileName);
 			   if (!f.exists()) {
 				   boolean b =  f.createNewFile();

@@ -181,7 +181,7 @@ public class CRename implements Initializable, ISuffix, ICursor, ITreeItemMethod
 //		setOpenWindowInWindowCenter(mainStage, stage);
 		
 		textFieldListener();
-		lockDir(cTree.getLockFileHandler(), pathTreeCell.getTreeItem().getValue().getLevelOneItem());
+		lockDir(cTree, treeItem);
 		
 		
 		buttonCancel.setOnAction(e -> {		

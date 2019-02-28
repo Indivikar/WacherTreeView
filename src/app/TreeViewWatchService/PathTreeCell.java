@@ -158,8 +158,9 @@ public class PathTreeCell extends TreeCell<PathItem> implements ISuffix, ISystem
 	}
 
 	public void setLevelOneItem(TreeItem<PathItem> treeItem) {
-		
-		if (getTreeView().getTreeItemLevel(getTreeItem()) == 1) {
+
+		// Root-Ordner oder LevelOne-Ordner
+		if (getTreeView().getTreeItemLevel(getTreeItem()) <= 1) {
 			getTreeItem().getValue().setLevelOneItem(treeItem);
 		}
 		

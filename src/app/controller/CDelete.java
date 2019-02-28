@@ -69,7 +69,7 @@ public class CDelete implements Initializable, ICursor, ILockDir{
 		this.listAllLockedFiles = listAllLockedFiles;
 		
 //		lockDir(cTree.getLockFileHandler(), pathTreeCell.getTreeItem().getValue().getLevelOneItem());
-		lockDir(cTree.getLockFileHandler(), treeItem.getValue().getLevelOneItem());
+		lockDir(cTree, treeItem);
 	}
 
 	

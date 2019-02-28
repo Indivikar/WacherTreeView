@@ -279,6 +279,8 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 		                System.out.println("target: " + treeItem.getValue().getPath().toAbsolutePath().toString() + " - " + source.getFileName().toString());
 		                System.out.println("target: " + target);
 						
+		                lockDir(cTree, treeItem);
+		                
 		                selectedFiles.add(new SourceTarget(source, target));
 		                
 						addAllPaths(existFiles.toPath(), target);
@@ -450,7 +452,7 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 	        copiedFilesCount = 0;
 	        copiedDirsCount = 0;
 
-	        if (!cancelCopyRoutine) {
+	        if (!cancelCopyRoutine) {	        	
 				new Thread(copyOrMoveTask).start();
 			}
 	        

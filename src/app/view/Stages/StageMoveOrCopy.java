@@ -10,6 +10,7 @@ import app.TreeViewWatchService.PathTreeCell;
 import app.controller.CTree;
 import app.interfaces.ILockDir;
 import app.interfaces.ITreeItemMethods;
+import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -22,7 +23,14 @@ import javafx.stage.StageStyle;
 
 public class StageMoveOrCopy implements ILockDir, ITreeItemMethods{
 
+	private CTree cTree;
+	private PathTreeCell cell;
+	private TreeItem<PathItem> treeItem;
+	
 	public StageMoveOrCopy(CTree cTree, DragNDropInternal dragNDropInternal, PathTreeCell cell) {
+		this.cTree = cTree;
+		this.cell = cell;
+		this.treeItem = cell.getTreeItem();
 		Point p = MouseInfo.getPointerInfo().getLocation();
 		
 		Stage stage = new Stage();
@@ -70,10 +78,12 @@ public class StageMoveOrCopy implements ILockDir, ITreeItemMethods{
 		stage.setOnCloseRequest(e -> {
 			dragNDropInternal.setCancelCopyRoutine(true);
 
-			unlockDir(cTree.getLockFileHandler(), levelOneItem);
+			unlockUpdate();
 			
-			// Tree nur updaten, wenn das LevelOne Node leer ist, weil sonst das Lock-Icon nicht auf unlock wechselt, wenn das LevelOne Node leer ist
-			updateTreeIfLevelOneNodeEmpty(cTree, levelOneItem);
+//			unlockDir(cTree.getLockFileHandler(), levelOneItem);
+//			
+//			// Tree nur updaten, wenn das LevelOne Node leer ist, weil sonst das Lock-Icon nicht auf unlock wechselt, wenn das LevelOne Node leer ist
+//			updateTreeIfLevelOneNodeEmpty(cTree, levelOneItem);
 			
 			stage.close();
 			System.out.println("Close");
@@ -91,8 +101,22 @@ public class StageMoveOrCopy implements ILockDir, ITreeItemMethods{
 		stage.setY(p.getY() + 30.0);
 		stage.showAndWait();
 		
-		
 	}
+		
+		
+		private void unlockUpdate() {
+			Platform.runLater(() -> {
+
+					unlockDir(cTree.getLockFileHandler(), treeItem.getValue().getLevelOneItem());
+					unlockDir(cTree.getLockFileHandler(), cTree.getSaveSelectedDragNDropFiles().get(0).getValue().getLevelOneItem());
+					// Tree nur updaten, wenn das LevelOne Node leer ist, weil sonst das Lock-Icon nicht auf unlock wechselt, wenn das LevelOne Node leer ist
+					updateTreeIfLevelOneNodeEmpty(cTree, treeItem.getValue().getLevelOneItem());
+					updateTreeIfLevelOneNodeEmpty(cTree, cTree.getSaveSelectedDragNDropFiles().get(0).getValue().getLevelOneItem());
+					cell.getTreeView().refresh();
+			});	
+		}
+		
+	
 	
 //	private void updateTree(CTree cTree, TreeItem<PathItem> levelOneItem) {
 //		// Tree nur updaten, wenn das LevelOne Node leer ist, weil sonst das Lock-Icon nicht auf unlock wechselt, wenn das LevelOne Node leer ist

@@ -25,6 +25,7 @@ public class StageDelete implements IWindowEigenschaften, ILockDir {
 	
 	public StageDelete(Stage primaryStage, CTree cTree, PathTreeCell pathTreeCell, TreeItem<PathItem> treeItem, ObservableList<String> listAllLockedFiles) {
 		Stage stage = new Stage();
+		setOpenWindowInWindowCenter(primaryStage, stage);
 		stage.initModality(Modality.APPLICATION_MODAL);
 		FXMLLoader loader = new FXMLLoader(StartWacherDemo.class.getResource("view/fxml/delete.fxml"));			
 		AnchorPane root = null;
@@ -46,7 +47,7 @@ public class StageDelete implements IWindowEigenschaften, ILockDir {
 		
 		stage.setTitle("Delete");
 		stage.setScene(scene);
-		setOpenWindowInWindowCenter(primaryStage, stage);
+		
 		stage.showAndWait();
 	}
 

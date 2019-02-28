@@ -85,8 +85,8 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 	private boolean replaceYes = false;
 //	private Object lock = new Object();
 	
-	private TreeCell<PathItem> dropZone;
-	private TreeItem<TaskNode> draggedItem;
+//	private TreeCell<PathItem> dropZone;
+//	private TreeItem<TaskNode> draggedItem;
 	private static final String DROP_HINT_STYLE = "-fx-border-color: #eea82f; -fx-border-width: 0 0 2 0; -fx-padding: 3 3 1 3";
 	private ObservableList<ExistFiles> listExistFiles = FXCollections.observableArrayList();
 	private int copiedFilesCount;
@@ -98,6 +98,8 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 	private Path targetDir = null;
 	private CopyOrMoveTask copyOrMoveTask;
 	private boolean cancelCopyRoutine = false;
+	
+	
 	
 	private ObservableList<TreeItem<PathItem>> sourceItems = FXCollections.observableArrayList();
 	
@@ -126,18 +128,17 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 	
 	private void setDragDetected(PathTreeCell cell) {
         cell.setOnDragDetected(event -> {
-        	System.out.println("setDragDetected 1");
+        	TreeItem<PathItem> treeItem = cell.getTreeItem();
+
+        	System.out.println("setDragDetected 1 " + cell.getTreeItem().getValue().getPath());
        	
         	ObservableList<TreeItem<PathItem>> selItems = cell.getTreeView().getSelectionModel().getSelectedItems();
         	cTree.getSaveSelectedDragNDropFiles().clear();
         	cTree.getSaveSelectedDragNDropFiles().addAll(selItems);
-
-        	
-
+       	
         	System.out.println("setDragDetected 2 " + sourceItems.size());
-        	
-        	
-            TreeItem<PathItem> treeItem = cell.getTreeItem();
+        	       	
+
 //            if (item != null && item.isLeaf()) {
             
             if (selItems != null && !treeItem.getValue().isLocked()) {
@@ -175,15 +176,15 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 	private void setDragOver(PathTreeCell cell) {
         cell.setOnDragOver(event -> {
         	Dragboard db = event.getDragboard();
-//        	System.out.println("setDragOver");
             TreeItem<PathItem> treeItem = cell.getTreeItem();
+
             if (treeItem != null && event.getGestureSource() != cell && event.getDragboard().hasFiles() && !treeItem.getValue().isLocked()) {
 //                Path targetPath = cell.getTreeItem().getValue().getPath(); 
                 Path targetPath = treeItem.getValue().getPath(); 
-                PathTreeCell sourceCell = (PathTreeCell) event.getGestureSource();
+                PathTreeCell sourceCell_2 = (PathTreeCell) event.getGestureSource();
                 Path source = db.getFiles().get(0).toPath();
 //                System.out.println(source);
-                if (sourceCell == null) {
+                if (sourceCell_2 == null) {
 					// external Drag N Drop
 					event.acceptTransferModes(TransferMode.COPY);          
 //					isMove = false;
@@ -193,8 +194,8 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 					// internal Drag N Drop
 //					System.out.println("internal");
 //					Path sourceParentPath = sourceCell.getTreeItem().getValue().getPath();
-//					System.out.println(targetPath.toString() + " == " +  sourceParentPath.toString());
-					if (!targetPath.equals(source.getParent()) && !targetPath.equals(source)) {
+//				System.out.println(targetPath.toString() + " == " +  source.toString());
+					if (!targetPath.equals(source.getParent()) && !targetPath.equals(source) && !cTree.getMainDirectory().equalsIgnoreCase(source.toString())) {
 	//	                if (sourceParentPath.compareTo(targetPath) != 0) {
 		                    event.acceptTransferModes(TransferMode.COPY);
 //		                    isMove = true;
@@ -203,10 +204,7 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 	//	                }
 					}
 
-				}
-                
-
-                
+				} 
             }
             event.consume();
         });
@@ -216,9 +214,10 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 	
 	private void setDragEntered(PathTreeCell cell) {
         cell.setOnDragEntered(event -> {
-        	System.out.println("setDragEntered");
+        	
         	scrollingByDragNDrop.stopScrolling();
             TreeItem<PathItem> treeItem = cell.getTreeItem();
+            System.out.println("setDragEntered " + treeItem.getValue().getPath());
             if (treeItem != null &&
                     event.getGestureSource() != cell &&                   
                     event.getDragboard().hasFiles()) {

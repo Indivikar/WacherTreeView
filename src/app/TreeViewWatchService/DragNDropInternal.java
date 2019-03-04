@@ -79,6 +79,7 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 
 	private CTree cTree;
 	private ScrollingByDragNDrop scrollingByDragNDrop;
+	private StageMoveOrCopy stageMoveOrCopy;
 	
 //	private boolean isMove;
 //	private boolean isSameForAll = false;
@@ -108,6 +109,8 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 		this.scrollingByDragNDrop = cTree.getScrollingByDragNDrop();
 //		scrollingByDragNDrop = new ScrollingByDragNDrop(cTree.getTree());
 		
+		this.stageMoveOrCopy = new StageMoveOrCopy(cTree, this);
+		
 		cTree.getTree().addEventFilter(MouseEvent.MOUSE_ENTERED, eventStopScrolling);
 		cTree.getPrimaryStage().getScene().addEventFilter(MouseEvent.MOUSE_EXITED_TARGET, eventStopScrolling);
 				
@@ -132,22 +135,25 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 
         	System.out.println("setDragDetected 1 " + cell.getTreeItem().getValue().getPath());
        	
-        	ObservableList<TreeItem<PathItem>> selItems = cell.getTreeView().getSelectionModel().getSelectedItems();
-        	cTree.getSaveSelectedDragNDropFiles().clear();
-        	cTree.getSaveSelectedDragNDropFiles().addAll(selItems);
+//        	ObservableList<TreeItem<PathItem>> selItems = cell.getTreeView().getSelectionModel().getSelectedItems();
+//        	cTree.getSaveSelectedItems().clear();
+//        	cTree.getSaveSelectedItems().addAll(selItems);
        	
+        	cTree.saveSelectedItems();
+        	
+        	
         	System.out.println("setDragDetected 2 " + sourceItems.size());
         	       	
 
 //            if (item != null && item.isLeaf()) {
             
-            if (selItems != null && !treeItem.getValue().isLocked()) {
+            if (cTree.getSelectedItems() != null && !treeItem.getValue().isLocked()) {
                 Dragboard db = cell.startDragAndDrop(TransferMode.COPY);
                 ClipboardContent content = new ClipboardContent();
 
                 List<File> allFiles = new ArrayList<>();
                 
-                for (TreeItem<PathItem> item : selItems) {
+                for (TreeItem<PathItem> item : cTree.getSelectedItems()) {
                 	List<File> files = Arrays.asList(item.getValue().getPath().toFile());               	
                 	allFiles.addAll(files);
 				}
@@ -255,16 +261,17 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 	            if (db.hasFiles()) {
 	            	filesCounter.clear();
 	            	Set<SourceTarget> selectedFiles = new HashSet<SourceTarget>();
-	            	System.out.println("selItems: " + cTree.getSaveSelectedDragNDropFiles().size() + " -> " + isInternal);
-	            	copyOrMoveTask = new CopyOrMoveTask(cTree, this, cell, treeItem, filesCounter, selectedFiles, sourceDir, targetDir, cTree.getSaveSelectedDragNDropFiles());
+	            	System.out.println("selItems: " + cTree.getSelectedItems().size() + " -> " + isInternal);
+	            	copyOrMoveTask = new CopyOrMoveTask(cTree, this, cell, treeItem, filesCounter, selectedFiles, sourceDir, targetDir);
 	            	
 	             	if (isInternal) {	    
 	             		System.out.println("isInternal 1");
 	             		lockDir(cTree, treeItem);
 	             		System.out.println("isInternal 2");
-	             		lockDir(cTree, cTree.getSaveSelectedDragNDropFiles().get(0));
+	             		lockDir(cTree, cTree.getSelectedItems().get(0));
 	             		System.out.println("isInternal 3");
-	             		new StageMoveOrCopy(cTree, this, cell);
+//	             		new StageMoveOrCopy(cTree, this, cell);
+	             		stageMoveOrCopy.show(cell);
 //	    				openContextMenu(); 
 	    			}
 	            		            	

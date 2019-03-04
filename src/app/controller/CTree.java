@@ -123,7 +123,7 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 	private static ObservableList<TreeItem<PathItem>> listFiles = FXCollections.observableArrayList();
 	private static ObservableList<ItemsDB> pathsPA = FXCollections.observableArrayList();
 	
-	private ObservableList<TreeItem<PathItem>> saveSelectedDragNDropFiles = FXCollections.observableArrayList();
+	private ObservableList<TreeItem<PathItem>> selectedItems = FXCollections.observableArrayList();
 	
 	private ObservableList<ModelFileChanges> listSaveChanges = FXCollections.observableArrayList();
 	public static HashMap<String, Image> suffixIcon = new HashMap<>();
@@ -367,8 +367,6 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 	
 	 	private static void handleSearch(TreeItem<PathItem> rootItem, TreeItem<PathItem> newItem) {
 
-	 		
-	 		
 	 		String root = rootItem.getValue().getPath().toString();
 	 		String parent = newItem.getValue().getPath().getParent().toString();
 	 		if (root.equalsIgnoreCase(parent)) {	 			
@@ -449,8 +447,12 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 //        });
 //    }
 	
+    public void saveSelectedItems() {
+    	ObservableList<TreeItem<PathItem>> selItems = tree.getSelectionModel().getSelectedItems();
+    	selectedItems.clear();
+    	selectedItems.addAll(selItems);
+	}
 
-    
     // Getter    
     
     // Services
@@ -483,10 +485,10 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 	public TableColumn<ModelFileChanges, String> getColumnTime() {return columnTime;}
 	public Button getButtonReloadTree() {return buttonReloadTree;}
 	
-	public ObservableList<TreeItem<PathItem>> getSaveSelectedDragNDropFiles() {return saveSelectedDragNDropFiles;}
+	public ObservableList<TreeItem<PathItem>> getSelectedItems() {return selectedItems;}
 
 	// Setter
-	public void setSaveSelectedDragNDropFiles(ObservableList<TreeItem<PathItem>> saveSelectedDragNDropFiles) {this.saveSelectedDragNDropFiles = saveSelectedDragNDropFiles;}
+	public void setSelectedItems(ObservableList<TreeItem<PathItem>> selectedItems) {this.selectedItems = selectedItems;}
 
 	public void set(StartWacherDemo startWacherDemo, Stage primaryStage) {
 		this.startWacherDemo = startWacherDemo;

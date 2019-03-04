@@ -1,5 +1,6 @@
 package app.threads;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileVisitResult;
@@ -8,10 +9,13 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import org.apache.commons.io.FileUtils;
 
 import app.TreeViewWatchService.CreateTree;
 import app.TreeViewWatchService.DragNDropInternal;
@@ -26,6 +30,7 @@ import app.models.SourceTarget;
 import app.view.Stages.StageFileIsExist;
 import app.view.alerts.DefaultAlert;
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.scene.control.TreeItem;
@@ -34,8 +39,10 @@ import javafx.scene.control.Alert.AlertType;
 public class CopyOrMoveTask extends Task<Void> implements ICursor, ITreeItemMethods, ILockDir {
 
 	private CTree cTree;
+	private CreateTree createTree;
 	private DragNDropInternal dragNDropInternal;
 	private CopyDialogProgress pForm;
+	
 	private PathTreeCell cell;
 	private TreeItem<PathItem> treeItem;
 	private Set<Path> inputSelectedFiles;
@@ -50,14 +57,18 @@ public class CopyOrMoveTask extends Task<Void> implements ICursor, ITreeItemMeth
 	private Object lock = new Object();
 	
 	private int currentCounter;
+
+	private int DeleteVersuche = 10;
 	
-	private ObservableList<TreeItem<PathItem>> selItems;
+//	private ObservableList<TreeItem<PathItem>> selItems;
+	private ObservableList<String> saveLockFiles;
 	
 	public CopyOrMoveTask(CTree cTree, DragNDropInternal dragNDropInternal, PathTreeCell cell, TreeItem<PathItem> treeItem, Set<Path> inputSelectedFiles, Set<SourceTarget> selectedFiles,
-			Path sourceDir, Path targetDir, ObservableList<TreeItem<PathItem>> selItems) {
+			Path sourceDir, Path targetDir) {
 
 		System.out.println("init CopyOrMoveTask 1");
 		this.cTree = cTree;
+		this.createTree = cTree.getCreateTree();
 		this.dragNDropInternal = dragNDropInternal;
 		this.cell = cell;
 		this.treeItem = treeItem;
@@ -65,7 +76,6 @@ public class CopyOrMoveTask extends Task<Void> implements ICursor, ITreeItemMeth
 		this.selectedFiles = selectedFiles;
 		this.sourceDir = sourceDir;
 		this.targetDir = targetDir;
-		this.selItems = selItems;
 //		this.isMove = isMove;
 		
 		
@@ -82,13 +92,20 @@ public class CopyOrMoveTask extends Task<Void> implements ICursor, ITreeItemMeth
 	
 	@Override
 	protected void failed() {
+			// TODO - Fehlermeldung ändern und Layout anpassen
 	        new DefaultAlert(cTree.getPrimaryStage(), AlertType.ERROR, "ERROR", "There was an error during the copy process", "");
 	        sortUnlockUpdate();
+			// TODO - wenn cancelled dann komplett refresh, der refresh soll von der DB angestossen werden
+	        createTree.startCreateTree(cell.getTreeView().getRoot(), false, false);
+			// 		- und danach Dialog Close
 	}
 	
 	@Override
 	protected void cancelled() {
 		sortUnlockUpdate();
+		// TODO - wenn cancelled dann komplett refresh, der refresh soll von der DB angestossen werden
+		createTree.startCreateTree(cell.getTreeView().getRoot(), false, false);
+		// 		- und danach Dialog Close
 	}
 	
 	@Override
@@ -98,24 +115,30 @@ public class CopyOrMoveTask extends Task<Void> implements ICursor, ITreeItemMeth
 	
 	@Override
     protected void succeeded() {
+		if (isMove) {
+			DeleteItemTask deleteItemTask = new DeleteItemTask(cTree, cell, treeItem, saveLockFiles, false);
+			new Thread(deleteItemTask).start();
+		}
+		
 		sortUnlockUpdate(); 
+		System.out.println("______Copy or Move -> Succeeded______");
     }
 	
 	private void sortUnlockUpdate() {
 		Platform.runLater(() -> {
 				sortItems(cell, pForm);
 				unlockDir(cTree.getLockFileHandler(), treeItem.getValue().getLevelOneItem());
-				unlockDir(cTree.getLockFileHandler(), cTree.getSaveSelectedDragNDropFiles().get(0).getValue().getLevelOneItem());
+				unlockDir(cTree.getLockFileHandler(), cTree.getSelectedItems().get(0).getValue().getLevelOneItem());
 	//			unlockDir(cTree.getLockFileHandler(), cell.getTreeItem().getValue().getLevelOneItem());
-				updateTreeIfLevelOneNodeEmpty(cTree, treeItem.getValue().getLevelOneItem());
-				updateTreeIfLevelOneNodeEmpty(cTree, cTree.getSaveSelectedDragNDropFiles().get(0).getValue().getLevelOneItem());
+//				updateTreeIfLevelOneNodeEmpty(cTree, treeItem.getValue().getLevelOneItem());
+//				updateTreeIfLevelOneNodeEmpty(cTree, cTree.getSelectedItems().get(0).getValue().getLevelOneItem());
 				cell.getTreeView().refresh();
 		});	
 	}
 	
 	@Override
 	protected Void call() throws Exception {
-			System.out.println("Start CopyOrMoveTask");
+			System.out.println("______Copy or Move -> Start");
 			System.out.println("Row: " + treeItem.getValue().getRow() + " - " + treeItem.getValue().getPath());
         
 
@@ -220,6 +243,7 @@ public class CopyOrMoveTask extends Task<Void> implements ICursor, ITreeItemMeth
 							System.err.println("    exists -> " + target);
 						  } else {
 //                            	  Files.copy(dir, target);
+							  System.out.println("Copy or Move -> Source: " + dir + "  ->  Target: " + target + "  -> treeItem: " + treeItem.getValue().getPath());
 							  copyOrMove(dir, target, isMove);
 						  }
 
@@ -284,17 +308,91 @@ public class CopyOrMoveTask extends Task<Void> implements ICursor, ITreeItemMeth
                     }
 
                     
-                    private void copyOrMove(Path file, Path fileTarget, boolean isMove) {
+                    private void copyOrMove(Path fileSource, Path fileTarget, boolean isMove) {
             	    	try {
-            				Files.copy(file, fileTarget, StandardCopyOption.REPLACE_EXISTING);
+            	    		System.out.println("Copy or Move 1");
+            				Files.copy(fileSource, fileTarget, StandardCopyOption.REPLACE_EXISTING); 
+            				System.out.println("Copy or Move 2");
             				if (fileTarget.toFile().exists()) {
+            					System.out.println("Copy or Move 3");
             					if (isMove) {
+            						System.out.println("Copy or Move 4");
+            						File lockFile = getLockFilePath(fileSource);
+            				        List<String> list = new ArrayList<String>();
+            				        list.add(lockFile.getAbsolutePath());
+//            				        ObservableList<String> obList = FXCollections.observableList(list);
+            				        System.out.println("Copy or Move 5");
+//            				        saveSourceItems.clear();
+            				        System.out.println("Copy or Move 6");
+            				        saveLockFiles = FXCollections.observableList(list);
+
+            				        System.out.println("move Delete treeItem: " + treeItem.getValue().getPath());
+//            				        System.out.println("move Delete cell: " + cell.getTreeItem().getValue().getPath());
+            				        
+//            				        DeleteItemTask deleteItemTask = new DeleteItemTask(cTree, cell, treeItem, obList, false);
+            				        
+            				        
+//            				        deleteItemTask.setOnSucceeded(e -> {
+//	            						if (!fileSource.toFile().exists()) {
+//	        								removeMovedItems();	
+//										} else {
+//											
+//											
+//											while (fileSource.toFile().exists()) {
+//		            							try {
+//													Thread.sleep(500);
+//												} catch (InterruptedException ee) {
+//													// TODO Auto-generated catch block
+//													ee.printStackTrace();
+//												}
+//
+//		            							new Thread(deleteItemTask).start();
+//		 
+//												if (--DeleteVersuche == 0) {
+//													break;
+//												}
+//		
+//											}
+//										}
+//	            						
+//	            						
+//            						});
+            				         
+//            						new Thread(deleteItemTask).start();
+
             						
-            						boolean isDeleted = file.toFile().delete();
-            						System.err.println("Delete: " + file + " -> " + isDeleted);
-            						if (isDeleted) {
-            							removeMovedItems();	
-									}
+
+//            						boolean isDeleted = Files.deleteIfExists(fileSource);
+            				        
+//            				        cTree.getLockFileHandler().printList();
+            				        
+            				              
+//            						boolean isDeleted = false;
+//            						
+//            						int tries = 10;
+//            						
+//            						while (!isDeleted) {
+//            							try {
+//											Thread.sleep(500);
+//										} catch (InterruptedException e) {
+//											// TODO Auto-generated catch block
+//											e.printStackTrace();
+//										}
+//            							
+//            							cTree.getLockFileHandler().printList();
+//            							
+//            							isDeleted = fileSource.toFile().delete();
+// 
+//										if (--tries == 0) {
+//											break;
+//										}
+//
+//									}
+//            						
+//            						System.err.println("Delete: " + fileSource + " -> " + isDeleted);
+//            						if (isDeleted) {
+//            							removeMovedItems();	
+//									}
             					}		    		
             		    	}
             			} catch (IOException e) {
@@ -333,9 +431,12 @@ public class CopyOrMoveTask extends Task<Void> implements ICursor, ITreeItemMeth
             	
             	
             	// create the new Item
-            	CreateTree createTree = cTree.getCreateTree();
+//            	CreateTree createTree = cTree.getCreateTree();
             	System.out.println("targetDir: " + targetDir);
             	createTree.updatePathListFormItem(targetDir);
+            	createTree.startCreateTree(cell.getTreeView().getRoot(), false, false);
+            	
+            	
 //            	System.out.println("cell.getTreeItem(): " + cell.getTreeItem().getValue().getPath() + "  ->  " + cell.getTreeItem().getChildren().get(0).getChildren().size());
 //            	TreeItem<PathItem> mainCell = null;
 //            	System.out.println("   98: " + cell.getTreeItem().getValue().getPath());
@@ -347,7 +448,7 @@ public class CopyOrMoveTask extends Task<Void> implements ICursor, ITreeItemMeth
 //					mainCell = cell.getTreeItem().getParent();
 //				}
 //            	createTree.startCreateTree(mainCell);
-            	createTree.startCreateTree(cell.getTreeView().getRoot(), false, false);
+            	
             	
             	// is DragNDrop internal, remove this Item
             	
@@ -385,13 +486,19 @@ public class CopyOrMoveTask extends Task<Void> implements ICursor, ITreeItemMeth
 		return null;
 	}
 
-	private void removeMovedItems() {
-		if (isMove) {
-			for (TreeItem<PathItem> item : selItems) {
-				selItems.get(0).getParent().getChildren().remove(item);
-			}
-		}
-	}
+//	private void removeMovedItems() {
+//		if (isMove) {
+//			
+//
+//				System.out.println("remove: " +  treeItem.getValue().getPath() + " -> Row: " + treeItem.getValue().getRow());
+//				selItems.get(0).getParent().getChildren().remove(treeItem);
+//
+////			for (TreeItem<PathItem> item : selItems) {
+////				System.out.println("remove: " +  item.getValue().getPath() + " -> Row: " + item.getValue().getRow());
+////				selItems.get(0).getParent().getChildren().remove(item);
+////			}
+//		}
+//	}
 	
 	   private void sortItems(PathTreeCell cell, CopyDialogProgress pForm) {
            SortWinExplorerTask taskSort = new SortWinExplorerTask(cTree, pForm, cell.getTreeView().getRoot(), targetDir.toString());

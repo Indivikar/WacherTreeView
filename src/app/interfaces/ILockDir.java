@@ -35,7 +35,7 @@ public interface ILockDir {
 				   lockFileHandler.lockFile(f);
 			        //set hidden attribute
 //			        Files.setAttribute(f.toPath(), "dos:hidden", true, LinkOption.NOFOLLOW_LINKS);
-				   if (b) {
+				   if (b) {					   
 					   addLockFileToList(f);
 				   }
 			       return b;
@@ -84,8 +84,25 @@ public interface ILockDir {
 //		   }
 	   };
 	   
+	   public default boolean unlockDir(LockFileHandler lockFileHandler, File levelOneFile) {
+		   File f = getLockFilePath(levelOneFile);  
+		   if (f.exists()) {
+			   return unlocker(lockFileHandler, f);
+		   }
+		   
+		   return false;
+	   }
+	   
 	   public default boolean unlockDir(LockFileHandler lockFileHandler, TreeItem<PathItem> levelOneItem) {
-		   File f = new File(levelOneItem.getValue().getPath() + File.separator + CTree.lockFileName);
+		   File f = getLockFilePath(levelOneItem.getValue().getPath());	  
+		   if (f.exists()) {
+			   return unlocker(lockFileHandler, f);
+		   }
+		   
+		   return false;
+	   }
+	   
+	   public default boolean unlocker(LockFileHandler lockFileHandler, File f) {		   
 		   if (f.exists()) {
 			   try {
 				unlockLockFile(lockFileHandler, f);
@@ -100,6 +117,16 @@ public interface ILockDir {
 //			   return f.delete();
 		   }		   
 		   return false;
+	   }
+	   
+	  
+	   
+	   public default File getLockFilePath(File folder) {
+		   return getLockFilePath(folder.toPath());
+	   }
+	   
+	   public default File getLockFilePath(Path folder) {
+		   return new File(folder + File.separator + CTree.lockFileName);
 	   }
 	   
 	   public default void unlockLockFile(LockFileHandler lockFileHandler, PathTreeCell pathTreeCell) {

@@ -31,7 +31,7 @@ public class LockFileHandler implements ISearchLockedFiles {
 	}
 
 	public void unlockLockfile(File f) {
-		
+		// hier wird das Lockfle weder freigegeben, damit es mit gelöscht werden kann
 		System.out.println("Key unlockLockfile: " + inputStreamList.size() + " == " + f);
 		for (Entry<String, MLockFile> inputStream : inputStreamList.entrySet()) {
 			System.out.println("Key unlockLockfile: " + inputStreamList.size());
@@ -43,9 +43,11 @@ public class LockFileHandler implements ISearchLockedFiles {
 			System.out.println("Key unlockLockfile: " + inputStream.getKey() + " == " + f);
 			if (inputStream.getKey().equalsIgnoreCase(f.getAbsolutePath())) {
 				try {
-					
-					inputStream.getValue().getLock().release();
-					inputStream.getValue().getRaf().close();
+					System.out.println("Vor Close: " + inputStream.getKey() + " -> " + inputStream.getValue().getRaf().isOpen());
+//					inputStream.getValue().getLock().release();
+					inputStream.getValue().getRaf().close();				
+					System.out.println("Nach Close: " + inputStream.getKey() + " -> " + inputStream.getValue().getRaf().isOpen());
+
 					Platform.runLater(() -> {
 						inputStreamList.remove(inputStream.getKey());
 					});	
@@ -83,6 +85,8 @@ public class LockFileHandler implements ISearchLockedFiles {
 	private void addLockFile(String path, FileChannel raf, FileLock lock) {
 		String parent = new File(path).getParent();
 		inputStreamList.put(parent, new MLockFile(raf, lock));
+		printList();
+		
 	}
 	
 	public void deleteAllLockfiles(TreeItem<PathItem> rootItem) {
@@ -124,6 +128,12 @@ public class LockFileHandler implements ISearchLockedFiles {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-
+	}
+	
+	public void printList() {
+		
+		for (Entry<String, MLockFile> item : inputStreamList.entrySet()) {
+			System.out.println("addedLockFiles: " + item.getKey() + " -> isOpen: " + item.getValue().getRaf().isOpen());
+		}
 	}
 }

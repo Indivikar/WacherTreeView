@@ -171,8 +171,8 @@ public class CreateTree implements ITreeItemMethods, ISaveExpandedItems, ISaveSe
 		LoadTime.Stop("select Saved Items", selectedItems.size() + "");
 
 		
-      SortWinExplorerTask task = new SortWinExplorerTask(cTree, mainItem);
-      new Thread(task).start();
+		SortWinExplorerTask task = new SortWinExplorerTask(cTree, mainItem);
+		new Thread(task).start();
 		
 		
 //		long start1 = new Date().getTime();

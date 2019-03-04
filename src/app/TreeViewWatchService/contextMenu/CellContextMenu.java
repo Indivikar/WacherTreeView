@@ -16,19 +16,24 @@ public class CellContextMenu extends ContextMenu {
 	private PathTreeCell pathTreeCell;
 	private ObservableList<String> listAllLockedFiles;
 	
-	MenuItemOpen menuItemOpen;
-	SeparatorMenuItem separatorMenuItem_1;
-	MenuItemNewFile menuItemNewFile;
-	MenuItemNewDirectory menuItemNewDirectory;
-	MenuItemRename menuItemRename;
-	MenuItemDeleteItem menuItemDeleteItem;
-	SeparatorMenuItem separatorMenuItem_2;
-	MenuItemRefreshTree menuItemRefreshTree;
+	private MenuItemOpen menuItemOpen;
+	private SeparatorMenuItem separatorMenuItem_1;
+	private MenuItemNewFile menuItemNewFile;
+	private MenuItemNewDirectory menuItemNewDirectory;
+	private MenuItemRename menuItemRename;
+	private MenuItemDeleteItem menuItemDeleteItem;
+	private SeparatorMenuItem separatorMenuItem_2;
+	private MenuItemRefreshTree menuItemRefreshTree;
 	
-	public CellContextMenu(PathTreeCell pathTreeCell, Stage primaryStage, CTree cTree, ObservableList<String> listAllLockedFiles) {
+	public CellContextMenu(PathTreeCell pathTreeCell, Stage primaryStage, CTree cTree, 
+			ObservableList<String> listAllLockedFiles) {
 		
-		// wurde eingebaut, damit die celle selected wird, wo ein rechts-Klick auf den Pfeil vom Node gemacht wird
+		
 		showingProperty().addListener((ov, oldVal, newVal) -> {
+			// Alle Selected Items Speichern
+			cTree.saveSelectedItems();
+			
+			// wurde eingebaut, damit die celle selected wird, wo ein rechts-Klick auf den Pfeil vom Node gemacht wird
 			TreeItem<PathItem> selItem = cTree.getTree().getSelectionModel().getSelectedItem();
 			if (selItem != null) {
 				String selItemString = selItem.getValue().getPath().toString();

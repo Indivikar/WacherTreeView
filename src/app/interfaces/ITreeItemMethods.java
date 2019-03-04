@@ -10,6 +10,7 @@ import app.TreeViewWatchService.PathTreeCell;
 import app.controller.CTree;
 import app.functions.LoadTime;
 import app.view.alerts.DefaultAlert;
+import javafx.collections.ObservableList;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.TreeItem;
@@ -111,7 +112,7 @@ public interface ITreeItemMethods {
 			cTree.refreshTree(true);
 		}
 	}
-    
+
     public default void selectItemSearchInTreeView(TreeView<PathItem> treeView, TreeItem<PathItem> item, String newItemString) {
     	LoadTime.Start();
     	searchAndSelectItem(treeView, treeView.getRoot(), newItemString);

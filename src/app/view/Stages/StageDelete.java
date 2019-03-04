@@ -23,7 +23,8 @@ public class StageDelete implements IWindowEigenschaften, ILockDir {
 
 	private CDelete controller;
 	
-	public StageDelete(Stage primaryStage, CTree cTree, PathTreeCell pathTreeCell, TreeItem<PathItem> treeItem, ObservableList<String> listAllLockedFiles) {
+	public StageDelete(Stage primaryStage, CTree cTree, PathTreeCell pathTreeCell, 
+			TreeItem<PathItem> treeItem, ObservableList<String> listAllLockedFiles) {
 		Stage stage = new Stage();
 		setOpenWindowInWindowCenter(primaryStage, stage);
 		stage.initModality(Modality.APPLICATION_MODAL);

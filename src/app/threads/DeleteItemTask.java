@@ -43,28 +43,39 @@ public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, IC
 	private CopyDialogProgress pForm;
 	
 	private ObservableList<String> listAllLockedFiles;
-	private List<TreeItem<PathItem>> selectedItems = new ArrayList<TreeItem<PathItem>>();
-	private List<Integer> rows = new ArrayList<Integer>();
+//	private ObservableList<TreeItem<PathItem>> selectedItems;
+//	private List<TreeItem<PathItem>> selectedItems = new ArrayList<TreeItem<PathItem>>();
+	private List<TreeItem<PathItem>> itemsToRemove = new ArrayList<TreeItem<PathItem>>();
 	
-	private int pathsCounter = 0;
+	private int pathsCounter = 0; // für die ProgressBar
 	private int countDeletedDir = 0;
 	
+	private boolean showDialog = false;
 	private boolean cancelTask = false;
 	private boolean skip = false;
 	
-	public DeleteItemTask(CTree cTree, PathTreeCell pathTreeCell, TreeItem<PathItem> treeItem, ObservableList<String> listAllLockedFiles) {
+//	public DeleteItemTask(CTree cTree, PathTreeCell pathTreeCell, TreeItem<PathItem> treeItem, ObservableList<String> listAllLockedFiles) {
+//		new DeleteItemTask(cTree, pathTreeCell, treeItem, listAllLockedFiles, true);
+//	}
+
+	public DeleteItemTask(CTree cTree, PathTreeCell pathTreeCell, TreeItem<PathItem> treeItem, 
+			ObservableList<String> listAllLockedFiles, boolean showDialog) {
 		  System.out.println("new Task");		  
 		  this.deleteItemTask = this;		  
 		  this.cTree = cTree;
 		  this.pathTreeCell = pathTreeCell;
 		  this.treeItem = treeItem;
 		  this.listAllLockedFiles = listAllLockedFiles;
+//		  this.selectedItems = selItems;
+		  this.showDialog = showDialog;
 		  
-    	  pForm = new CopyDialogProgress(deleteItemTask);
-    	  pForm.activateProgressBar(this);
+		  if (showDialog) {
+			  pForm = new CopyDialogProgress(deleteItemTask);
+			  pForm.activateProgressBar(this);
     	  
-    	  bindUIandService(pForm.getDialogStage(), this);
-    	  
+			  bindUIandService(pForm.getDialogStage(), this);
+		  }
+
 	}
 
 	@Override
@@ -95,12 +106,12 @@ public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, IC
 		unlockDir(cTree.getLockFileHandler(), treeItem.getValue().getLevelOneItem());
 
 		// Tree nur updaten, wenn das LevelOne Node leer ist, weil sonst das Lock-Icon nicht auf unlock wechselt, wenn das LevelOne Node leer ist
-		int levelOneSize = treeItem.getValue().getLevelOneItem().getChildren().size();
-		if(levelOneSize == 0) {
-			cTree.refreshTree(true);
-		} else {
-			CreateTree.wantUpdateTree = false;
-		}
+//		int levelOneSize = treeItem.getValue().getLevelOneItem().getChildren().size();
+//		if(levelOneSize == 0) {
+//			cTree.refreshTree(true);
+//		} else {
+//			CreateTree.wantUpdateTree = false;
+//		}
 		
 		sleep(1000);
 		
@@ -110,33 +121,46 @@ public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, IC
 //			treeItem.getValue().getLevelOneItem().getValue().setLocked(false);
 //		}
 //		System.out.println("succeeded: " + treeItem.getValue().getLevelOneItem().getValue().isLocked());
-		pForm.close();
+		if (showDialog) {
+			pForm.close();
+		}
+		System.out.println("______Delete -> succeeded______");
+		
 	}
 	
 	
 	
 	@Override
 	protected Void call() throws Exception {
-
+		System.out.println("______Delete -> Start______");
+		
+		
 		LoadTime.Start();
 		
+		// zähle die Pfade für die Progressbar
+		pathsCounter = pathsCounter + cTree.getSelectedItems().size();
 		
-		
-		for (TreeItem<PathItem> item : pathTreeCell.getTreeView().getSelectionModel().getSelectedItems()) {
-			System.out.println("add item: " + item.getValue().getPath() +  " (" + item.getValue().getRow() + ")");
+//		for (TreeItem<PathItem> item : pathTreeCell.getTreeView().getSelectionModel().getSelectedItems()) {
+//			System.out.println("add item: " + item.getValue().getPath() +  " (" + item.getValue().getRow() + ")  unlock after Work -> " + treeItem.getValue().getPath());
+//			
+////			unlockLockFile(cTree.getLockFileHandler(), pathTreeCell);
+////			unlockLockFile(cTree.getLockFileHandler(), treeItem);
+//			unlockLockFile(cTree.getLockFileHandler(), item);
+//			
+//			selectedItems.add(item);
+//			itemsToRemove.add(item);
+//			
+//			pathsCounter++;
+//			countPaths(item);
+//		}
+
+		for (TreeItem<PathItem> treeItem : cTree.getSelectedItems()) {	
+			// zähle die Pfade der Unter-Ordner für die Progressbar
+			countPaths(treeItem);
 			
-//			unlockLockFile(cTree.getLockFileHandler(), pathTreeCell);
 			unlockLockFile(cTree.getLockFileHandler(), treeItem);
 			
-			selectedItems.add(item);
-			rows.add(item.getValue().getRow());
-			
-			pathsCounter++;
-			countPaths(item);
-		}
-
-		for (TreeItem<PathItem> treeItem : selectedItems) {			
-			File file = treeItem.getValue().getPath().toFile();
+			File file = treeItem.getValue().getPath().toFile();			
 			deleteFileOrDirectory(file);
 		}
 		
@@ -159,12 +183,14 @@ public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, IC
 	
 	
 	private void removeItem() {
-
-		rows.sort(Comparator.naturalOrder());
-		rows.sort(Comparator.reverseOrder());
-		
-		for (Integer row : rows) {
-			TreeItem<PathItem> item = pathTreeCell.getTreeView().getTreeItem(row);		
+		System.out.println("______removeItem -> Start______");
+//		itemsToRemove.get(index).sort(Comparator.naturalOrder());
+		itemsToRemove.sort((a, b) -> Integer.compare(b.getValue().getRow(), a.getValue().getRow()));
+//		itemsToRemove.sort(Comparator.reverseOrder());
+		System.out.println("Liste SelectedItems: " + cTree.getSelectedItems().size());
+		for (TreeItem<PathItem> item : cTree.getSelectedItems()) {
+//			TreeItem<PathItem> item = pathTreeCell.getTreeView().getTreeItem(row);	
+			System.err.println("vor remove Item: " + item.getValue().getPath() + "  -> exists Item: " + item.getValue().getPath().toFile().exists());
 			if (!item.getValue().getPath().toFile().exists()) {
 				boolean isRemoved = item.getParent().getChildren().remove(item);
 	            if (isRemoved) {
@@ -172,6 +198,19 @@ public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, IC
 				}
 			}
 		}
+		
+		System.out.println("______removeItem -> Ende______");
+		
+//		for (Integer row : rows) {
+//			TreeItem<PathItem> item = pathTreeCell.getTreeView().getTreeItem(row);	
+//			System.err.println("vor remove Item: " + item.getValue().getPath() + "  -> exists Item: " + item.getValue().getPath().toFile().exists());
+//			if (!item.getValue().getPath().toFile().exists()) {
+//				boolean isRemoved = item.getParent().getChildren().remove(item);
+//	            if (isRemoved) {
+//					System.err.println("remove Item: " + item.getValue().getPath());
+//				}
+//			}
+//		}
 	}
 	
     private void deleteFileOrDirectory(File file) {
@@ -182,6 +221,7 @@ public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, IC
 		boolean isAccessFileFounded = recursiveSearch(file, pForm);
 	    if (isAccessFileFounded) {
 	    	System.err.println("Locked File Founded");
+	    	// TODO - Message ändern
 	    	updateMessage("Locked File Founded");
 //				    	return;
 	    	
@@ -215,6 +255,8 @@ public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, IC
 						// Count Files and update massages
 						countAllPaths(file);
 						
+						System.err.println("Delete File: " + file.getAbsolutePath());
+						
 						// Delete
 						Files.walk(file.toPath())
 							.filter(f -> f.toFile().isDirectory())
@@ -236,7 +278,7 @@ public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, IC
 				                         updateMessage("Cancelled");
 				                         this.cancelTask = true;
 				                         // TODO - den namen "folder.lock" zentralisieren
-				                         File lockFile = new File(ordner + File.separator + "folder.lock");
+				                         File lockFile = new File(ordner + File.separator + CTree.lockFileName);
 				                         if (lockFile.exists()) {
 				                        	 // TODO - Alert Layout ändern
 											new DefaultAlert(cTree.getPrimaryStage(), 

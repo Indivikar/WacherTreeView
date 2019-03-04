@@ -27,6 +27,7 @@ public class CDelete implements Initializable, ICursor, ILockDir{
 	private PathTreeCell pathTreeCell;
 	private TreeItem<PathItem> treeItem;
 	private ObservableList<String> listAllLockedFiles;
+	private ObservableList<TreeItem<PathItem>> selectedItems;
 	
 	private @FXML Button buttonOK;
 	private @FXML Button buttonCancel;
@@ -44,7 +45,7 @@ public class CDelete implements Initializable, ICursor, ILockDir{
 
 	private void setAction() {
 		buttonOK.setOnAction(e -> {
-    	    DeleteItemTask DeleteItemTask = new DeleteItemTask(cTree, pathTreeCell, treeItem, listAllLockedFiles);
+    	    DeleteItemTask DeleteItemTask = new DeleteItemTask(cTree, pathTreeCell, treeItem, listAllLockedFiles, true);
     	    bindUIandService(primaryStage, DeleteItemTask);
     	    new Thread(DeleteItemTask).start();
 			stage.close();

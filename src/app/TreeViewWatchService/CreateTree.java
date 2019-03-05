@@ -18,6 +18,7 @@ import app.controller.CTree;
 import app.db.PathList;
 import app.functions.LoadTime;
 import app.interfaces.ICursor;
+import app.interfaces.ILockDir;
 import app.interfaces.ISaveExpandedItems;
 import app.interfaces.ISaveSelectedItems;
 import app.interfaces.ITreeItemMethods;
@@ -31,7 +32,7 @@ import javafx.collections.ObservableList;
 import javafx.scene.control.TreeItem;
 import javafx.util.Pair;
 
-public class CreateTree implements ITreeItemMethods, ISaveExpandedItems, ISaveSelectedItems, ICursor, ITreeUpdateHandler {
+public class CreateTree implements ITreeItemMethods, ISaveExpandedItems, ISaveSelectedItems, ICursor, ITreeUpdateHandler, ILockDir {
 	
 	private CTree cTree;
 	
@@ -64,7 +65,7 @@ public class CreateTree implements ITreeItemMethods, ISaveExpandedItems, ISaveSe
 			wantUpdateTree = true;
 			return;
 		}
-		
+	
 		bindUIandService(cTree.getTree(), CTree.getLoadDBService());
 		CTree.getLoadDBService().setOnSucceeded(e -> {
 				System.out.println("updatePathListFormDB");

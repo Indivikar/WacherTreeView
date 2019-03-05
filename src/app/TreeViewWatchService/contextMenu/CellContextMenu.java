@@ -4,7 +4,12 @@ import app.TreeViewWatchService.PathItem;
 import app.TreeViewWatchService.PathTreeCell;
 import app.controller.CTree;
 import app.interfaces.ILockDir;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Service;
+import javafx.scene.Cursor;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TreeItem;
@@ -25,9 +30,12 @@ public class CellContextMenu extends ContextMenu {
 	private SeparatorMenuItem separatorMenuItem_2;
 	private MenuItemRefreshTree menuItemRefreshTree;
 	
+	private SimpleBooleanProperty serviceReload = new SimpleBooleanProperty(false);
+	
 	public CellContextMenu(PathTreeCell pathTreeCell, Stage primaryStage, CTree cTree, 
 			ObservableList<String> listAllLockedFiles) {
 		
+
 		
 		showingProperty().addListener((ov, oldVal, newVal) -> {
 			// Alle Selected Items Speichern
@@ -72,6 +80,20 @@ public class CellContextMenu extends ContextMenu {
 							menuItemRefreshTree);	
 	}
 
+	public void bindMenuItemsReload(Service<?> service) {
+
+                Bindings
+                .when(service.runningProperty())
+                    .then(test(true))
+                    .otherwise(test(false));
+				
+	}
+	
+	private boolean test(boolean wert) {
+		menuItemNewFile.setDisable(wert);
+		return false;
+	}
+	
 	public void setRootMenuItems() {
 		menuItemOpen.setDisable(false);
 		menuItemNewFile.setDisable(true);
@@ -111,5 +133,11 @@ public class CellContextMenu extends ContextMenu {
 		menuItemRename.setDisable(isLocked);
 		menuItemDeleteItem.setDisable(isLocked);
 	}
+	
+//	public void serviceReloadBinding(boolean wert) {		
+//		System.out.println("serviceReloadBinding(): " + wert);
+//		menuItemNewFile.setDisable(wert);
+//		System.out.println("is menuItemNewFile disabled: " + menuItemNewFile.isDisable());
+//	}
 	
 }

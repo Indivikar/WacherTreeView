@@ -132,7 +132,8 @@ public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, IC
 //			treeItem.getValue().getLevelOneItem().getValue().setLocked(false);
 //		}
 //		System.out.println("succeeded: " + treeItem.getValue().getLevelOneItem().getValue().isLocked());
-		if (showDialog) {
+		if (copyDialogProgress != null) {
+			System.out.println("______Delete -> copyDialogProgress close______");
 			copyDialogProgress.close();
 		}
 		System.out.println("______Delete -> succeeded______");
@@ -201,18 +202,28 @@ public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, IC
 		System.out.println("Liste SelectedItems: " + cTree.getSelectedItems().size());
 		for (TreeItem<PathItem> item : cTree.getSelectedItems()) {
 //			TreeItem<PathItem> item = pathTreeCell.getTreeView().getTreeItem(row);	
-			System.err.println("vor remove Item: " + item.getValue().getPath() + "  -> exists Item: " + item.getValue().getPath().toFile().exists());
+			System.err.println("vor remove Item: " + item.getValue().getPath() + "  -> item.getParent(): " + item.getParent().getValue().getPath() 
+					+ "  -> exists Item: " + item.getValue().getPath().toFile().exists());
 			if (!item.getValue().getPath().toFile().exists()) {
 				
 				System.out.println("Parent Item" + item.getParent());
 				
-				boolean isRemoved = item
+				if (item.getParent() == null) {
+					// TODO - reload tree
+					
+				} else {
+					boolean isRemoved = item
 						.getParent()
 						.getChildren()
 						.remove(item);
-	            if (isRemoved) {
-					System.err.println("remove Item: " + item.getValue().getPath());
+					if (isRemoved) {
+						System.err.println("remove Item: " + item.getValue().getPath());
+						cTree.getTree().refresh();
+					}
 				}
+				
+
+
 			}
 		}
 		
@@ -353,7 +364,7 @@ public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, IC
     
     private void updater(File file) {
 		countDeletedDir++;
-		updateTitle(file.getAbsolutePath());
+		updateTitle("Delete: " + file.getAbsolutePath());
 		updateProgress(countDeletedDir, pathsCounter); 
 		int percent = (int)((countDeletedDir * 100.0f) / pathsCounter);
 		if (percent <= 100) {
@@ -396,15 +407,15 @@ public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, IC
 		return false;
 	}
 
-	private void sleep(int ms) {
-		try {
-			Thread.sleep(ms);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	
-	}
+//	private void sleep(int ms) {
+//		try {
+//			Thread.sleep(ms);
+//		} catch (InterruptedException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//	
+//	}
 	
 	
 	// Setter

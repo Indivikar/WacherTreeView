@@ -242,6 +242,8 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 	
 	private void setDragDropped(Stage stage, ExecutorService service, PathTreeCell cell) {
 		 cell.setOnDragDropped(event -> {
+			 
+ 
 			 TreeItem<PathItem> treeItem = cell.getTreeItem();
 			 
 			 scrollingByDragNDrop.stopScrolling();
@@ -259,11 +261,20 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 	            boolean success = false;	            
 	            if (db.hasFiles()) {
 	            	filesCounter.clear();
-	            	Set<SourceTarget> selectedFiles = new HashSet<SourceTarget>();
+//	            	Set<SourceTarget> selectedFiles = new HashSet<SourceTarget>();
 	            	System.out.println("selItems: " + cTree.getSelectedItems().size() + " -> " + isInternal);
-	            	copyOrMoveTask = new CopyOrMoveTask(cTree, this, cell, treeItem, filesCounter, selectedFiles, sourceDir, targetDir);
 	            	
-	             	if (isInternal) {	    
+	            	
+	            	
+	            	
+					if (isInternal) {	
+	             		Set<SourceTarget> selectedFiles = getSourceAndTargetFiles(db, treeItem);
+	             		copyOrMoveTask = new CopyOrMoveTask(cTree, this, cell, treeItem, filesCounter, selectedFiles, sourceDir, targetDir);
+	             		stageMoveOrCopy.getStage().setOnHiding(e -> {
+	             			System.out.println("--------------------------Hide window");
+	             			copyRoutine(filesCounter, selectedFiles);
+	             		});
+	             		
 	             		System.out.println("isInternal 1");
 	             		lockDir(cTree, treeItem);
 	             		System.out.println("isInternal 2");
@@ -272,27 +283,33 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 //	             		new StageMoveOrCopy(cTree, this, cell);
 	             		stageMoveOrCopy.show(cell);
 //	    				openContextMenu(); 
+
+	             		
+	    			} else {
+	    				System.out.println("isExternal 1");
+	    				Set<SourceTarget> selectedFiles = getSourceAndTargetFiles(db, treeItem);
+	    				copyRoutine(filesCounter, selectedFiles);
 	    			}
 	            		            	
-	            	for (File existFiles : db.getFiles()) {
-						System.out.println("db.getFiles(): " + existFiles);
-//						selectedFiles.add(existFiles.toPath());
-		                final Path source = existFiles.toPath();
-		                
-		                final Path target = Paths.get(treeItem.getValue().getPath().toAbsolutePath().toString(), source.getFileName().toString());
-
-		                System.out.println("source: " + source);
-		                System.out.println("target: " + treeItem.getValue().getPath().toAbsolutePath().toString() + " - " + source.getFileName().toString());
-		                System.out.println("target: " + target);
-						
-		                lockDir(cTree, treeItem);
-		                
-		                selectedFiles.add(new SourceTarget(source, target));
-		                
-						addAllPaths(existFiles.toPath(), target);
-					}
+//	            	for (File existFiles : db.getFiles()) {
+//						System.out.println("db.getFiles(): " + existFiles);
+////						selectedFiles.add(existFiles.toPath());
+//		                final Path source = existFiles.toPath();
+//		                
+//		                final Path target = Paths.get(treeItem.getValue().getPath().toAbsolutePath().toString(), source.getFileName().toString());
+//
+//		                System.out.println("source: " + source);
+//		                System.out.println("target: " + treeItem.getValue().getPath().toAbsolutePath().toString() + " - " + source.getFileName().toString());
+//		                System.out.println("target: " + target);
+//						
+//		                lockDir(cTree, treeItem);
+//		                
+//		                selectedFiles.add(new SourceTarget(source, target));
+//		                
+//						addAllPaths(existFiles.toPath(), target);
+//					}
 	            	
-	            	copyRoutine(filesCounter, selectedFiles);
+//	            	copyRoutine(filesCounter, selectedFiles);
 	            	
 //	                final Path source = db.getFiles().get(0).toPath();
 //	                final Path target = Paths.get(cell.getTreeItem().getValue().getPath().toAbsolutePath().toString(), source.getFileName().toString());
@@ -365,6 +382,29 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 	        });
 	}
 	
+	private Set<SourceTarget> getSourceAndTargetFiles(Dragboard db, TreeItem<PathItem> treeItem) {
+		Set<SourceTarget> selectedFiles = new HashSet<SourceTarget>();
+		for (File existFiles : db.getFiles()) {
+			System.out.println("db.getFiles(): " + existFiles);
+//			selectedFiles.add(existFiles.toPath());
+            final Path source = existFiles.toPath();
+            
+            final Path target = Paths.get(treeItem.getValue().getPath().toAbsolutePath().toString(), source.getFileName().toString());
+
+            System.out.println("source: " + source);
+            System.out.println("target: " + treeItem.getValue().getPath().toAbsolutePath().toString() + " - " + source.getFileName().toString());
+            System.out.println("target: " + target);
+			
+            lockDir(cTree, treeItem);
+            
+            selectedFiles.add(new SourceTarget(source, target));
+            
+			addAllPaths(existFiles.toPath(), target);
+		}
+		
+		return selectedFiles;
+
+	}
 	
 	private boolean isDragNDropInternal(Dragboard db, PathTreeCell cell) {	
 		final Path sourcePath = db.getFiles().get(0).toPath();
@@ -658,7 +698,6 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 		}
     };
 	
-    
     
 	@Override
 	public void addAllExpandedItems() {

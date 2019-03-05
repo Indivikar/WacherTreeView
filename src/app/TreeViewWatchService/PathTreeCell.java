@@ -50,6 +50,7 @@ public class PathTreeCell extends TreeCell<PathItem> implements ISuffix, ISystem
     
     
     public PathTreeCell(CTree cTree, Stage primaryStage) {  
+    	System.out.println("Load -> PathTreeCell");
     	this.cTree = cTree;
     	this.fileMenu = new CellContextMenu(this, primaryStage, cTree, listAllLockedFiles);
         DragNDropInternal DragNDropInternal = new DragNDropInternal(primaryStage, service, this);                   
@@ -358,7 +359,8 @@ public class PathTreeCell extends TreeCell<PathItem> implements ISuffix, ISystem
 
     // Getter
 	public CTree getcTree() {return cTree;}
-
+	public CellContextMenu getCellContextMenu() {return cellContextMenu;}
+	
 	public void set(CellContextMenu cellContextMenu) {
 		this.cellContextMenu = cellContextMenu;
 	}

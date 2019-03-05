@@ -98,6 +98,7 @@ public class CopyOrMoveTask extends Task<Void> implements ICursor, ITreeItemMeth
 			// TODO - wenn cancelled dann komplett refresh, der refresh soll von der DB angestossen werden
 	        createTree.startCreateTree(cell.getTreeView().getRoot(), false, false);
 			// 		- und danach Dialog Close
+//	        sleep(1000);
 	        copyDialogProgress.close();
 	}
 	
@@ -107,6 +108,7 @@ public class CopyOrMoveTask extends Task<Void> implements ICursor, ITreeItemMeth
 		// TODO - wenn cancelled dann komplett refresh, der refresh soll von der DB angestossen werden
 		createTree.startCreateTree(cell.getTreeView().getRoot(), false, false);
 		// 		- und danach Dialog Close
+//		sleep(1000);
 		copyDialogProgress.close();
 	}
 	
@@ -120,10 +122,13 @@ public class CopyOrMoveTask extends Task<Void> implements ICursor, ITreeItemMeth
 		if (isMove) {
 			DeleteItemTask deleteItemTask = new DeleteItemTask(cTree, cell, treeItem, saveLockFiles, false);
 			new Thread(deleteItemTask).start();
+		} else {
+			copyDialogProgress.close();
 		}
 		
 		sortUnlockUpdate(); 
-		copyDialogProgress.close();
+//		sleep(1000);
+		
 		System.out.println("______Copy or Move -> Succeeded______");
     }
 	
@@ -239,9 +244,14 @@ public class CopyOrMoveTask extends Task<Void> implements ICursor, ITreeItemMeth
 //	                        }
 //                        System.out.println(3);
                         Path target = targetDir.resolve(sourceDir.relativize(dir));
-
-                        updateTitle(dir.toString());
-						
+                        
+                        // TODO - Text anpassen
+                        if (isMove) {
+							updateTitle("Move: " + dir.toString());
+						} else {
+							updateTitle("Copy: " + dir.toString());
+						}
+                        
 						if (target.toFile().exists()) {
 							System.err.println("    exists -> " + target);
 						  } else {
@@ -282,7 +292,12 @@ public class CopyOrMoveTask extends Task<Void> implements ICursor, ITreeItemMeth
                         
                         
                         if (filteredFiles.contains(file)) {
-                        	updateTitle(file.toString());
+                            // TODO - Text anpassen
+                            if (isMove) {
+    							updateTitle("Move: " + file.toString());
+    						} else {
+    							updateTitle("Copy: " + file.toString());
+    						}
                         	
                         	Path fileTarget = targetDir.resolve(sourceDir.relativize(file));
                         	
@@ -528,17 +543,22 @@ public class CopyOrMoveTask extends Task<Void> implements ICursor, ITreeItemMeth
 ////               doTaskEventCloseRoutine(copyTask);
 //           });
            
-           
-           try {
-				Thread.sleep(50);
-			} catch (InterruptedException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
+           sleep(50);
+
            bindUIandService(pForm.getDialogStage(), taskSort);
            new Thread(taskSort).start();
 
 	   }
+	   
+	   
+//	   private void sleep(int milliSec) {
+//           try {
+//				Thread.sleep(milliSec);
+//			} catch (InterruptedException e1) {
+//				// TODO Auto-generated catch block
+//				e1.printStackTrace();
+//			}
+//	   }
 	   
 	   // Getter
 	   public boolean isSameForAll() {return isSameForAll;}

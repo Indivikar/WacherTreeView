@@ -21,11 +21,19 @@ import javafx.scene.control.TreeItem;
 
 public interface ILockDir {
 	
+	   public int deleteVersuche = 2; // wie oft soll versucht werden, die LockDatei zu löschen
+	   public int deleteDelay = 500; // wieviel Zeit soll zwischen den versuchen liegen -> in Millisekunden
+	   public int countVersuche = 0;
+	
 	   public default boolean lockDir(CTree cTree, TreeItem<PathItem> treeItem) {
 		   try {
-			   LockFileHandler lockFileHandler = cTree.getLockFileHandler();	
+			   LockFileHandler lockFileHandler = cTree.getLockFileHandler();
+//			   if (treeItem == null) {
+//				   return false;
+//			   }
 			   TreeItem<PathItem> levelOneItem = treeItem.getValue().getLevelOneItem();
-			   String path = levelOneItem.getValue().getPath().toString();			   
+			   String path = levelOneItem.getValue().getPath().toString();	
+			   System.out.println("");
 			   File f = new File(levelOneItem.getValue().getPath() + File.separator + CTree.lockFileName);
 			   
 			   if (!f.exists() && !cTree.getMainDirectory().equalsIgnoreCase(path)) {
@@ -87,7 +95,7 @@ public interface ILockDir {
 	   public default boolean unlockDir(LockFileHandler lockFileHandler, File levelOneFile) {
 		   File f = getLockFilePath(levelOneFile);  
 		   if (f.exists()) {
-			   return unlocker(lockFileHandler, f);
+			   return unlocker(lockFileHandler, f, 0);
 		   }
 		   
 		   return false;
@@ -96,13 +104,13 @@ public interface ILockDir {
 	   public default boolean unlockDir(LockFileHandler lockFileHandler, TreeItem<PathItem> levelOneItem) {
 		   File f = getLockFilePath(levelOneItem.getValue().getPath());	  
 		   if (f.exists()) {
-			   return unlocker(lockFileHandler, f);
+			   return unlocker(lockFileHandler, f, 0);
 		   }
 		   
 		   return false;
 	   }
 	   
-	   public default boolean unlocker(LockFileHandler lockFileHandler, File f) {		   
+	   public default boolean unlocker(LockFileHandler lockFileHandler, File f, int countVersuche) {		   
 		   if (f.exists()) {
 			   try {
 				boolean isUnlocked = unlockLockFile(lockFileHandler, f);
@@ -115,7 +123,14 @@ public interface ILockDir {
 				}
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				sleep(deleteDelay);
+				if (countVersuche < deleteVersuche) {					
+					countVersuche++;
+					System.err.println(countVersuche + ". Versuch die Lock-Datei zu löschen");
+					unlocker(lockFileHandler, f, countVersuche);
+				} else {
+					e.printStackTrace();
+				}
 			}
 //			   return f.delete();
 		   }		   
@@ -229,6 +244,14 @@ public interface ILockDir {
 			return false;
 	   };
 	   
+	  public default void sleep(int milliSekunden) {
+		  try {
+				Thread.sleep(milliSekunden);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+	  };
 	   
 	   
 }

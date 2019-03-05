@@ -217,13 +217,17 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 	}
 	
 	public void refreshTree() {
-		System.out.println("----- refreshTree -----");
+		System.out.println("----- refreshTree -----");	
+//		cell.getCellContextMenu().serviceReloadBinding(true);
+//		lockDir(this, getTree().getRoot());
 		this.createTree.updatePathListFormDB(treeItem, true, true);
 //		this.createTree.startCreateTree(treeItem, true, true);
 	}
 
 	public void refreshTree(boolean cursorWait) {
 			System.out.println("----- refreshTree -----");
+//			cell.getCellContextMenu().serviceReloadBinding(true);
+//			lockDir(this, getTree().getRoot());
 			this.createTree.updatePathListFormDB(treeItem, true, true, true);
 //			this.createTree.startCreateTree(treeItem, true, true);
 	}

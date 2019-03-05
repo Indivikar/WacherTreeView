@@ -92,7 +92,7 @@ public class StageMoveOrCopy implements ILockDir, ITreeItemMethods{
 //			updateTreeIfLevelOneNodeEmpty(cTree, levelOneItem);
 			
 //			stage.close();
-			stage.hide();
+//			stage.hide();
 			System.out.println("Close");
 		});
 		

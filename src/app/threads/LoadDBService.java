@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
 
+import app.TreeViewWatchService.PathTreeCell;
+import app.TreeViewWatchService.contextMenu.CellContextMenu;
 import app.controller.CTree;
 import app.functions.LoadTime;
 import app.models.ItemsDB;
@@ -32,24 +34,27 @@ public class LoadDBService extends Service<ObservableList<ItemsDB>>{
 	@Override
 	protected void cancelled() {
 		reset();
+//		cellContextMenuBinding(false);
 	}
 	
 	@Override
 	protected void failed() {
 		reset();
+//		cellContextMenuBinding(false);
 	}
 	
 	@Override
 	protected void scheduled() {
 		System.out.println("scheduled()");
 		cTree.getTree().getScene().setCursor(Cursor.WAIT);
+//		cellContextMenuBinding(true);
 	}
 	
 	@Override
 	protected void succeeded() {
 		System.out.println("succeeded()");
-		cTree.getTree().getScene().setCursor(Cursor.DEFAULT);
-		
+		cTree.getTree().getScene().setCursor(Cursor.DEFAULT);	
+//		cellContextMenuBinding(false);
 		reset();
 		
 //        SortWinExplorerTask task = new SortWinExplorerTask(cTree, cTree.getTree().getRoot());
@@ -57,6 +62,7 @@ public class LoadDBService extends Service<ObservableList<ItemsDB>>{
 		
 		
 	}
+	
 	
 	
 	@Override
@@ -70,6 +76,9 @@ public class LoadDBService extends Service<ObservableList<ItemsDB>>{
             	 
             	LoadTime.Start();
             	 
+            	Thread.sleep(2000);
+            	
+            	
             	fileList.clear();
 //         		try (BufferedReader br = new BufferedReader(new FileReader(pathFileDB)))
          		try (BufferedReader br = new BufferedReader(new InputStreamReader(
@@ -107,5 +116,16 @@ public class LoadDBService extends Service<ObservableList<ItemsDB>>{
              }
          };
 	}
+	
+//	private void cellContextMenuBinding(boolean wert) {
+//		PathTreeCell cell = cTree.getCell();
+//		if (cell != null) {
+//			CellContextMenu contextMenu = cell.getCellContextMenu();
+//			if (contextMenu != null) {
+//				contextMenu.serviceReloadBinding(wert);
+//			}
+//		}
+//	}
+	
 
 }

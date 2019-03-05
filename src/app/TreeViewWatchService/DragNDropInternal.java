@@ -25,7 +25,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 import app.controller.CTree;
-import app.dialog.CopyDialogProgress;
 import app.interfaces.ICursor;
 import app.interfaces.ILockDir;
 import app.interfaces.ISaveExpandedItems;

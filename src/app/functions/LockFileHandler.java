@@ -30,7 +30,9 @@ public class LockFileHandler implements ISearchLockedFiles {
 		// TODO Auto-generated constructor stub
 	}
 
-	public void unlockLockfile(File f) {
+	public boolean unlockLockfile(File f) {
+		boolean returnWert = false;
+		
 		// hier wird das Lockfle weder freigegeben, damit es mit gelöscht werden kann
 		System.out.println("Key unlockLockfile: " + inputStreamList.size() + " == " + f);
 		for (Entry<String, MLockFile> inputStream : inputStreamList.entrySet()) {
@@ -48,16 +50,22 @@ public class LockFileHandler implements ISearchLockedFiles {
 					inputStream.getValue().getRaf().close();				
 					System.out.println("Nach Close: " + inputStream.getKey() + " -> " + inputStream.getValue().getRaf().isOpen());
 
-					Platform.runLater(() -> {
-						inputStreamList.remove(inputStream.getKey());
-					});	
+					// wurde das LockFile wieder frei gegeben (nicht mehr Open), wenn ja, dann aus der liste löschen
+					if (!inputStream.getValue().getRaf().isOpen()) {
+						returnWert = true;
+						Platform.runLater(() -> {							
+							inputStreamList.remove(inputStream.getKey());
+						});	
+					}
+
 					System.out.println("Key unlockLockfile remove: " + inputStream.getKey() + " == " + inputStreamList.size());
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
+					// TODO Fehler code einbauen
 					e.printStackTrace();
 				}
 			}
 		}
+		return returnWert;
 	}
 
 	public void lockFile(Path path) {

@@ -14,7 +14,6 @@ import app.TreeViewWatchService.FileAlterationListenerImpl;
 import app.TreeViewWatchService.PathItem;
 import app.TreeViewWatchService.PathTreeCell;
 import app.controller.CTree;
-import app.dialog.CopyDialogProgress;
 import app.interfaces.ICursor;
 import app.interfaces.ISearchLockedFiles;
 import app.threads.DeleteItemTask;

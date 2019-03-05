@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import app.controller.CTree;
-import app.dialog.CopyDialogProgress;
 import app.view.alerts.AlertFilesLocked;
+import app.view.alerts.CopyDialogProgress;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Alert.AlertType;
 

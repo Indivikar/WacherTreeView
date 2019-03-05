@@ -22,12 +22,12 @@ import app.TreeViewWatchService.DragNDropInternal;
 import app.TreeViewWatchService.PathItem;
 import app.TreeViewWatchService.PathTreeCell;
 import app.controller.CTree;
-import app.dialog.CopyDialogProgress;
 import app.interfaces.ICursor;
 import app.interfaces.ILockDir;
 import app.interfaces.ITreeItemMethods;
 import app.models.SourceTarget;
 import app.view.Stages.StageFileIsExist;
+import app.view.alerts.CopyDialogProgress;
 import app.view.alerts.DefaultAlert;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -41,7 +41,7 @@ public class CopyOrMoveTask extends Task<Void> implements ICursor, ITreeItemMeth
 	private CTree cTree;
 	private CreateTree createTree;
 	private DragNDropInternal dragNDropInternal;
-	private CopyDialogProgress pForm;
+	private CopyDialogProgress copyDialogProgress;
 	
 	private PathTreeCell cell;
 	private TreeItem<PathItem> treeItem;
@@ -77,11 +77,11 @@ public class CopyOrMoveTask extends Task<Void> implements ICursor, ITreeItemMeth
 		this.sourceDir = sourceDir;
 		this.targetDir = targetDir;
 //		this.isMove = isMove;
-		
-		
-		this.pForm = new CopyDialogProgress(null);
-		bindUIandService(pForm.getDialogStage(), this);
+
+		this.copyDialogProgress = new CopyDialogProgress(null);
+		bindUIandService(copyDialogProgress.getDialogStage(), this);
 		System.out.println("init CopyOrMoveTask 2");
+		
 	}
 
 	public void next(){
@@ -98,6 +98,7 @@ public class CopyOrMoveTask extends Task<Void> implements ICursor, ITreeItemMeth
 			// TODO - wenn cancelled dann komplett refresh, der refresh soll von der DB angestossen werden
 	        createTree.startCreateTree(cell.getTreeView().getRoot(), false, false);
 			// 		- und danach Dialog Close
+	        copyDialogProgress.close();
 	}
 	
 	@Override
@@ -106,11 +107,12 @@ public class CopyOrMoveTask extends Task<Void> implements ICursor, ITreeItemMeth
 		// TODO - wenn cancelled dann komplett refresh, der refresh soll von der DB angestossen werden
 		createTree.startCreateTree(cell.getTreeView().getRoot(), false, false);
 		// 		- und danach Dialog Close
+		copyDialogProgress.close();
 	}
 	
 	@Override
 	protected void scheduled() {
-		pForm.activateProgressBar(this);
+		copyDialogProgress.activateProgressBar(this);
 	}
 	
 	@Override
@@ -121,12 +123,13 @@ public class CopyOrMoveTask extends Task<Void> implements ICursor, ITreeItemMeth
 		}
 		
 		sortUnlockUpdate(); 
+		copyDialogProgress.close();
 		System.out.println("______Copy or Move -> Succeeded______");
     }
 	
 	private void sortUnlockUpdate() {
 		Platform.runLater(() -> {
-				sortItems(cell, pForm);
+				sortItems(cell, copyDialogProgress);
 				unlockDir(cTree.getLockFileHandler(), treeItem.getValue().getLevelOneItem());
 				unlockDir(cTree.getLockFileHandler(), cTree.getSelectedItems().get(0).getValue().getLevelOneItem());
 	//			unlockDir(cTree.getLockFileHandler(), cell.getTreeItem().getValue().getLevelOneItem());

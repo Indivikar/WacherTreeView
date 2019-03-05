@@ -1,4 +1,4 @@
-package app.dialog;
+package app.view.alerts;
 
 import java.io.File;
 

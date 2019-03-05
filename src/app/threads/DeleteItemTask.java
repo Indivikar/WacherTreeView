@@ -19,7 +19,6 @@ import app.TreeViewWatchService.CreateTree;
 import app.TreeViewWatchService.PathItem;
 import app.TreeViewWatchService.PathTreeCell;
 import app.controller.CTree;
-import app.dialog.CopyDialogProgress;
 import app.functions.LoadTime;
 import app.interfaces.ICursor;
 import app.interfaces.ILockDir;
@@ -27,6 +26,7 @@ import app.interfaces.ISearchLockedFiles;
 import app.loadTime.LoadTime.LoadTimeOperation;
 import app.sort.WindowsExplorerComparator;
 import app.view.alerts.AlertFilesLocked;
+import app.view.alerts.CopyDialogProgress;
 import app.view.alerts.DefaultAlert;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -38,9 +38,10 @@ public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, IC
 	
 	private DeleteItemTask deleteItemTask;
 	private CTree cTree;
+	private CreateTree createTree;
 	private PathTreeCell pathTreeCell;
 	private TreeItem<PathItem> treeItem;
-	private CopyDialogProgress pForm;
+	private CopyDialogProgress copyDialogProgress;
 	
 	private ObservableList<String> listAllLockedFiles;
 //	private ObservableList<TreeItem<PathItem>> selectedItems;
@@ -63,6 +64,7 @@ public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, IC
 		  System.out.println("new Task");		  
 		  this.deleteItemTask = this;		  
 		  this.cTree = cTree;
+		  this.createTree = cTree.getCreateTree();
 		  this.pathTreeCell = pathTreeCell;
 		  this.treeItem = treeItem;
 		  this.listAllLockedFiles = listAllLockedFiles;
@@ -70,10 +72,10 @@ public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, IC
 		  this.showDialog = showDialog;
 		  
 		  if (showDialog) {
-			  pForm = new CopyDialogProgress(deleteItemTask);
-			  pForm.activateProgressBar(this);
+			  copyDialogProgress = new CopyDialogProgress(deleteItemTask);
+			  copyDialogProgress.activateProgressBar(this);
     	  
-			  bindUIandService(pForm.getDialogStage(), this);
+			  bindUIandService(copyDialogProgress.getDialogStage(), this);
 		  }
 
 	}
@@ -86,17 +88,26 @@ public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, IC
 		unlockDir(cTree.getLockFileHandler(), treeItem.getValue().getLevelOneItem());
 		updateMessage("Cancelled");
 		// TODO - wenn cancelled dann komplett refresh, der refresh soll von der DB angestossen werden
+		createTree.startCreateTree(cTree.getTree().getRoot(), false, false);
 		// 		- und danach Dialog Close
+		if (showDialog) {
+			copyDialogProgress.close();
+		}
 	}
 	
 	@Override
 	protected void failed() {
-		System.err.println("Failed");
+		// TODO - Alert mit fehlermeldung einbauen
+		System.err.println("Failed");		
 //		unlockDir(cTree.getLockFileHandler(), pathTreeCell.getTreeItem().getValue().getLevelOneItem());
 		unlockDir(cTree.getLockFileHandler(), treeItem.getValue().getLevelOneItem());
 		updateMessage("Failed");
 		// TODO - wenn cancelled dann komplett refresh, der refresh soll von der DB angestossen werden
+		createTree.startCreateTree(cTree.getTree().getRoot(), false, false);
 		// 		- und danach Dialog Close
+		if (showDialog) {
+			copyDialogProgress.close();
+		}
 	}
 	
 	@Override
@@ -122,7 +133,7 @@ public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, IC
 //		}
 //		System.out.println("succeeded: " + treeItem.getValue().getLevelOneItem().getValue().isLocked());
 		if (showDialog) {
-			pForm.close();
+			copyDialogProgress.close();
 		}
 		System.out.println("______Delete -> succeeded______");
 		
@@ -192,7 +203,13 @@ public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, IC
 //			TreeItem<PathItem> item = pathTreeCell.getTreeView().getTreeItem(row);	
 			System.err.println("vor remove Item: " + item.getValue().getPath() + "  -> exists Item: " + item.getValue().getPath().toFile().exists());
 			if (!item.getValue().getPath().toFile().exists()) {
-				boolean isRemoved = item.getParent().getChildren().remove(item);
+				
+				System.out.println("Parent Item" + item.getParent());
+				
+				boolean isRemoved = item
+						.getParent()
+						.getChildren()
+						.remove(item);
 	            if (isRemoved) {
 					System.err.println("remove Item: " + item.getValue().getPath());
 				}
@@ -218,7 +235,7 @@ public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, IC
     	skip = false;
     	
 		listAllLockedFiles.clear();
-		boolean isAccessFileFounded = recursiveSearch(file, pForm);
+		boolean isAccessFileFounded = recursiveSearch(file, copyDialogProgress);
 	    if (isAccessFileFounded) {
 	    	System.err.println("Locked File Founded");
 	    	// TODO - Message ändern

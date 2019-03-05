@@ -105,10 +105,13 @@ public interface ILockDir {
 	   public default boolean unlocker(LockFileHandler lockFileHandler, File f) {		   
 		   if (f.exists()) {
 			   try {
-				unlockLockFile(lockFileHandler, f);
-				boolean b = Files.deleteIfExists(f.toPath());
-				if (b) {
-					removeLockFileFromList(f);
+				boolean isUnlocked = unlockLockFile(lockFileHandler, f);
+				if (isUnlocked) {
+					boolean b = Files.deleteIfExists(f.toPath());
+					if (b) {
+						removeLockFileFromList(f);
+						return true;
+					}
 				}
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -129,18 +132,18 @@ public interface ILockDir {
 		   return new File(folder + File.separator + CTree.lockFileName);
 	   }
 	   
-	   public default void unlockLockFile(LockFileHandler lockFileHandler, PathTreeCell pathTreeCell) {
+	   public default boolean unlockLockFile(LockFileHandler lockFileHandler, PathTreeCell pathTreeCell) {
 		   File levelOneDir = pathTreeCell.getTreeItem().getValue().getLevelOneItem().getValue().getPath().toFile();
-		   unlockLockFile(lockFileHandler, levelOneDir);
+		   return unlockLockFile(lockFileHandler, levelOneDir);
 	   }
 	   
-	   public default void unlockLockFile(LockFileHandler lockFileHandler, TreeItem<PathItem> treeItem) {
+	   public default boolean unlockLockFile(LockFileHandler lockFileHandler, TreeItem<PathItem> treeItem) {
 		   File levelOneDir = treeItem.getValue().getLevelOneItem().getValue().getPath().toFile();
-		   unlockLockFile(lockFileHandler, levelOneDir);
+		   return unlockLockFile(lockFileHandler, levelOneDir);
 	   }
 	   
-	   public default void unlockLockFile(LockFileHandler lockFileHandler, File levelOneDirOrLockFilePath) {
-		   lockFileHandler.unlockLockfile(levelOneDirOrLockFilePath);
+	   public default boolean unlockLockFile(LockFileHandler lockFileHandler, File levelOneDirOrLockFilePath) {
+		   return lockFileHandler.unlockLockfile(levelOneDirOrLockFilePath);
 	   }
 	   
 	   public default boolean setThisItemLocked(TreeItem<PathItem> rootItem, Path path, boolean isLocked) {

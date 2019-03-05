@@ -6,11 +6,11 @@ import java.util.Date;
 
 import app.TreeViewWatchService.PathItem;
 import app.controller.CTree;
-import app.dialog.CopyDialogProgress;
 import app.functions.LoadTime;
 import app.loadTime.LoadTime.LoadTimeOperation;
 import app.interfaces.ITreeItemMethods;
 import app.sort.WindowsExplorerComparator;
+import app.view.alerts.CopyDialogProgress;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.scene.control.TreeItem;

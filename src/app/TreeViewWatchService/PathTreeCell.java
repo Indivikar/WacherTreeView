@@ -20,6 +20,7 @@ import javafx.application.Platform;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.SelectionModel;
@@ -30,6 +31,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 
 public class PathTreeCell extends TreeCell<PathItem> implements ISuffix, ISystemIcon, IOpenFile, ILockDir{
@@ -47,13 +49,16 @@ public class PathTreeCell extends TreeCell<PathItem> implements ISuffix, ISystem
 
     private int index;
     private TreeItem<PathItem> levelOneItem;
-    
+    private DragNDropInternal dragNDropInternal;
     
     public PathTreeCell(CTree cTree, Stage primaryStage) {  
-    	System.out.println("Load -> PathTreeCell");
+//    	System.out.println("Load -> PathTreeCell");
     	this.cTree = cTree;
     	this.fileMenu = new CellContextMenu(this, primaryStage, cTree, listAllLockedFiles);
-        DragNDropInternal DragNDropInternal = new DragNDropInternal(primaryStage, service, this);                   
+        this.dragNDropInternal = new DragNDropInternal(primaryStage, service, this);     
+        
+        setListenerRefreshTree();
+
     }
 
     public void selectCell() {
@@ -80,13 +85,23 @@ public class PathTreeCell extends TreeCell<PathItem> implements ISuffix, ISystem
                 setText(getString() + " (" + getIndex() + " - " + item.getLevel() + " -> " + item.isLocked() + ")");
                 
 				setContextMenu(fileMenu);       
-				setListenerLockedContextMenu(getTreeItem());              
+				setListenerLockedContextMenu(getTreeItem());  
+				
+//				setListenerRefreshTree();
                 setStartPropertiesContextMenu(item);
 
                 setGraphic(getImage(this.getTreeItem()));
                 
                 mouseOver(this);                              
 				mouseClick(this);
+				
+//				setListenerRefreshTree();
+				
+//				this.setOnDragDetected(dragNDropInternal.eventDragDetected);
+//				this.setOnDragOver(dragNDropInternal.eventDragOver);
+//				this.setOnDragEntered(dragNDropInternal.eventDragEntered);
+//				this.setOnDragDropped(dragNDropInternal.eventDragDropped);
+//				this.setOnDragDone(dragNDropInternal.eventDragDone);
 //				if (item.getPath().toString().contains("A0")) {
 //					System.out.println(item.toString2());
 //				}
@@ -95,6 +110,53 @@ public class PathTreeCell extends TreeCell<PathItem> implements ISuffix, ISystem
         }
     }
 
+	private void setListenerRefreshTree() {
+		
+		EventHandler<MouseEvent> mouseMoved = event ->  {						
+			if (this.getOnDragDetected() == null) {
+				System.out.println("     Drag N Drop -> set Mouse Moved");
+				this.setOnDragDetected(dragNDropInternal.eventDragDetected);				
+				this.setOnDragOver(dragNDropInternal.eventDragOver);
+				this.setOnDragEntered(dragNDropInternal.eventDragEntered);
+				this.setOnDragExited(dragNDropInternal.eventDragExited);
+				this.setOnDragDropped(dragNDropInternal.eventDragDropped);
+				this.setOnDragDone(dragNDropInternal.eventDragDone);			
+			}
+		};
+		
+
+		cTree.getTree().getRoot().getValue().getIsRefreshTreeProp().addListener((var, oldVar, newVar) -> {		
+//			System.err.println("Root Item Refresh Tree 1");
+
+			if (newVar) {				
+				// Context Menu deaktivieren, bei refresh Tree
+				if (!cTree.getPropDisBoolNewFile().get()) {
+					cTree.setMenuItemsReload(newVar);
+				}
+				
+				// Drag N Drop blocken, bei refresh Tree
+				if (this.getOnDragDetected() != null) {
+//					System.out.println("     Drag N Drop -> null");						
+					cTree.getTree().removeEventFilter(MouseEvent.MOUSE_MOVED, mouseMoved);
+					this.setOnDragDetected(null);
+					this.setOnDragOver(null);
+					this.setOnDragEntered(null);
+					this.setOnDragExited(null);
+					this.setOnDragDropped(null);
+					this.setOnDragDone(null);
+				}
+
+			} else {
+//				System.out.println("     Drag N Drop -> set");
+				// Context Menu wird nach refresh Tree wieder neu geladen, also muss keine Aktion zum aktivieren ausgeführt werden
+				
+				// Drag N Drop wieder frei geben, nach refresh Tree
+				cTree.getTree().addEventHandler(MouseEvent.MOUSE_MOVED, mouseMoved);
+			}
+
+		});
+	}
+	
 	private void setListenerLockedContextMenu(TreeItem<PathItem> treeItem) {
 		PathItem item = treeItem.getValue();
 		boolean isLocked = item.isLocked();
@@ -128,7 +190,8 @@ public class PathTreeCell extends TreeCell<PathItem> implements ISuffix, ISystem
 	}
 
 	private void setStartPropertiesContextMenu(PathItem item) {
-        if (getTreeView().getTreeItemLevel(getTreeItem()) == 0) {               	
+        if (getTreeView().getTreeItemLevel(getTreeItem()) == 0) {    
+        	System.out.println("setRootMenuItems()");
         	cellContextMenu.setRootMenuItems();
 //        	setGraphic(getImage(this.getTreeItem()));
         } else {

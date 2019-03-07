@@ -17,7 +17,7 @@ import app.TreeViewWatchService.PathTreeCell;
 import app.controller.CRename;
 import app.controller.CTree;
 import app.functions.LoadTime;
-import app.interfaces.ICursor;
+import app.interfaces.IBindings;
 import app.interfaces.ILockDir;
 import app.interfaces.ITreeItemMethods;
 import app.loadTime.LoadTime.LoadTimeOperation;
@@ -29,7 +29,7 @@ import javafx.concurrent.Task;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.Alert.AlertType;
 
-public class RenameTask extends Task<Boolean> implements ITreeItemMethods, ICursor, ILockDir {
+public class RenameTask extends Task<Boolean> implements ITreeItemMethods, IBindings, ILockDir {
 
 	private CRename cRename;
 	private CTree cTree;

@@ -22,7 +22,7 @@ import app.TreeViewWatchService.DragNDropInternal;
 import app.TreeViewWatchService.PathItem;
 import app.TreeViewWatchService.PathTreeCell;
 import app.controller.CTree;
-import app.interfaces.ICursor;
+import app.interfaces.IBindings;
 import app.interfaces.ILockDir;
 import app.interfaces.ITreeItemMethods;
 import app.models.SourceTarget;
@@ -36,7 +36,7 @@ import javafx.concurrent.Task;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.Alert.AlertType;
 
-public class CopyOrMoveTask extends Task<Void> implements ICursor, ITreeItemMethods, ILockDir {
+public class CopyOrMoveTask extends Task<Void> implements IBindings, ITreeItemMethods, ILockDir {
 
 	private CTree cTree;
 	private CreateTree createTree;

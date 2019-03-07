@@ -34,7 +34,7 @@ import app.TreeViewWatchService.PathItem;
 import app.TreeViewWatchService.PathTreeCell;
 import app.TreeViewWatchService.ScrollingByDragNDrop;
 import app.db.PathList;
-import app.interfaces.ICursor;
+import app.interfaces.IBindings;
 import app.interfaces.ILockDir;
 import app.interfaces.ISaveExpandedItems;
 import app.interfaces.ISuffix;
@@ -53,6 +53,7 @@ import app.watcher.watchService.PAWatcher;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
@@ -82,7 +83,7 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import javafx.util.Pair;
 
-public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpandedItems, ICursor, ILockDir, ITreeUpdateHandler {
+public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpandedItems, IBindings, ILockDir, ITreeUpdateHandler {
 
 	public static ObservableList<LoadTimeOperation> listLoadTime = FXCollections.observableArrayList();
 
@@ -114,6 +115,17 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 	
 	// Listeners
 	private ChildrenChangedListener ChildrenChangedListener = new ChildrenChangedListener(this);
+	
+	// ContextMenu Disable Properties -> darf nicht in denn Klassen stehen, die neu geladen werden
+	private SimpleBooleanProperty propDisBoolOpen = new SimpleBooleanProperty();
+	private SimpleBooleanProperty propDisBoolNewFile = new SimpleBooleanProperty();
+	private SimpleBooleanProperty propDisBoolNewDirectory = new SimpleBooleanProperty();
+	private SimpleBooleanProperty propDisBoolRename = new SimpleBooleanProperty();
+	private SimpleBooleanProperty propDisBoolDeleteItem = new SimpleBooleanProperty();
+	private SimpleBooleanProperty propDisBoolRefreshTree = new SimpleBooleanProperty();
+	
+	// Drag N Drop 
+	private SimpleBooleanProperty propBoolBlockDragNDrop = new SimpleBooleanProperty();
 	
 	public static boolean isInternalChange = false;
 	
@@ -165,6 +177,11 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 
 		setButtonAction();
 		setPropUpdateMessage();
+		
+//		tree.addEventHandler(MouseEvent.MOUSE_RELEASED, event ->  {
+//			System.out.println("     CTree -> set Mouse Released");
+//		});
+		
 	}
 
 	private void setPropUpdateMessage() {
@@ -216,9 +233,52 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 		
 	}
 	
+	int count = 0;
+	
+	public boolean setProperiesRefreshTree(boolean wert) {
+		// Diese Methode muss ein boolean zurück geben, weil die Methode (in dem Interface "IBindings")
+        // 		Bindings.when(service.runningProperty())
+        //    		.then(setMenuItemsReload(true))
+        //    		.otherwise(setMenuItemsReload(false));
+		// ein boolean wert erwartet, was für ein wert es ist, spielt keine Rolle
+		
+		// Drag N Drop
+//		propBoolBlockDragNDrop.setValue(wert);
+		
+		
+		
+		if (count >= 2) {
+			tree.getRoot().getValue().setRefreshTree(wert);
+			
+//			cell.setOnDragDetected(null);
+//			cell.setOnDragOver(null);
+//			cell.setOnDragEntered(null);
+//			cell.setOnDragDropped(null);
+//			cell.setOnDragDone(null);
+		}
+
+		
+		// ContextMenu
+//		setMenuItemsReload(wert);
+		count++;
+		return false;
+	}
+	
+	
+	public void setMenuItemsReload(boolean wert) {
+		System.out.println("     setMenuItemsReload -> " + wert);
+		propDisBoolOpen.setValue(wert);
+		propDisBoolNewFile.setValue(wert);
+		propDisBoolNewDirectory.setValue(wert);
+		propDisBoolRename.setValue(wert);
+		propDisBoolDeleteItem.setValue(wert);
+		propDisBoolRefreshTree.setValue(wert);
+	}
+	
 	public void refreshTree() {
 		System.out.println("----- refreshTree -----");	
 //		cell.getCellContextMenu().serviceReloadBinding(true);
+//		propDisBoolNewFile.setValue(true);
 //		lockDir(this, getTree().getRoot());
 		this.createTree.updatePathListFormDB(treeItem, true, true);
 //		this.createTree.startCreateTree(treeItem, true, true);
@@ -226,7 +286,7 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 
 	public void refreshTree(boolean cursorWait) {
 			System.out.println("----- refreshTree -----");
-//			cell.getCellContextMenu().serviceReloadBinding(true);
+//			propDisBoolNewFile.setValue(true);
 //			lockDir(this, getTree().getRoot());
 			this.createTree.updatePathListFormDB(treeItem, true, true, true);
 //			this.createTree.startCreateTree(treeItem, true, true);
@@ -491,8 +551,21 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 	
 	public ObservableList<TreeItem<PathItem>> getSelectedItems() {return selectedItems;}
 
+	// ContextMenu Disable Properties
+	public SimpleBooleanProperty getPropDisBoolOpen() {return propDisBoolOpen;}
+	public SimpleBooleanProperty getPropDisBoolNewFile() {return propDisBoolNewFile;}
+	public SimpleBooleanProperty getPropDisBoolNewDirectory() {return propDisBoolNewDirectory;}
+	public SimpleBooleanProperty getPropDisBoolRename() {return propDisBoolRename;}
+	public SimpleBooleanProperty getPropDisBoolDeleteItem() {return propDisBoolDeleteItem;}
+	public SimpleBooleanProperty getPropDisBoolRefreshTree() {return propDisBoolRefreshTree;}
+
+	// Drag N Drop
+	public SimpleBooleanProperty getPropBoolBlockDragNDrop() {return propBoolBlockDragNDrop;}
+
 	// Setter
 	public void setSelectedItems(ObservableList<TreeItem<PathItem>> selectedItems) {this.selectedItems = selectedItems;}
+
+
 
 	public void set(StartWacherDemo startWacherDemo, Stage primaryStage) {
 		this.startWacherDemo = startWacherDemo;

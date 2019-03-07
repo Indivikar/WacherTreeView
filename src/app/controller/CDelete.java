@@ -5,7 +5,7 @@ import java.util.ResourceBundle;
 
 import app.TreeViewWatchService.PathItem;
 import app.TreeViewWatchService.PathTreeCell;
-import app.interfaces.ICursor;
+import app.interfaces.IBindings;
 import app.interfaces.ILockDir;
 import app.threads.DeleteItemTask;
 import app.view.Stages.StageDelete;
@@ -18,7 +18,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.TreeItem;
 import javafx.stage.Stage;
 
-public class CDelete implements Initializable, ICursor, ILockDir{
+public class CDelete implements Initializable, IBindings, ILockDir{
 
 	private CTree cTree;
 	private StageDelete stageDelete;

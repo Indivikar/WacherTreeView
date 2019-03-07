@@ -20,7 +20,7 @@ import app.TreeViewWatchService.PathItem;
 import app.TreeViewWatchService.PathTreeCell;
 import app.controller.CTree;
 import app.functions.LoadTime;
-import app.interfaces.ICursor;
+import app.interfaces.IBindings;
 import app.interfaces.ILockDir;
 import app.interfaces.ISearchLockedFiles;
 import app.loadTime.LoadTime.LoadTimeOperation;
@@ -34,7 +34,7 @@ import javafx.concurrent.Task;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.Alert.AlertType;
 
-public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, ICursor, ILockDir {
+public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, IBindings, ILockDir {
 	
 	private DeleteItemTask deleteItemTask;
 	private CTree cTree;

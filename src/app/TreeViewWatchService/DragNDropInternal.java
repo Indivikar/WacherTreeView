@@ -25,7 +25,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 import app.controller.CTree;
-import app.interfaces.ICursor;
+import app.interfaces.IBindings;
 import app.interfaces.ILockDir;
 import app.interfaces.ISaveExpandedItems;
 import app.interfaces.ITreeItemMethods;
@@ -65,6 +65,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
 import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
@@ -74,9 +75,10 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
-public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, ICursor, ILockDir{
+public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, IBindings, ILockDir{
 
 	private CTree cTree;
+	private PathTreeCell cell;
 	private ScrollingByDragNDrop scrollingByDragNDrop;
 	private StageMoveOrCopy stageMoveOrCopy;
 	
@@ -105,6 +107,7 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 	
 	public DragNDropInternal(Stage stage, ExecutorService service, final PathTreeCell cell) {
 		this.cTree = cell.getcTree();
+		this.cell = cell;
 		this.scrollingByDragNDrop = cTree.getScrollingByDragNDrop();
 //		scrollingByDragNDrop = new ScrollingByDragNDrop(cTree.getTree());
 		
@@ -113,12 +116,12 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 		cTree.getTree().addEventFilter(MouseEvent.MOUSE_ENTERED, eventStopScrolling);
 		cTree.getPrimaryStage().getScene().addEventFilter(MouseEvent.MOUSE_EXITED_TARGET, eventStopScrolling);
 				
-		setDragDetected(cell);
-		setDragOver(cell);
-		setDragEntered(cell);
-		setDragExited(cell);
-		setDragDropped(stage, service, cell);
-		setDragDone(cell);
+//		setDragDetected(cell);
+//		setDragOver(cell);
+//		setDragEntered(cell);
+//		setDragExited(cell);
+//		setDragDropped(stage, service, cell);
+//		setDragDone(cell);
 	}
 
 //	public void next(){
@@ -128,8 +131,17 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 //    }
 	
 	
-	private void setDragDetected(PathTreeCell cell) {
-        cell.setOnDragDetected(event -> {
+//	private void setDragDetected(PathTreeCell cell) {
+//        cell.setOnDragDetected(
+	public EventHandler<MouseEvent> eventDragDetected = event -> {
+        	
+		
+        	// bei Refresh Tree, Drag N Drop blocken
+//        	if (cTree.getPropBoolBlockDragNDrop().get()) {
+//        		event.setDragDetect(false);
+//				return;
+//			}
+        	
         	TreeItem<PathItem> treeItem = cell.getTreeItem();
 
         	System.out.println("setDragDetected 1 " + cell.getTreeItem().getValue().getPath());
@@ -175,15 +187,37 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 //                db.setDragView(cell.snapshot(null, null));
 //                event.consume();
 //            }
-        });
-	}
+        };
+//	);
+//	}
 	
-	private void setDragOver(PathTreeCell cell) {
-        cell.setOnDragOver(event -> {
+//	private void setDragOver(PathTreeCell cell) {
+//        cell.setOnDragOver(
+        public EventHandler<DragEvent> eventDragOver = event -> {
+        	
+        	// bei Refresh Tree, Drag N Drop blocken
+//        	if (cTree.getPropBoolBlockDragNDrop().get()) {
+//        		System.out.println("DragOver Cancel");
+//        		event.setDropCompleted(true);
+//			
+//			}
+        	
         	Dragboard db = event.getDragboard();
             TreeItem<PathItem> treeItem = cell.getTreeItem();
+            // durch 
+            if (!cell.isSelected()) {
+            	System.out.println("Select -> " + cell.getTreeItem().getValue().getPath());
+            	cell.selectCell();
+			}
+        	// bei Refresh Tree, Drag N Drop blocken
+//        	if (cTree.getPropBoolBlockDragNDrop().get()) {
+//        		System.out.println("DragOver Cancel");
+//        		db.clear();
+//        		event.setDropCompleted(true);
+//			
+//			}
 
-            if (treeItem != null && event.getGestureSource() != cell && event.getDragboard().hasFiles() && !treeItem.getValue().isLocked()) {
+            if (treeItem != null && event.getGestureSource() != cell && db.hasFiles() && !treeItem.getValue().isLocked()) {
 //                Path targetPath = cell.getTreeItem().getValue().getPath(); 
                 Path targetPath = treeItem.getValue().getPath(); 
                 PathTreeCell sourceCell_2 = (PathTreeCell) event.getGestureSource();
@@ -212,13 +246,20 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 				} 
             }
             event.consume();
-        });
-	}
+        };
+//        );
+//	}
 	
 
 	
-	private void setDragEntered(PathTreeCell cell) {
-        cell.setOnDragEntered(event -> {
+//	private void setDragEntered(PathTreeCell cell) {
+//        cell.setOnDragEntered(
+        public EventHandler<DragEvent> eventDragEntered = event -> {
+        	// bei Refresh Tree, Drag N Drop blocken
+//        	if (cTree.getPropBoolBlockDragNDrop().get()) {
+//        		event.setDropCompleted(true);
+//				return;
+//			}
         	
         	scrollingByDragNDrop.stopScrolling();
             TreeItem<PathItem> treeItem = cell.getTreeItem();
@@ -228,21 +269,33 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
                     event.getDragboard().hasFiles()) {
 //                Path targetPath = cell.getTreeItem().getValue().getPath();
                 PathTreeCell sourceCell = (PathTreeCell) event.getGestureSource();   
-                System.out.println(sourceCell);
+
+                
+//                System.out.println(sourceCell);
             }
             event.consume();
-        });
-	}
+        };
+//        );
+//	}
 	
-	private void setDragExited(PathTreeCell cell) {
-        cell.setOnDragExited(event -> {
+        
+//	private void setDragExited(PathTreeCell cell) {
+//        cell.setOnDragExited(
+        public EventHandler<DragEvent> eventDragExited = event -> {
 //        	scrollingByDragNDrop.startScrolling(event);
-        });
-	}
+        };
+//        );
+//	}
 	
-	private void setDragDropped(Stage stage, ExecutorService service, PathTreeCell cell) {
-		 cell.setOnDragDropped(event -> {
+//	private void setDragDropped(Stage stage, ExecutorService service, PathTreeCell cell) {
+//		 cell.setOnDragDropped(
+		public EventHandler<DragEvent> eventDragDropped = event -> {
 			 
+			 
+	        	// bei Refresh Tree, Drag N Drop blocken
+//	        	if (cTree.getPropBoolBlockDragNDrop().get()) {
+//					return;
+//				}
  
 			 TreeItem<PathItem> treeItem = cell.getTreeItem();
 			 
@@ -379,8 +432,23 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 //	            }
 	            event.setDropCompleted(success);
 	            event.consume();
-	        });
-	}
+	        };
+//		);
+//	}
+	
+
+	
+//	private void setDragDone(PathTreeCell cell) {
+//        cell.setOnDragDone(eventDragDone);
+//	}
+	
+	public EventHandler<DragEvent> eventDragDone = event -> {
+        scrollingByDragNDrop.stopScrolling();
+//      cell.indexProperty().addListener(e -> {
+//      	System.out.println("--- Set Index " +  cell.getIndex());
+//      	cell.selectCell();
+//      });
+    };
 	
 	private Set<SourceTarget> getSourceAndTargetFiles(Dragboard db, TreeItem<PathItem> treeItem) {
 		Set<SourceTarget> selectedFiles = new HashSet<SourceTarget>();
@@ -655,18 +723,7 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 //	        });    
 //	    }
 	    
-	    
-	private void setDragDone(PathTreeCell cell) {
-        cell.setOnDragDone(event -> {
-            scrollingByDragNDrop.stopScrolling();
-//            cell.indexProperty().addListener(e -> {
-//            	System.out.println("--- Set Index " +  cell.getIndex());
-//            	cell.selectCell();
-//            });
-        });
-        
-        
-	}
+
 
 	
 //	 private void sleep(int ms) {
@@ -711,6 +768,8 @@ public class DragNDropInternal implements ISaveExpandedItems, ITreeItemMethods, 
 	public DragNDropInternal getDragNDropInternal() {return this;};
 	public ScrollingByDragNDrop getScrollingByDragNDrop() {return scrollingByDragNDrop;}
 	public CopyOrMoveTask getCopyOrMoveTask() {return copyOrMoveTask;}
+	
+	public EventHandler<DragEvent> getEventDragDone() {return eventDragDone;}
 
 	// Setter
 	public void setCancelCopyRoutine(boolean cancelCopyRoutine) {this.cancelCopyRoutine = cancelCopyRoutine;}

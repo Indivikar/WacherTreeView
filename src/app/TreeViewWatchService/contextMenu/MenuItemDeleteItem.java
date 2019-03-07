@@ -14,7 +14,7 @@ import app.TreeViewWatchService.FileAlterationListenerImpl;
 import app.TreeViewWatchService.PathItem;
 import app.TreeViewWatchService.PathTreeCell;
 import app.controller.CTree;
-import app.interfaces.ICursor;
+import app.interfaces.IBindings;
 import app.interfaces.ISearchLockedFiles;
 import app.threads.DeleteItemTask;
 import app.view.Stages.StageDelete;
@@ -25,7 +25,7 @@ import javafx.stage.Stage;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Alert.AlertType;
 
-public class MenuItemDeleteItem extends MenuItem implements ICursor{
+public class MenuItemDeleteItem extends MenuItem implements IBindings{
 
 	private PathTreeCell pathTreeCell;
 	private ObservableList<String> listAllLockedFiles;

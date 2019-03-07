@@ -18,6 +18,7 @@ import javafx.stage.Stage;
 public class CellContextMenu extends ContextMenu {
 	
 	private Stage primaryStage;
+	private CTree cTree;
 	private PathTreeCell pathTreeCell;
 	private ObservableList<String> listAllLockedFiles;
 	
@@ -32,10 +33,21 @@ public class CellContextMenu extends ContextMenu {
 	
 	private SimpleBooleanProperty serviceReload = new SimpleBooleanProperty(false);
 	
-	public CellContextMenu(PathTreeCell pathTreeCell, Stage primaryStage, CTree cTree, 
-			ObservableList<String> listAllLockedFiles) {
-		
-
+	private SimpleBooleanProperty propDisBoolOpen;
+	private SimpleBooleanProperty propDisBoolNewFile;
+	private SimpleBooleanProperty propDisBoolNewDirectory;
+	private SimpleBooleanProperty propDisBoolRename;
+	private SimpleBooleanProperty propDisBoolDeleteItem;
+	private SimpleBooleanProperty propDisBoolRefreshTree;
+	
+	public CellContextMenu(PathTreeCell pathTreeCell, Stage primaryStage, CTree cTree, ObservableList<String> listAllLockedFiles) {
+		this.cTree = cTree;
+		this.propDisBoolOpen = cTree.getPropDisBoolOpen();
+		this.propDisBoolNewFile = cTree.getPropDisBoolNewFile();
+		this.propDisBoolNewDirectory = cTree.getPropDisBoolNewDirectory();
+		this.propDisBoolRename = cTree.getPropDisBoolRename();
+		this.propDisBoolDeleteItem = cTree.getPropDisBoolDeleteItem();
+		this.propDisBoolRefreshTree = cTree.getPropDisBoolRefreshTree();
 		
 		showingProperty().addListener((ov, oldVal, newVal) -> {
 			// Alle Selected Items Speichern
@@ -70,6 +82,8 @@ public class CellContextMenu extends ContextMenu {
 		this.separatorMenuItem_2 = new SeparatorMenuItem();
 		this.menuItemRefreshTree = new MenuItemRefreshTree(pathTreeCell, cTree);
 		
+		bindings();
+		
 		getItems().addAll(	menuItemOpen,
 							separatorMenuItem_1,
 							menuItemNewFile, 
@@ -80,58 +94,107 @@ public class CellContextMenu extends ContextMenu {
 							menuItemRefreshTree);	
 	}
 
-	public void bindMenuItemsReload(Service<?> service) {
-
-                Bindings
-                .when(service.runningProperty())
-                    .then(test(true))
-                    .otherwise(test(false));
-				
+	private void bindings() {
+		menuItemOpen.disableProperty().bind(propDisBoolOpen);
+		menuItemNewFile.disableProperty().bind(propDisBoolNewFile);
+		menuItemNewDirectory.disableProperty().bind(propDisBoolNewDirectory);
+		menuItemRename.disableProperty().bind(propDisBoolRename);
+		menuItemDeleteItem.disableProperty().bind(propDisBoolDeleteItem);
+		menuItemRefreshTree.disableProperty().bind(propDisBoolRefreshTree);
 	}
 	
-	private boolean test(boolean wert) {
-		menuItemNewFile.setDisable(wert);
-		return false;
-	}
+	
+
 	
 	public void setRootMenuItems() {
-		menuItemOpen.setDisable(false);
-		menuItemNewFile.setDisable(true);
-		menuItemNewDirectory.setDisable(false);
-		menuItemRename.setDisable(true);
-		menuItemDeleteItem.setDisable(true);
+		propDisBoolOpen.setValue(false);
+		propDisBoolNewFile.setValue(false);
+		propDisBoolNewDirectory.setValue(false);
+		propDisBoolRename.setValue(true);
+		propDisBoolDeleteItem.setValue(true);
+		propDisBoolRefreshTree.setValue(false);
+		
+//		menuItemOpen.setDisable(false);
+//		menuItemNewFile.setDisable(true);
+//		menuItemNewDirectory.setDisable(false);
+//		menuItemRename.setDisable(true);
+//		menuItemDeleteItem.setDisable(true);
 	}
 	
+//	public boolean setMenuItemsReload(boolean wert) {
+//		// Diese Methode muss ein boolean zurück geben, weil die Methode (in dem Interface "CreateTree")
+//        // 		Bindings.when(service.runningProperty())
+//        //    		.then(setMenuItemsReload(true))
+//        //    		.otherwise(setMenuItemsReload(false));
+//		// ein boolean wert erwartet, was für ein wert es ist, spielt keine Rolle
+//		
+//		cTree.getPropDisBoolOpen().setValue(wert);
+//		cTree.getPropDisBoolNewFile().setValue(wert);
+//		cTree.getPropDisBoolNewDirectory().setValue(wert);
+//		cTree.getPropDisBoolRename().setValue(wert);
+//		cTree.getPropDisBoolDeleteItem().setValue(wert);
+//		cTree.getPropDisBoolRefreshTree().setValue(wert);
+//		return false;
+//	}
+	
 	public void setMenuItemsDir() {
-		menuItemOpen.setDisable(false);
-		menuItemNewFile.setDisable(false);
-		menuItemNewDirectory.setDisable(false);
-		menuItemRename.setDisable(false);
-		menuItemDeleteItem.setDisable(false);		
+		propDisBoolOpen.setValue(false);
+		propDisBoolNewFile.setValue(false);
+		propDisBoolNewDirectory.setValue(false);
+		propDisBoolRename.setValue(false);
+		propDisBoolDeleteItem.setValue(false);
+		propDisBoolRefreshTree.setValue(false);
+		
+//		menuItemOpen.setDisable(false);
+//		menuItemNewFile.setDisable(false);
+//		menuItemNewDirectory.setDisable(false);
+//		menuItemRename.setDisable(false);
+//		menuItemDeleteItem.setDisable(false);		
 	}
 	
 	public void setMenuItemsFile() {
-		menuItemOpen.setDisable(false);
-		menuItemNewFile.setDisable(true);
-		menuItemNewDirectory.setDisable(true);
-		menuItemRename.setDisable(false);
-		menuItemDeleteItem.setDisable(false);		
+		propDisBoolOpen.setValue(false);
+		propDisBoolNewFile.setValue(true);
+		propDisBoolNewDirectory.setValue(true);
+		propDisBoolRename.setValue(false);
+		propDisBoolDeleteItem.setValue(false);
+		propDisBoolRefreshTree.setValue(false);
+		
+//		menuItemOpen.setDisable(false);
+//		menuItemNewFile.setDisable(true);
+//		menuItemNewDirectory.setDisable(true);
+//		menuItemRename.setDisable(false);
+//		menuItemDeleteItem.setDisable(false);		
 	}
 	
-	public void setLockedDir(boolean isLocked) {
-		menuItemOpen.setDisable(isLocked);
-		menuItemNewFile.setDisable(isLocked);
-		menuItemNewDirectory.setDisable(isLocked);
-		menuItemRename.setDisable(isLocked);
-		menuItemDeleteItem.setDisable(isLocked);
+	public void setLockedDir(boolean isLocked) {		
+		propDisBoolOpen.setValue(isLocked);
+		propDisBoolNewFile.setValue(isLocked);
+		propDisBoolNewDirectory.setValue(isLocked);
+		propDisBoolRename.setValue(isLocked);
+		propDisBoolDeleteItem.setValue(isLocked);
+		propDisBoolRefreshTree.setValue(false);
+		
+//		menuItemOpen.setDisable(isLocked);
+//		menuItemNewFile.setDisable(isLocked);
+//		menuItemNewDirectory.setDisable(isLocked);
+//		menuItemRename.setDisable(isLocked);
+//		menuItemDeleteItem.setDisable(isLocked);
 	}
 	
 	public void setLockedFile(boolean isLocked) {
-		menuItemOpen.setDisable(isLocked);
-		menuItemNewFile.setDisable(true);
-		menuItemNewDirectory.setDisable(true);
-		menuItemRename.setDisable(isLocked);
-		menuItemDeleteItem.setDisable(isLocked);
+		propDisBoolOpen.setValue(isLocked);
+		propDisBoolNewFile.setValue(true);
+		propDisBoolNewDirectory.setValue(true);
+		propDisBoolRename.setValue(isLocked);
+		propDisBoolDeleteItem.setValue(isLocked);
+		propDisBoolRefreshTree.setValue(false);
+		
+//		menuItemOpen.setDisable(isLocked);
+//		menuItemNewFile.setDisable(true);
+//		menuItemNewDirectory.setDisable(true);
+//		menuItemRename.setDisable(isLocked);
+//		menuItemDeleteItem.setDisable(isLocked);
 	}
 	
 //	public void serviceReloadBinding(boolean wert) {		

@@ -1,5 +1,6 @@
 package app.interfaces;
 
+import app.controller.CTree;
 import javafx.beans.binding.Bindings;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
@@ -7,7 +8,7 @@ import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.stage.Stage;
 
-public interface ICursor {
+public interface IBindings {
 
     public default void bindUIandService(Stage node, Service<?> service) {
     	node.getScene()
@@ -57,4 +58,11 @@ public interface ICursor {
                 );
     }
 	
+	public default void bindMenuItemsReload(CTree cTree, Service<?> service) {
+        Bindings
+        .when(service.runningProperty())
+            .then(cTree.setProperiesRefreshTree(true))
+            .otherwise(cTree.setProperiesRefreshTree(false));		
+	}
+    
 }

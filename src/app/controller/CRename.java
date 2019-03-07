@@ -7,7 +7,7 @@ import java.util.ResourceBundle;
 import app.TreeViewWatchService.CreateTree;
 import app.TreeViewWatchService.PathItem;
 import app.TreeViewWatchService.PathTreeCell;
-import app.interfaces.ICursor;
+import app.interfaces.IBindings;
 import app.interfaces.ILockDir;
 import app.interfaces.ISuffix;
 import app.interfaces.ITreeItemMethods;
@@ -25,7 +25,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.TreeItem;
 import javafx.stage.Stage;
 
-public class CRename implements Initializable, ISuffix, ICursor, ITreeItemMethods, ILockDir, IWindowEigenschaften{
+public class CRename implements Initializable, ISuffix, IBindings, ITreeItemMethods, ILockDir, IWindowEigenschaften{
 
 	
 	private StageRename stageRename;

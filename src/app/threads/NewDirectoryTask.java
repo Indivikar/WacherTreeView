@@ -11,12 +11,12 @@ import app.TreeViewWatchService.PathItem;
 import app.TreeViewWatchService.PathTreeCell;
 import app.controller.CTree;
 import app.functions.LoadTime;
-import app.interfaces.ICursor;
+import app.interfaces.IBindings;
 import app.interfaces.ITreeItemMethods;
 import javafx.concurrent.Task;
 import javafx.scene.control.TreeItem;
 
-public class NewDirectoryTask extends Task<Void> implements ICursor, ITreeItemMethods {
+public class NewDirectoryTask extends Task<Void> implements IBindings, ITreeItemMethods {
 
 	private CTree cTree;
 	private PathTreeCell pathTreeCell;

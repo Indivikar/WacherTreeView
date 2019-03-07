@@ -3,7 +3,7 @@ package app;
 import java.io.File;
 
 import app.controller.CTree;
-import app.interfaces.ICursor;
+import app.interfaces.IBindings;
 import app.interfaces.ILockDir;
 import app.loadTime.LoadTime;
 import javafx.application.Application;
@@ -19,7 +19,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
 
-public class StartWacherDemo extends Application implements ILockDir, ICursor {
+public class StartWacherDemo extends Application implements ILockDir, IBindings {
 
 	// Config
 	boolean startLoadTimeList = false;

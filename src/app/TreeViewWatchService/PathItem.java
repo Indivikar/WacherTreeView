@@ -15,8 +15,10 @@ public class PathItem {
     private int level;    
     private int row;
     private boolean isLocked;
+    private boolean isRefreshTree;
     private SimpleIntegerProperty rowProp = new SimpleIntegerProperty();
     private SimpleBooleanProperty isLockedProp = new SimpleBooleanProperty();
+    private SimpleBooleanProperty isRefreshTreeProp = new SimpleBooleanProperty();
     
     public PathItem(Path path, boolean isDirectoryItem) {
     	this.path = path;
@@ -32,7 +34,9 @@ public class PathItem {
     public int getRow() {return row;}
 	public SimpleIntegerProperty getRowProp() {return rowProp;}	
 	public boolean isLocked() {return isLocked;}
+	public boolean isRefreshTree() {return isRefreshTree;}
 	public SimpleBooleanProperty getIsLockedProp() {return isLockedProp;}
+	public SimpleBooleanProperty getIsRefreshTreeProp() {return isRefreshTreeProp;}
 
 	// Setter
 	public void setPath(Path path) {this.path = path;}
@@ -49,6 +53,11 @@ public class PathItem {
 		this.isLockedProp.setValue(isLocked);
 	}
 
+    public void setRefreshTree(boolean isRefreshTree) {
+		this.isRefreshTree = isRefreshTree;
+		this.isRefreshTreeProp.setValue(isRefreshTree);
+	}
+    
 	@Override
     public String toString() {
         if (path.getFileName() == null) {

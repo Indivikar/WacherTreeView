@@ -17,7 +17,7 @@ import java.util.List;
 import app.controller.CTree;
 import app.db.PathList;
 import app.functions.LoadTime;
-import app.interfaces.ICursor;
+import app.interfaces.IBindings;
 import app.interfaces.ILockDir;
 import app.interfaces.ISaveExpandedItems;
 import app.interfaces.ISaveSelectedItems;
@@ -27,12 +27,14 @@ import app.loadTime.LoadTime.LoadTimeOperation;
 import app.models.ItemsDB;
 import app.sort.WinExplorerComparatorPath;
 import app.threads.SortWinExplorerTask;
+import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Service;
 import javafx.scene.control.TreeItem;
 import javafx.util.Pair;
 
-public class CreateTree implements ITreeItemMethods, ISaveExpandedItems, ISaveSelectedItems, ICursor, ITreeUpdateHandler, ILockDir {
+public class CreateTree implements ITreeItemMethods, ISaveExpandedItems, ISaveSelectedItems, IBindings, ITreeUpdateHandler, ILockDir {
 	
 	private CTree cTree;
 	
@@ -66,6 +68,7 @@ public class CreateTree implements ITreeItemMethods, ISaveExpandedItems, ISaveSe
 			return;
 		}
 	
+		bindMenuItemsReload(cTree, CTree.getLoadDBService());
 		bindUIandService(cTree.getTree(), CTree.getLoadDBService());
 		CTree.getLoadDBService().setOnSucceeded(e -> {
 				System.out.println("updatePathListFormDB");
@@ -90,6 +93,17 @@ public class CreateTree implements ITreeItemMethods, ISaveExpandedItems, ISaveSe
 //		long runningTime = new Date().getTime() - start;		
 //		CTree.listLoadTime.add(new LoadTimeOperation("updatePathList()", runningTime + "", pathFileDB));
 	}
+	
+//	public void bindMenuItemsReload(Service<?> service) {
+//
+//        Bindings
+//        .when(service.runningProperty())
+//            .then(cTree.getCell().getCellContextMenu().setMenuItemsReload(true))
+//            .otherwise(cTree.getCell().getCellContextMenu().setMenuItemsReload(true));
+//		
+//	}
+	
+
 	
 	public void updatePathListFormItem(Path target) {
 

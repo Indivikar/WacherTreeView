@@ -77,6 +77,8 @@ public class PathTreeCell extends TreeCell<PathItem> implements ISuffix, ISystem
             setContextMenu(null);           
         } else {
 
+//        		getTreeItem().getValue().setRefreshTree(cTree.getPropDisBoolOpen().get());
+        	
         		setLevelOneItem(getTreeItem());
 
         		item.setRow(getIndex());
@@ -125,8 +127,9 @@ public class PathTreeCell extends TreeCell<PathItem> implements ISuffix, ISystem
 		};
 		
 
-		cTree.getTree().getRoot().getValue().getIsRefreshTreeProp().addListener((var, oldVar, newVar) -> {		
-//			System.err.println("Root Item Refresh Tree 1");
+//		cTree.getTree().getRoot().getValue().getIsRefreshTreeProp().addListener((var, oldVar, newVar) -> {		
+		cTree.getPropBoolRefresh().addListener((var, oldVar, newVar) -> {	
+//			System.err.println("Root Item Refresh Tree 1 " + cTree.getPropDisBoolOpen().get());
 
 			if (newVar) {				
 				// Context Menu deaktivieren, bei refresh Tree

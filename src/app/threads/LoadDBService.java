@@ -11,6 +11,8 @@ import app.TreeViewWatchService.PathTreeCell;
 import app.TreeViewWatchService.contextMenu.CellContextMenu;
 import app.controller.CTree;
 import app.functions.LoadTime;
+import app.interfaces.IBindings;
+import app.interfaces.ILockDir;
 import app.models.ItemsDB;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -19,12 +21,16 @@ import javafx.concurrent.Task;
 import javafx.scene.Cursor;
 import javafx.stage.Stage;
 
-public class LoadDBService extends Service<ObservableList<ItemsDB>>{
+public class LoadDBService extends Service<ObservableList<ItemsDB>> implements ILockDir, IBindings{
 
 	private File pathFileDB;
 	private CTree cTree;
 	
 	private ObservableList<ItemsDB> fileList = FXCollections.observableArrayList();	
+	
+	// Properties
+	private boolean waitIfLocked; // soll vor dem Update geschaut werden, ob ein Ordner gelockt ist?
+	
 	
 	public LoadDBService(CTree cTree, String pathFileDB) {
 		this.cTree = cTree;
@@ -46,14 +52,14 @@ public class LoadDBService extends Service<ObservableList<ItemsDB>>{
 	@Override
 	protected void scheduled() {
 		System.out.println("scheduled()");
-		cTree.getTree().getScene().setCursor(Cursor.WAIT);
+//		cTree.getTree().getScene().setCursor(Cursor.WAIT);
 //		cellContextMenuBinding(true);
 	}
 	
 	@Override
 	protected void succeeded() {
 		System.out.println("succeeded()");
-		cTree.getTree().getScene().setCursor(Cursor.DEFAULT);	
+//		cTree.getTree().getScene().setCursor(Cursor.DEFAULT);	
 //		cellContextMenuBinding(false);
 		reset();
 		
@@ -72,8 +78,16 @@ public class LoadDBService extends Service<ObservableList<ItemsDB>>{
              @Override
              protected ObservableList<ItemsDB> call() throws Exception {
                  
-            	 System.out.println("Start LoadDBService");
+            	System.out.println("Start LoadDBService");
             	 
+         		while (isSomeDirLockedOnServer(cTree) && waitIfLocked) {	
+        			System.out.println("es sind noch Ordner gelockt -> mit update warten");
+        			sleep(1000);
+        		}
+            	 
+        		bindMenuItemsReload(cTree, CTree.getLoadDBService());
+        		bindUIandService(cTree.getTree(), CTree.getLoadDBService());
+         		
             	LoadTime.Start();
             	 
             	Thread.sleep(2000);
@@ -116,6 +130,12 @@ public class LoadDBService extends Service<ObservableList<ItemsDB>>{
              }
          };
 	}
+
+	
+	// Setter
+	public void setWaitIfLocked(boolean waitIfLocked) {this.waitIfLocked = waitIfLocked;}
+	
+	
 	
 //	private void cellContextMenuBinding(boolean wert) {
 //		PathTreeCell cell = cTree.getCell();

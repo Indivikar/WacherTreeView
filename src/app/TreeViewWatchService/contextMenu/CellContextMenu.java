@@ -41,6 +41,7 @@ public class CellContextMenu extends ContextMenu {
 	private SimpleBooleanProperty propDisBoolRefreshTree;
 	
 	public CellContextMenu(PathTreeCell pathTreeCell, Stage primaryStage, CTree cTree, ObservableList<String> listAllLockedFiles) {
+//		System.out.println("init CellContextMenu");
 		this.cTree = cTree;
 		this.propDisBoolOpen = cTree.getPropDisBoolOpen();
 		this.propDisBoolNewFile = cTree.getPropDisBoolNewFile();
@@ -65,7 +66,6 @@ public class CellContextMenu extends ContextMenu {
 					cTree.getTree().getSelectionModel().select(row);
 				}
 			}
-
 		});
 		
 		pathTreeCell.set(this);
@@ -92,6 +92,7 @@ public class CellContextMenu extends ContextMenu {
 							menuItemDeleteItem,
 							separatorMenuItem_2,
 							menuItemRefreshTree);	
+		
 	}
 
 	private void bindings() {

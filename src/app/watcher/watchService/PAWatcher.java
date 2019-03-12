@@ -7,6 +7,8 @@ import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 
 import app.controller.CTree;
+import app.interfaces.ILockDir;
+import app.interfaces.ITreeUpdateHandler;
 import javafx.application.Platform;
 
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
@@ -15,7 +17,7 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 import java.io.File;
 import java.io.IOException;
 
-public class PAWatcher {
+public class PAWatcher implements ITreeUpdateHandler, ILockDir {
 
 	private CTree cTree;
 	
@@ -150,12 +152,14 @@ public class PAWatcher {
 	 * Static method invoked for triggering watch service for existing files in
 	 * the input directories
 	 */
-	private static void triggerWatchService(File dir) throws IOException {
+	private void triggerWatchService(File dir) throws IOException {
 		File[] dirContent = dir.listFiles();
 		for (File f : dirContent) {
-			if (!f.isDirectory()) {
+			// nur ausführen, wenn kein Ordner gelockt ist
+			if (!f.isDirectory() && !isSomeDirLockedOnServer(cTree)) {
 //				log.debug("Processing existing file: " + f.getName());
-				System.out.println("Processing existing file: " + f.getName());
+				System.out.println("PAWatcher anstossen, um die DB zu aktualisieren: " + f.getName());
+				// setzt die Zeit neu, wann die DB das letzte mal geändert wurde und stösst den Watcher an, das er ein Update machen soll
 				f.setLastModified(f.lastModified());
 			}
 		}
@@ -198,9 +202,19 @@ public class PAWatcher {
 //							log.info("FILE_INPUT_DIRECTORY: " +  event.context());
 							System.out.println("FILE_INPUT_DIRECTORY: " +  event.context() + " -> " + event.kind());
 							
+							
+//							if (event.kind().name().equals("ENTRY_CREATE")) {	
+//								if (cTree.getFileNameDB().equalsIgnoreCase(event.context().toString())) {
+//									startUpdate();
+//								}
+//							}
+							
 							if (event.kind().name().equals("ENTRY_MODIFY")) {
-								
-								startAction(event.context().toString());
+								if (cTree.getFileNameDB().equalsIgnoreCase(event.context().toString())) {
+									Platform.runLater(() -> {
+										cTree.refreshTree(true);
+									});
+								}
 							}
 							
 							/**
@@ -220,20 +234,7 @@ public class PAWatcher {
 		}
 	}
 
-	private void startAction(String string) {	
-		if (cTree.getFileNameDB().equalsIgnoreCase(string)) {
-			System.out.println("Start Änderung -> " + cTree.getFileNameDB());
-//			if (!addTreeItems.isRunning()) {
-//				new Thread(addTreeItems).start();
-				Platform.runLater(() -> {
-//					new Thread(addTreeItems).start();
-					cTree.refreshTree();
-				});
-				
-//			}
 
-		}
-	}
 	
 	// Getter
 //	public AddTreeItems getAddTreeItems() {return addTreeItems;}

@@ -57,19 +57,22 @@ public class CreateTree implements ITreeItemMethods, ISaveExpandedItems, ISaveSe
 		this.pathList = new PathList(pathFileDB);
 	}
 
-	public void updatePathListFormDB(TreeItem<PathItem> mainItem, boolean clearTree, boolean saveSelections) {	
-		updatePathListFormDB(mainItem, clearTree, saveSelections, false);
+	public void updatePathListFormDB(TreeItem<PathItem> mainItem, boolean clearTree, boolean saveSelections, boolean waitIfLocked) {	
+		updatePathListFormDB(mainItem, clearTree, saveSelections, waitIfLocked, false);
 	}
 	
-	public void updatePathListFormDB(TreeItem<PathItem> mainItem, boolean clearTree, boolean saveSelections, boolean cursorWait) {		
+	
+	
+	public void updatePathListFormDB(TreeItem<PathItem> mainItem, boolean clearTree, boolean saveSelections, boolean waitIfLocked, boolean cursorWait) {		
 		
 		if (!wantUpdateTree) {
 			wantUpdateTree = true;
 			return;
 		}
 	
-		bindMenuItemsReload(cTree, CTree.getLoadDBService());
-		bindUIandService(cTree.getTree(), CTree.getLoadDBService());
+//		bindMenuItemsReload(cTree, CTree.getLoadDBService());
+//		bindUIandService(cTree.getTree(), CTree.getLoadDBService());
+		CTree.getLoadDBService().setWaitIfLocked(waitIfLocked);
 		CTree.getLoadDBService().setOnSucceeded(e -> {
 				System.out.println("updatePathListFormDB");
 				this.paths = CTree.getLoadDBService().getValue();
@@ -78,6 +81,9 @@ public class CreateTree implements ITreeItemMethods, ISaveExpandedItems, ISaveSe
 			
 		        // delete all lockfiles(folder.lock) that are no longer needed
 				cTree.getLockFileHandler().deleteAllLockfiles(cTree.getTree().getRoot());
+				
+				// den TreeView auf disable(false) setzen nach dem laden
+				cTree.getTree().setDisable(false);
 		});
 		
 		

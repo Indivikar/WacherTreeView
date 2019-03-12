@@ -66,6 +66,7 @@ import javafx.fxml.Initializable;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
@@ -78,10 +79,14 @@ import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import javafx.util.Pair;
+import jfxtras.styles.jmetro8.JMetro;
+import jfxtras.styles.jmetro8.JMetro.Style;
 
 public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpandedItems, IBindings, ILockDir, ITreeUpdateHandler {
 
@@ -101,9 +106,8 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 	private StartWacherDemo startWacherDemo;
 	private Stage primaryStage;
 
-	// Services
+	// Services & Tasks
 	private static LoadDBService loadDBService;
-	
 	
 	// Klassen
 //	private static PathList pathList;
@@ -116,13 +120,15 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 	// Listeners
 	private ChildrenChangedListener ChildrenChangedListener = new ChildrenChangedListener(this);
 	
+	private SimpleBooleanProperty propBoolRefresh = new SimpleBooleanProperty(false);
+	
 	// ContextMenu Disable Properties -> darf nicht in denn Klassen stehen, die neu geladen werden
-	private SimpleBooleanProperty propDisBoolOpen = new SimpleBooleanProperty();
-	private SimpleBooleanProperty propDisBoolNewFile = new SimpleBooleanProperty();
-	private SimpleBooleanProperty propDisBoolNewDirectory = new SimpleBooleanProperty();
-	private SimpleBooleanProperty propDisBoolRename = new SimpleBooleanProperty();
-	private SimpleBooleanProperty propDisBoolDeleteItem = new SimpleBooleanProperty();
-	private SimpleBooleanProperty propDisBoolRefreshTree = new SimpleBooleanProperty();
+	private SimpleBooleanProperty propDisBoolOpen = new SimpleBooleanProperty(false);
+	private SimpleBooleanProperty propDisBoolNewFile = new SimpleBooleanProperty(false);
+	private SimpleBooleanProperty propDisBoolNewDirectory = new SimpleBooleanProperty(false);
+	private SimpleBooleanProperty propDisBoolRename = new SimpleBooleanProperty(false);
+	private SimpleBooleanProperty propDisBoolDeleteItem = new SimpleBooleanProperty(false);
+	private SimpleBooleanProperty propDisBoolRefreshTree = new SimpleBooleanProperty(false);
 	
 	// Drag N Drop 
 	private SimpleBooleanProperty propBoolBlockDragNDrop = new SimpleBooleanProperty();
@@ -151,6 +157,9 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 	@FXML private TableColumn<ModelFileChanges, String> columnFile;
 	@FXML private TableColumn<ModelFileChanges, String> columnTime;
 	
+	@FXML private ProgressBar progressBarTreeView;
+	@FXML private WebView webViewLoading;
+	
 	@FXML private Button buttonNow;
 //	@FXML private Button buttonLater;
 	
@@ -175,8 +184,15 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 //		textFieldRootDirectory.setText("H:\\Test");
 		textFieldRootDirectory.setText(mainDirectory);
 
+//		bindTreeViewAndProgressBar(tree, progressBarTreeView);
+		bindTreeViewAndWebView(tree, webViewLoading);
+		
+//        JMetro jMetro = new JMetro(Style.LIGHT);
+//        jMetro.applyTheme(progressBarTreeView);
+		
 		setButtonAction();
 		setPropUpdateMessage();
+		addWebViewLoadingProps();
 		
 //		tree.addEventHandler(MouseEvent.MOUSE_RELEASED, event ->  {
 //			System.out.println("     CTree -> set Mouse Released");
@@ -184,6 +200,14 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 		
 	}
 
+	private void addWebViewLoadingProps() {
+		final WebEngine webEngine = webViewLoading.getEngine();
+        URL url = StartWacherDemo.class.getResource("view/html/loading/load_animation.htm");
+		System.out.println("Local URL: " + url.toString());
+           
+		webEngine.load(url.toString());
+	}
+	
 	private void setPropUpdateMessage() {
 		vBoxMessage.setVisible(false);
 	}
@@ -218,7 +242,8 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 		
 		buttonReloadTree.setOnAction(event -> {		
 //			this.createTree.addAllExpandedItems();
-//			tree.getRoot().getChildren().clear();
+			tree.getRoot().getChildren().clear();
+			showWebViewLoading();
 			refreshServerPathList(this);
 //			refreshTree();
 			
@@ -245,10 +270,12 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 		// Drag N Drop
 //		propBoolBlockDragNDrop.setValue(wert);
 		
-		
+
+		showWebViewLoading();
 		
 		if (count >= 2) {
-			tree.getRoot().getValue().setRefreshTree(wert);
+			propBoolRefresh.setValue(wert);
+//			tree.getRoot().getValue().setRefreshTree(wert);
 			
 //			cell.setOnDragDetected(null);
 //			cell.setOnDragOver(null);
@@ -264,6 +291,18 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 		return false;
 	}
 	
+	public void showWebViewLoading() {
+		// wenn Fehlermeldung "tree.getRoot().getChildren() == null" dann "tree.setDisable(true);" und "webViewLoading" einblenden
+		try {
+			int sizeRoot = tree.getRoot().getChildren().size();	
+			if (sizeRoot == 0) {
+				tree.setDisable(true);
+			}
+		} catch (Exception e) {
+			tree.setDisable(true);
+		}
+	}
+	
 	
 	public void setMenuItemsReload(boolean wert) {
 		System.out.println("     setMenuItemsReload -> " + wert);
@@ -275,20 +314,20 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 		propDisBoolRefreshTree.setValue(wert);
 	}
 	
-	public void refreshTree() {
+	public void refreshTree(boolean waitIfLocked) {
 		System.out.println("----- refreshTree -----");	
 //		cell.getCellContextMenu().serviceReloadBinding(true);
 //		propDisBoolNewFile.setValue(true);
 //		lockDir(this, getTree().getRoot());
-		this.createTree.updatePathListFormDB(treeItem, true, true);
+		this.createTree.updatePathListFormDB(treeItem, true, true, waitIfLocked);
 //		this.createTree.startCreateTree(treeItem, true, true);
 	}
 
-	public void refreshTree(boolean cursorWait) {
+	public void refreshTree(boolean waitIfLocked, boolean cursorWait) {
 			System.out.println("----- refreshTree -----");
 //			propDisBoolNewFile.setValue(true);
 //			lockDir(this, getTree().getRoot());
-			this.createTree.updatePathListFormDB(treeItem, true, true, true);
+			this.createTree.updatePathListFormDB(treeItem, true, true, waitIfLocked, true);
 //			this.createTree.startCreateTree(treeItem, true, true);
 	}
 	
@@ -320,7 +359,7 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 //        new Thread(threadAddItems).start();
         createTree = new CreateTree(pathFileDB, this);
         
-        createTree.updatePathListFormDB(treeItem, false, false);
+        createTree.updatePathListFormDB(treeItem, false, false, false);
 //        updateTree();
 
 //        createTree.startCreateTree(treeItem, false, false);
@@ -519,9 +558,8 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 
     // Getter    
     
-    // Services
+    // Services & Tasks
     public static LoadDBService getLoadDBService() {return loadDBService;}
-    
     
 //    public static String getLockFileName() {return lockFileName;}
 	public String getDrive() {return drive;}
@@ -551,6 +589,8 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 	
 	public ObservableList<TreeItem<PathItem>> getSelectedItems() {return selectedItems;}
 
+	public SimpleBooleanProperty getPropBoolRefresh() {return propBoolRefresh;}
+	
 	// ContextMenu Disable Properties
 	public SimpleBooleanProperty getPropDisBoolOpen() {return propDisBoolOpen;}
 	public SimpleBooleanProperty getPropDisBoolNewFile() {return propDisBoolNewFile;}
@@ -572,7 +612,7 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 		this.primaryStage = primaryStage;		
 	
 		loadDBService = new LoadDBService(this, pathFileDB);
-
+		
 		loadTree();
 		
 //		try {

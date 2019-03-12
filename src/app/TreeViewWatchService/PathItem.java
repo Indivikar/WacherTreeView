@@ -36,7 +36,7 @@ public class PathItem {
 	public boolean isLocked() {return isLocked;}
 	public boolean isRefreshTree() {return isRefreshTree;}
 	public SimpleBooleanProperty getIsLockedProp() {return isLockedProp;}
-	public SimpleBooleanProperty getIsRefreshTreeProp() {return isRefreshTreeProp;}
+//	public SimpleBooleanProperty getIsRefreshTreeProp() {return isRefreshTreeProp;}
 
 	// Setter
 	public void setPath(Path path) {this.path = path;}
@@ -53,10 +53,10 @@ public class PathItem {
 		this.isLockedProp.setValue(isLocked);
 	}
 
-    public void setRefreshTree(boolean isRefreshTree) {
-		this.isRefreshTree = isRefreshTree;
-		this.isRefreshTreeProp.setValue(isRefreshTree);
-	}
+//    public void setRefreshTree(boolean isRefreshTree) {
+//		this.isRefreshTree = isRefreshTree;
+//		this.isRefreshTreeProp.setValue(isRefreshTree);
+//	}
     
 	@Override
     public String toString() {

@@ -17,6 +17,7 @@ import app.TreeViewWatchService.PathItem;
 import app.TreeViewWatchService.PathTreeCell;
 import app.controller.CTree;
 import app.functions.LockFileHandler;
+import javafx.collections.ObservableList;
 import javafx.scene.control.TreeItem;
 
 public interface ILockDir {
@@ -212,6 +213,34 @@ public interface ILockDir {
 			return false;
 		}
 	
+	   public default boolean isSomeDirLockedOnServer(CTree cTree) {
+		   	// auf dem Server nach Lockdatei schauen, ist irgendein Ordner gelockt?
+		   File dir = cTree.getTree().getRoot().getValue().getPath().toFile();
+			File[] files = dir.listFiles();
+			if (files != null) { 
+				for (int i = 0; i < files.length; i++) {	
+					File f = new File(files[i] + File.separator + CTree.lockFileName);
+//					System.out.println(f);
+					if (!f.isDirectory() && f.exists()) {
+//						System.out.println("locked -> " + dir);
+						return true;					
+					}
+				}				
+			}
+			return false;
+		}
+	   
+	   public default boolean isSomeDirLockedOnTreeView(CTree cTree) {
+		   	// im TreeView nach gelockten levelOneItems schauen, ist irgendein Ordner gelockt?
+		   ObservableList<TreeItem<PathItem>> rootChildren = cTree.getTree().getRoot().getChildren();
+		   for (TreeItem<PathItem> levelOneItem : rootChildren) {
+			   if (levelOneItem.getValue().isLocked()) {
+				   return true;
+			   }
+		   }		   
+			return false;
+		}
+	   
 	   public default void changeIconWhenFolderLocked(TreeItem<PathItem> rootItem) {
 		   System.out.println("changeIconWhenFolderLocked: " + rootItem.getChildren().size());
 		   for (TreeItem<PathItem> item : rootItem.getChildren()) {

@@ -17,6 +17,8 @@ import javafx.scene.Scene;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
+import jfxtras.styles.jmetro8.JMetro;
+import jfxtras.styles.jmetro8.JMetro.Style;
 
 
 public class StartWacherDemo extends Application implements ILockDir, IBindings {
@@ -42,7 +44,7 @@ public class StartWacherDemo extends Application implements ILockDir, IBindings 
 		
 		FXMLLoader loader = new FXMLLoader(StartWacherDemo.class.getResource("view/fxml/tree.fxml"));			
 		AnchorPane root = loader.load();
-		
+				
 		Scene scene = new Scene(root);
 		
 		addController(primaryStage, loader);		

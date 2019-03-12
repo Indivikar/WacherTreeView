@@ -1,0 +1,88 @@
+body {
+  background-color: rgba(0, 0, 0, 0.8);
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+.shadow {
+	padding: -10px 0px 0px -10px; 
+	height: 80px;
+  	width: 80px;
+	border: 1px solid rgba(255, 255, 255, 0.8);
+  -webkit-box-shadow: 0px 0px 2px -1px rgba(0,0,0,0.62);  /* Safari 3-4, iOS 4.0.2 - 4.2, Android 2.3+ */
+  -moz-box-shadow:    0px 0px 2px -1px rgba(0,0,0,0.62);  /* Firefox 3.5 - 3.6 */
+  box-shadow:         0px 0px 2px -1px rgba(0,0,0,0.62);  /* Opera 10.5, IE 9, Firefox 4+, Chrome 6+, iOS 5 */
+}
+
+.border {
+
+}
+
+.loading,
+.loading::before,
+.loading::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-left-color: rgba(255, 255, 255, 0.6);
+  -webkit-border-radius: 999px;
+  -moz-border-radius: 999px;
+  border-radius: 999px;
+}
+
+.loading {
+  margin: -20px 0 0 -20px;
+  height: 50px;
+  width: 50px; 
+  -webkit-animation: animation-rotate 1000ms linear infinite;
+  -moz-animation: animation-rotate 1000ms linear infinite;
+  -o-animation: animation-rotate 1000ms linear infinite;
+  animation: animation-rotate 1000ms linear infinite;
+}
+
+.loading::before {
+  content: "";
+  margin: -23px 0 0 -23px;
+  height: 44px;
+  width: 44px;
+  -webkit-animation: animation-rotate 1000ms linear infinite;
+  -moz-animation: animation-rotate 1000ms linear infinite;
+  -o-animation: animation-rotate 1000ms linear infinite;
+  animation: animation-rotate 1000ms linear infinite;
+}
+
+.loading::after {
+  content: "";
+  margin: -29px 0 0 -29px;
+  height: 56px;
+  width: 56px;
+  -webkit-animation: animation-rotate 2000ms linear infinite;
+  -moz-animation: animation-rotate 2000ms linear infinite;
+  -o-animation: animation-rotate 2000ms linear infinite;
+  animation: animation-rotate 2000ms linear infinite;
+}
+
+@-webkit-keyframes animation-rotate {
+  100% {
+    -webkit-transform: rotate(360deg);
+  }
+}
+
+@-moz-keyframes animation-rotate {
+  100% {
+    -moz-transform: rotate(360deg);
+  }
+}
+
+@-o-keyframes animation-rotate {
+  100% {
+    -o-transform: rotate(360deg);
+  }
+}
+
+@keyframes animation-rotate {
+  100% {
+    transform: rotate(360deg);
+  }
+}

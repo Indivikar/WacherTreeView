@@ -6,5 +6,10 @@
 	<classpathentry kind="src" path="threads"/>
 	<classpathentry kind="lib" path="lib/commons-io-2.6/commons-io-2.6.jar"/>
 	<classpathentry kind="lib" path="lib/getSystemIcons/jsdg-stubs-jre1.5.jar"/>
+	<classpathentry kind="lib" path="lib/JMetro/jmetro-5.2.jar" sourcepath="lib/JMetro/jmetro-5.2-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:file:/H:/Apps/Java/Workspace2018-12/WacherTreeView/lib/JMetro/jmetro-5.2-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

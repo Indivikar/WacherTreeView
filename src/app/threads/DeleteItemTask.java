@@ -75,7 +75,7 @@ public class DeleteItemTask extends Task<Void> implements ISearchLockedFiles, IB
 			  copyDialogProgress = new CopyDialogProgress(deleteItemTask);
 			  copyDialogProgress.activateProgressBar(this);
     	  
-			  bindUIandService(copyDialogProgress.getDialogStage(), this);
+			  bindSceneAndService(copyDialogProgress.getDialogStage(), this);
 		  }
 
 	}

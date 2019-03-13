@@ -16,7 +16,7 @@ import javafx.stage.Stage;
 
 public interface IBindings {
 
-    public default void bindUIandService(Stage node, Service<?> service) {
+    public default void bindSceneAndService(Stage node, Service<?> service) {
     	node.getScene()
                 .getRoot()
                 .cursorProperty()
@@ -28,7 +28,7 @@ public interface IBindings {
                 );
     }
 	
-    public default void bindUIandService(Node node, Service<?> service) {
+    public default void bindSceneAndService(Node node, Service<?> service) {
     	Platform.runLater(() -> {
     		node.getScene()
                 .getRoot()
@@ -42,7 +42,35 @@ public interface IBindings {
     	});   	
     }
     
-    public default void bindUIandService(Stage node, Task<?> task) {
+    public default void bindNodeAndService(Node node, Service<?> service) {
+    	Platform.runLater(() -> {
+    			node
+                .cursorProperty()
+                .bind(
+                        Bindings
+                            .when(service.runningProperty())
+                                .then(Cursor.WAIT)
+                                .otherwise(Cursor.DEFAULT)
+                );
+    	});   	
+    }
+    
+    public default void bindNodeAndService(Node node, Task<?> task) {
+    	Platform.runLater(() -> {
+    			node
+                .cursorProperty()
+                .bind(
+                        Bindings
+                            .when(task.runningProperty())
+                                .then(Cursor.WAIT)
+                                .otherwise(Cursor.DEFAULT)
+                );
+    	});   	
+    }
+    
+    
+    
+    public default void bindSceneAndService(Stage node, Task<?> task) {
     	node.getScene()
                 .getRoot()
                 .cursorProperty()
@@ -54,7 +82,7 @@ public interface IBindings {
                 );
     }
 	
-    public default void bindUIandService(Node node, Task<?> task) {
+    public default void bindSceneAndService(Node node, Task<?> task) {
     	node.getScene()
                 .getRoot()
                 .cursorProperty()

@@ -96,12 +96,12 @@ public class CRename implements Initializable, ISuffix, IBindings, ITreeItemMeth
 //	        unLockTaskask.setOnSucceeded(evt -> {
 			System.err.println("Rename61: " + cellTreeItem.getValue().getPath());
 		        RenameTask renameTask = new RenameTask(this, cTree, pathTreeCell, cellTreeItem);		
-				bindUIandService(mainStage, renameTask);
+		        bindNodeAndService(cTree.getTree(), renameTask);
 				
 				renameTask.setOnSucceeded(ev -> {
 					
 			        SortWinExplorerTask task = new SortWinExplorerTask(pathTreeCell.getcTree(), pathTreeCell.getTreeItem().getParent());
-			        bindUIandService(mainStage, task);
+			        bindNodeAndService(cTree.getTree(), task);
 			        new Thread(task).start();
 			        task.setOnSucceeded(event -> {
 			        	selectItemSearchInTreeView(pathTreeCell.getTreeView(), pathTreeCell.getTreeItem(), renameTask.getNewFile().getAbsolutePath());		   		        	

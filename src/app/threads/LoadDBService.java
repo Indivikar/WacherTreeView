@@ -86,8 +86,10 @@ public class LoadDBService extends Service<ObservableList<ItemsDB>> implements I
         		}
             	 
         		bindMenuItemsReload(cTree, CTree.getLoadDBService());
-        		bindUIandService(cTree.getTree(), CTree.getLoadDBService());
-         		
+        		bindNodeAndService(cTree.getTree(), CTree.getLoadDBService());
+        		
+//        		System.out.println("Start LoadDBService -> " + cTree.getTree().getScene().getRoot().cursorProperty().get().equals(Cursor.WAIT));
+        		
             	LoadTime.Start();
             	 
             	Thread.sleep(2000);

@@ -17,8 +17,7 @@ import javafx.scene.Scene;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
-import jfxtras.styles.jmetro8.JMetro;
-import jfxtras.styles.jmetro8.JMetro.Style;
+
 
 
 public class StartWacherDemo extends Application implements ILockDir, IBindings {
@@ -82,7 +81,7 @@ public class StartWacherDemo extends Application implements ILockDir, IBindings 
 		};
 		
 		Platform.runLater(() -> {
-			bindUIandService(primaryStage, task);
+			bindSceneAndService(primaryStage, task);
 			new Thread(task).start();
 		});
 	}

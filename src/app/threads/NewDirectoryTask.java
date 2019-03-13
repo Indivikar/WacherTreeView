@@ -66,7 +66,7 @@ public class NewDirectoryTask extends Task<Void> implements IBindings, ITreeItem
 	    	System.out.println("path___: " + pathTreeCell.getTreeView().getRoot().getValue().getPath());
 	    	SortWinExplorerTask sortWinExplorerTask = new SortWinExplorerTask(cTree, null, parentItem, newDir.toString());
 //	    	SortWinExplorerTask sortWinExplorerTask = new SortWinExplorerTask(cTree, null, pathTreeCell.getTreeView().getRoot(), newDir.toString());
-	    	bindUIandService(cTree.getPrimaryStage(), sortWinExplorerTask);
+	    	bindNodeAndService(cTree.getTree(), sortWinExplorerTask);
 	    	new Thread(sortWinExplorerTask).start();
     	}
     	

@@ -35,7 +35,7 @@ public class MenuItemNewDirectory extends MenuItem implements ISaveExpandedItems
 	        		  System.out.println(pathTreeCell.getTreeItem().getValue().getPath().toString());	        		  
 		        	  wantUpdateTree(false);
 		        	  NewDirectoryTask newDirectoryTask = new NewDirectoryTask(cTree, pathTreeCell, pathTreeCell.getTreeItem());
-		        	  bindUIandService(primaryStage, newDirectoryTask);
+		        	  bindNodeAndService(cTree.getTree(), newDirectoryTask);
 		        	  new Thread(newDirectoryTask).start();
 	        	  }
 	        	  	              

@@ -5,6 +5,7 @@ import app.TreeViewWatchService.PathTreeCell;
 import app.controller.CTree;
 import app.interfaces.ILockDir;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ObservableList;
@@ -33,26 +34,36 @@ public class CellContextMenu extends ContextMenu {
 	
 	private SimpleBooleanProperty serviceReload = new SimpleBooleanProperty(false);
 	
-	private SimpleBooleanProperty propDisBoolOpen;
-	private SimpleBooleanProperty propDisBoolNewFile;
-	private SimpleBooleanProperty propDisBoolNewDirectory;
-	private SimpleBooleanProperty propDisBoolRename;
-	private SimpleBooleanProperty propDisBoolDeleteItem;
-	private SimpleBooleanProperty propDisBoolRefreshTree;
+	private SimpleBooleanProperty propDisBoolOpen = new SimpleBooleanProperty(false);
+	private SimpleBooleanProperty propDisBoolNewFile = new SimpleBooleanProperty(false);
+	private SimpleBooleanProperty propDisBoolNewDirectory = new SimpleBooleanProperty(false);
+	private SimpleBooleanProperty propDisBoolRename = new SimpleBooleanProperty(false);
+	private SimpleBooleanProperty propDisBoolDeleteItem = new SimpleBooleanProperty(false);
+	private SimpleBooleanProperty propDisBoolRefreshTree = new SimpleBooleanProperty(false);
 	
 	public CellContextMenu(PathTreeCell pathTreeCell, Stage primaryStage, CTree cTree, ObservableList<String> listAllLockedFiles) {
 //		System.out.println("init CellContextMenu");
 		this.cTree = cTree;
-		this.propDisBoolOpen = cTree.getPropDisBoolOpen();
-		this.propDisBoolNewFile = cTree.getPropDisBoolNewFile();
-		this.propDisBoolNewDirectory = cTree.getPropDisBoolNewDirectory();
-		this.propDisBoolRename = cTree.getPropDisBoolRename();
-		this.propDisBoolDeleteItem = cTree.getPropDisBoolDeleteItem();
-		this.propDisBoolRefreshTree = cTree.getPropDisBoolRefreshTree();
+//		this.propDisBoolOpen = cTree.getPropDisBoolOpen();
+//		this.propDisBoolNewFile = cTree.getPropDisBoolNewFile();
+//		this.propDisBoolNewDirectory = cTree.getPropDisBoolNewDirectory();
+//		this.propDisBoolRename = cTree.getPropDisBoolRename();
+//		this.propDisBoolDeleteItem = cTree.getPropDisBoolDeleteItem();
+//		this.propDisBoolRefreshTree = cTree.getPropDisBoolRefreshTree();
 		
+		
+		
+
+				
 		showingProperty().addListener((ov, oldVal, newVal) -> {
 			// Alle Selected Items Speichern
 			cTree.saveSelectedItems();
+			
+			
+			
+			if (cTree.getPropBoolRefresh().get()) {
+				setMenuItemsReload(true);
+			}
 			
 			// wurde eingebaut, damit die celle selected wird, wo ein rechts-Klick auf den Pfeil vom Node gemacht wird
 			TreeItem<PathItem> selItem = cTree.getTree().getSelectionModel().getSelectedItem();
@@ -96,12 +107,25 @@ public class CellContextMenu extends ContextMenu {
 	}
 
 	private void bindings() {
-		menuItemOpen.disableProperty().bind(propDisBoolOpen);
-		menuItemNewFile.disableProperty().bind(propDisBoolNewFile);
-		menuItemNewDirectory.disableProperty().bind(propDisBoolNewDirectory);
-		menuItemRename.disableProperty().bind(propDisBoolRename);
-		menuItemDeleteItem.disableProperty().bind(propDisBoolDeleteItem);
-		menuItemRefreshTree.disableProperty().bind(propDisBoolRefreshTree);
+		
+		// wenn der Cursor auf WAIT gesetzt wird, dann context-Items deaktivieren
+//		BooleanBinding booleanBindingCursor = cTree.getTree().getScene().getRoot().cursorProperty().isEqualTo(Cursor.WAIT); // Scene binding
+		BooleanBinding booleanBindingCursor = cTree.getTree().cursorProperty().isEqualTo(Cursor.WAIT); // TreeView binding
+		
+		menuItemOpen.disableProperty().bind(propDisBoolOpen.or(booleanBindingCursor));
+		menuItemNewFile.disableProperty().bind(propDisBoolNewFile.or(booleanBindingCursor));
+		menuItemNewDirectory.disableProperty().bind(propDisBoolNewDirectory.or(booleanBindingCursor));
+		menuItemRename.disableProperty().bind(propDisBoolRename.or(booleanBindingCursor));
+		menuItemDeleteItem.disableProperty().bind(propDisBoolDeleteItem.or(booleanBindingCursor));
+		menuItemRefreshTree.disableProperty().bind(propDisBoolRefreshTree.or(booleanBindingCursor));
+		
+		
+//		menuItemOpen.disableProperty().bind(propDisBoolOpen);
+//		menuItemNewFile.disableProperty().bind(propDisBoolNewFile);
+//		menuItemNewDirectory.disableProperty().bind(propDisBoolNewDirectory);
+//		menuItemRename.disableProperty().bind(propDisBoolRename);
+//		menuItemDeleteItem.disableProperty().bind(propDisBoolDeleteItem);
+//		menuItemRefreshTree.disableProperty().bind(propDisBoolRefreshTree);
 	}
 	
 	
@@ -120,6 +144,16 @@ public class CellContextMenu extends ContextMenu {
 //		menuItemNewDirectory.setDisable(false);
 //		menuItemRename.setDisable(true);
 //		menuItemDeleteItem.setDisable(true);
+	}
+	
+	public void setMenuItemsReload(boolean wert) {
+		System.out.println("     setMenuItemsReload -> " + wert);		
+		propDisBoolOpen.setValue(wert);
+		propDisBoolNewFile.setValue(wert);
+		propDisBoolNewDirectory.setValue(wert);
+		propDisBoolRename.setValue(wert);
+		propDisBoolDeleteItem.setValue(wert);
+		propDisBoolRefreshTree.setValue(wert);
 	}
 	
 //	public boolean setMenuItemsReload(boolean wert) {
@@ -168,7 +202,8 @@ public class CellContextMenu extends ContextMenu {
 //		menuItemDeleteItem.setDisable(false);		
 	}
 	
-	public void setLockedDir(boolean isLocked) {		
+	public void setLockedDir(boolean isLocked) {	
+		System.out.println(pathTreeCell.getTreeItem().getValue().getPath() + " -> " + isLocked);
 		propDisBoolOpen.setValue(isLocked);
 		propDisBoolNewFile.setValue(isLocked);
 		propDisBoolNewDirectory.setValue(isLocked);

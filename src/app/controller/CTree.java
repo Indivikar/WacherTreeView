@@ -187,6 +187,10 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 //		bindTreeViewAndProgressBar(tree, progressBarTreeView);
 		bindTreeViewAndWebView(tree, webViewLoading);
 		
+//		tree.cursorProperty().addListener(e -> {
+//			System.out.println(tree.cursorProperty().get() + " -> " + e.toString());
+//		});
+		
 //        JMetro jMetro = new JMetro(Style.LIGHT);
 //        jMetro.applyTheme(progressBarTreeView);
 		
@@ -304,8 +308,10 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 	}
 	
 	
+	
 	public void setMenuItemsReload(boolean wert) {
-		System.out.println("     setMenuItemsReload -> " + wert);
+		System.out.println("     setMenuItemsReload -> " + wert);		
+//		propBoolRefresh.setValue(wert);
 		propDisBoolOpen.setValue(wert);
 		propDisBoolNewFile.setValue(wert);
 		propDisBoolNewDirectory.setValue(wert);
@@ -413,7 +419,7 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 	private void updateTree() {
 		try {
 	        TreeLoaderTask treeLoaderTask = new TreeLoaderTask(this, treeItem);
-	  	  	bindUIandService(primaryStage, treeLoaderTask);
+	  	  	bindNodeAndService(tree, treeLoaderTask);
 	  	  	new Thread(treeLoaderTask).start();        	
 		} catch (Exception e) {
 			// TODO: handle exception

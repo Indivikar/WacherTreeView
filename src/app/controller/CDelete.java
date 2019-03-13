@@ -46,7 +46,7 @@ public class CDelete implements Initializable, IBindings, ILockDir{
 	private void setAction() {
 		buttonOK.setOnAction(e -> {
     	    DeleteItemTask DeleteItemTask = new DeleteItemTask(cTree, pathTreeCell, treeItem, listAllLockedFiles, true);
-    	    bindUIandService(primaryStage, DeleteItemTask);
+    	    bindNodeAndService(cTree.getTree(), DeleteItemTask);
     	    new Thread(DeleteItemTask).start();
 			stage.close();
 		});

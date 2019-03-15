@@ -8,8 +8,12 @@ import java.nio.file.WatchService;
 
 import app.controller.CTree;
 import app.interfaces.ILockDir;
+import app.interfaces.ITreeItemMethods;
 import app.interfaces.ITreeUpdateHandler;
+import app.view.functions.Notification;
+import app.view.functions.Notification.NotificationGraphic;
 import javafx.application.Platform;
+import javafx.geometry.Pos;
 
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
@@ -17,7 +21,7 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 import java.io.File;
 import java.io.IOException;
 
-public class PAWatcher implements ITreeUpdateHandler, ILockDir {
+public class PAWatcher implements ITreeUpdateHandler, ITreeItemMethods, ILockDir {
 
 	private CTree cTree;
 	
@@ -212,7 +216,12 @@ public class PAWatcher implements ITreeUpdateHandler, ILockDir {
 							if (event.kind().name().equals("ENTRY_MODIFY")) {
 								if (cTree.getFileNameDB().equalsIgnoreCase(event.context().toString())) {
 									Platform.runLater(() -> {
-										cTree.refreshTree(true);
+										// wenn rootItem leer ist, Notification nicht anzeigen
+										if (!isTreeEmpty(cTree.getTree())) {
+											new Notification()
+												.create(Pos.BOTTOM_RIGHT, cTree.getPrimaryStage(), NotificationGraphic.REFRESH, true, "", "es gab eine Änderung");	
+										}	
+										cTree.refreshTree(true);									
 									});
 								}
 							}

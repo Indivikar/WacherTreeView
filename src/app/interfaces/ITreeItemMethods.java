@@ -119,6 +119,19 @@ public interface ITreeItemMethods {
     	LoadTime.Stop("selectItemSearchInTreeView()", "");
 	}
     
+    public default boolean isTreeEmpty(TreeView<PathItem> tree) {
+		// wenn Fehlermeldung "tree.getRoot().getChildren() == null" dann "tree.setDisable(true);" und "webViewLoading" einblenden
+		try {
+			int sizeRoot = tree.getRoot().getChildren().size();	
+			if (sizeRoot == 0) {
+				return true;
+			}
+		} catch (Exception e) {
+			return true;
+		}   
+		return false;
+	}
+    
     public default boolean isOnlyOneItemSelected(Stage stageMain, PathTreeCell pathTreeCell) {
     	int i = pathTreeCell.getTreeView().getSelectionModel().getSelectedItems().size();
     	if (i == 1) {

@@ -63,10 +63,10 @@ public class MenuItemDeleteItem extends MenuItem implements IBindings{
 //    	try {
 //			  if (file.isDirectory()) {
 ////				    listAllLockedFiles.clear();
-////				    recursiveSearch(file);
-////				    if (listAllLockedFiles.size() > 0) {
+////				    recursivtAllLockedFiles.size() > 0) {
 ////				    	new AlertFilesLocked(AlertType.ERROR, listAllLockedFiles);
-//////						alertFilesLocked();
+//////						aeSearch(file);
+////				    if (lislertFilesLocked();
 ////						return;
 ////					}
 //				    				   

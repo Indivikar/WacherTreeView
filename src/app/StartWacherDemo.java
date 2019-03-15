@@ -5,6 +5,7 @@ import java.io.File;
 import app.controller.CTree;
 import app.interfaces.IBindings;
 import app.interfaces.ILockDir;
+import app.interfaces.ILogs;
 import app.loadTime.LoadTime;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -34,13 +35,14 @@ public class StartWacherDemo extends Application implements ILockDir, IBindings 
 		this.startWacherDemo = this;
 	}
 
+	
+	
 	@Override
 	public void start(Stage primaryStage) throws Exception {
 		if (startLoadTimeList) {
 			new LoadTime().start(new Stage());
 		}
-		
-		
+			
 		FXMLLoader loader = new FXMLLoader(StartWacherDemo.class.getResource("view/fxml/tree.fxml"));			
 		AnchorPane root = loader.load();
 				
@@ -92,5 +94,5 @@ public class StartWacherDemo extends Application implements ILockDir, IBindings 
         Platform.exit();
         System.exit(0);
     }
-	
+
 }

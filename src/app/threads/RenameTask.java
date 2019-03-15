@@ -1,16 +1,7 @@
 package app.threads;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-
-import org.apache.commons.io.FileUtils;
 
 import app.TreeViewWatchService.PathItem;
 import app.TreeViewWatchService.PathTreeCell;
@@ -20,14 +11,10 @@ import app.functions.LoadTime;
 import app.interfaces.IBindings;
 import app.interfaces.ILockDir;
 import app.interfaces.ITreeItemMethods;
-import app.loadTime.LoadTime.LoadTimeOperation;
-import app.sort.WindowsExplorerComparator;
-import app.view.alerts.AlertFilesLocked;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.scene.control.TreeItem;
-import javafx.scene.control.Alert.AlertType;
 
 public class RenameTask extends Task<Boolean> implements ITreeItemMethods, IBindings, ILockDir {
 

@@ -2,40 +2,29 @@ package app.controller;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map.Entry;
 import java.util.ResourceBundle;
-import java.util.Stack;
 
 import app.functions.LockFileHandler;
 import app.StartWacherDemo;
 import app.TreeViewWatchService.CreateTree;
-import app.TreeViewWatchService.FileMonitor;
 import app.TreeViewWatchService.ModelFileChanges;
 import app.TreeViewWatchService.PathItem;
 import app.TreeViewWatchService.PathTreeCell;
 import app.TreeViewWatchService.ScrollingByDragNDrop;
-import app.db.PathList;
 import app.interfaces.IBindings;
 import app.interfaces.ILockDir;
+import app.interfaces.ILogs;
 import app.interfaces.ISaveExpandedItems;
 import app.interfaces.ISuffix;
 import app.interfaces.ISystemIcon;
@@ -45,51 +34,47 @@ import app.loadTime.LoadTime.LoadTimeOperation;
 import app.models.ItemsDB;
 import app.sort.WindowsExplorerComparator;
 import app.threads.LoadDBService;
-import app.threads.NewDirectoryTask;
 import app.threads.SortWinExplorerTask;
 import app.threads.TreeLoaderTask;
 import app.watcher.watchService.LockWatcher;
 import app.watcher.watchService.PAWatcher;
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.geometry.Orientation;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ProgressBar;
-import javafx.scene.control.ScrollBar;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
-import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
-import javafx.util.Duration;
-import javafx.util.Pair;
-import jfxtras.styles.jmetro8.JMetro;
-import jfxtras.styles.jmetro8.JMetro.Style;
 
-public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpandedItems, IBindings, ILockDir, ITreeUpdateHandler {
 
+/**
+ * 
+ * @author DH
+ *
+ */
+
+public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpandedItems, IBindings, ILockDir, ITreeUpdateHandler, ILogs {
+	
+
+	
 	public static ObservableList<LoadTimeOperation> listLoadTime = FXCollections.observableArrayList();
 
 //	String mainDirectory = "Y:\\test";

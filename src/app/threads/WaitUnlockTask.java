@@ -12,7 +12,6 @@ import app.TreeViewWatchService.PathItem;
 import app.TreeViewWatchService.PathTreeCell;
 import app.controller.CTree;
 import app.functions.LoadTime;
-import app.interfaces.ICursor;
 import app.interfaces.ILockDir;
 import app.interfaces.ITreeItemMethods;
 import javafx.concurrent.Task;

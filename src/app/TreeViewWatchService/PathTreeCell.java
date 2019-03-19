@@ -189,6 +189,7 @@ public class PathTreeCell extends TreeCell<PathItem> implements ISuffix, ISystem
 
     		});
 		}
+        getTreeView().refresh();
 	}
 
 	private void setStartPropertiesContextMenu(PathItem item) {

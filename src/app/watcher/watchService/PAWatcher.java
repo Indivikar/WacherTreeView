@@ -35,6 +35,7 @@ public class PAWatcher implements ITreeUpdateHandler, ITreeItemMethods, ILockDir
 //	private AddTreeItems addTreeItems;
 
 	public PAWatcher(CTree cTree) {
+		System.out.println("init -> PAWatcher()");
 		this.cTree = cTree;
 //		addTreeItems = new AddTreeItems(cTree.getPathFileDB(), cTree, this);
 		
@@ -45,9 +46,12 @@ public class PAWatcher implements ITreeUpdateHandler, ITreeItemMethods, ILockDir
 				System.out.println("Shutdown hook invoked, Application will terminate...");
 				mStop = true;
 				try {
+					System.out.println("try");
 					mainThread.join();
 				} catch (InterruptedException e) {
+					System.out.println("catch");
 //					log.error("Error in application shutdown", e);
+					e.printStackTrace();
 				}
 			}
 		});

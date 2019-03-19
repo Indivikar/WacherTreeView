@@ -465,7 +465,7 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 	 		String parent = newItem.getValue().getPath().getParent().toString();
 	 		if (root.equalsIgnoreCase(parent)) {	 			
 	 			rootItem.getChildren().add(newItem);
-				return;
+				return;			
 			}
 	 		
 	 		

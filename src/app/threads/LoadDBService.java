@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.file.Path;
 
 import app.TreeViewWatchService.PathTreeCell;
@@ -13,6 +15,7 @@ import app.controller.CTree;
 import app.functions.LoadTime;
 import app.interfaces.IBindings;
 import app.interfaces.ILockDir;
+import app.interfaces.ILogs;
 import app.models.ItemsDB;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -21,7 +24,7 @@ import javafx.concurrent.Task;
 import javafx.scene.Cursor;
 import javafx.stage.Stage;
 
-public class LoadDBService extends Service<ObservableList<ItemsDB>> implements ILockDir, IBindings{
+public class LoadDBService extends Service<ObservableList<ItemsDB>> implements ILockDir, IBindings, ILogs{
 
 	private File pathFileDB;
 	private CTree cTree;
@@ -123,7 +126,8 @@ public class LoadDBService extends Service<ObservableList<ItemsDB>> implements I
 
                      br.close();
                  } catch (IOException e) {
-                	 // TODO - V:\test\___DB___\test.txt (Das System kann den angegebenen Pfad nicht finden)
+                	 // TODO - V:\test\___DB___\test.txt (Das System kann den angegebenen Pfad nicht finden)               	
+                	 logSevere(e);               	 
                      e.printStackTrace();
                  }
          		LoadTime.Stop("updatePathList()", "");

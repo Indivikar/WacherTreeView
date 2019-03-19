@@ -2,6 +2,8 @@ package app.interfaces;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.logging.FileHandler;
@@ -18,6 +20,24 @@ import javafx.scene.control.Alert.AlertType;
 public interface ILogs {
 
 	public Logger log = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
+	
+	public default void logInfo(IOException e) {
+   	 	StringWriter errors = new StringWriter();
+   	 	e.printStackTrace(new PrintWriter(errors));
+   	 	logInfo(errors.toString());
+	}
+	
+	public default void logWarning(IOException e) {
+   	 	StringWriter errors = new StringWriter();
+   	 	e.printStackTrace(new PrintWriter(errors));
+   	 	logWarning(errors.toString());
+	}
+	
+	public default void logSevere(IOException e) {
+   	 	StringWriter errors = new StringWriter();
+   	 	e.printStackTrace(new PrintWriter(errors));
+   	 	logSevere(errors.toString());
+	}
 	
 	public default void logInfo(String msg) {
 		log();

@@ -12,72 +12,98 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
+import app.watcher.watchService.PAWatcher;
+import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
+import javafx.stage.Stage;
 
 
 
-public interface ILogs {
+public interface ILogs extends IWindowEigenschaften {
 
 	public Logger log = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 	
-	public default void logInfo(IOException e) {
-   	 	StringWriter errors = new StringWriter();
-   	 	e.printStackTrace(new PrintWriter(errors));
-   	 	logInfo(errors.toString());
-	}
+//	public default void logInfo(String myClass, boolean showAlert, String msg, Exception e) {
+//   	 	StringWriter errors = new StringWriter();
+//   	 	e.printStackTrace(new PrintWriter(errors));
+//   	 	logInfo(myClass, showAlert, msg, errors.toString());
+//	}
+//	
+//	public default void logWarning(String myClass, boolean showAlert, String msg, Exception e) {
+//   	 	StringWriter errors = new StringWriter();
+//   	 	e.printStackTrace(new PrintWriter(errors));
+//   	 	logWarning(myClass, showAlert, msg, errors.toString());
+//	}
+//
+//	public default void logSevere(String myClass, boolean showAlert, String msg, Exception e) {
+//   	 	StringWriter errors = new StringWriter();
+//   	 	e.printStackTrace(new PrintWriter(errors));
+//   	 	logSevere(myClass, showAlert, msg, errors.toString());
+//	}
+//	
+//	public default void logInfo(String myClass, boolean showAlert, String msg, IOException e) {
+//   	 	StringWriter errors = new StringWriter();
+//   	 	e.printStackTrace(new PrintWriter(errors));
+//   	 	logInfo(myClass, showAlert, msg, errors.toString());
+//	}
+//	
+//	public default void logWarning(String myClass, boolean showAlert, String msg, IOException e) {
+//   	 	StringWriter errors = new StringWriter();
+//   	 	e.printStackTrace(new PrintWriter(errors));
+//   	 	logWarning(myClass, showAlert, msg, errors.toString());
+//	}
+//	
+//	public default void logSevere(String myClass, boolean showAlert, String msg, IOException e) {
+//		System.out.println("class " + myClass);
+//   	 	StringWriter errors = new StringWriter();
+//   	 	e.printStackTrace(new PrintWriter(errors));
+//   	 	logSevere(myClass, showAlert, msg, errors.toString());
+//	}
 	
-	public default void logWarning(IOException e) {
-   	 	StringWriter errors = new StringWriter();
-   	 	e.printStackTrace(new PrintWriter(errors));
-   	 	logWarning(errors.toString());
-	}
-	
-	public default void logSevere(IOException e) {
-   	 	StringWriter errors = new StringWriter();
-   	 	e.printStackTrace(new PrintWriter(errors));
-   	 	logSevere(errors.toString());
-	}
-	
-	public default void logInfo(String msg) {
-		log();
+	public default void logInfo(String myClass, String msg, String exceptionText) {
+		log(myClass, exceptionText);	
 		log.info(msg);
 	}
 	
-	public default void logWarning(String msg) {
-		log();
+	public default void logWarning(String myClass, String msg, String exceptionText) {
+		log(myClass, exceptionText);	
 		log.warning(msg);
 	}
 	
-	public default void logSevere(String msg) {
-		log();
+	public default void logSevere(String myClass, String msg, String exceptionText) {
+		log(myClass, exceptionText);			
 		log.severe(msg);
 	}
 	
-	public default void logInfoAndAlert(String msg) {
-		logAndAlert();
-		log.info(msg);
-	}
+//	public default void logInfoAndAlert(boolean setAlert, String msg) {
+//		
+//		log.info(msg);
+//	}
+//	
+//	public default void logWarningAndAlert(String msg) {
+//		logAndAlert();
+//		log.warning(msg);
+//	}
+//	
+//	public default void logSevereAndAlert(String msg) {
+//		logAndAlert();
+//		log.severe(msg);
+//	}
 	
-	public default void logWarningAndAlert(String msg) {
-		logAndAlert();
-		log.warning(msg);
-	}
+//	public default void log(String myClass, String exceptionText) {
+//		logAndAlert(myClass, false, exceptionText);
+//	}
+//	
+//	public default void logAndAlert(String myClass, String exceptionText) {
+//		logAndAlert(myClass, true, exceptionText);
+//	}
 	
-	public default void logSevereAndAlert(String msg) {
-		logAndAlert();
-		log.severe(msg);
-	}
-	
-	public default void log() {
-		logAndAlert(false);
-	}
-	
-	public default void logAndAlert() {
-		logAndAlert(true);
-	}
-	
-	public default void logAndAlert(boolean isAlert) {
+	public default void log(String myClass, String exceptionText) {
 		Logger root = Logger.getLogger("");
 		FileHandler txt = null;
 		
@@ -92,34 +118,41 @@ public interface ILogs {
 			e.printStackTrace();
 		}
 			
-		root.setLevel(Level.INFO); // welchem Level soll eine Meldung in die Datei geschrieben werden
+		root.setLevel(Level.INFO); // ab welchem Level soll eine Meldung in die Datei geschrieben werden
 		txt.setFormatter(new Formatter() {
 			@Override
 			public String format(LogRecord record)
 			{
 				String ret = "";
 
-				
-				SimpleDateFormat df = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+			
+				SimpleDateFormat df = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
 				Date d = new Date(record.getMillis());
 				
+				String msg = this.formatMessage(record);
+//				String inKlasse = myClass.getCanonicalName();
+				
 				ret += df.format(d) + "\r\n";
-				ret += record.getLevel() + ": ";
-				ret += " " + this.formatMessage(record);
+				ret += "     Class: " + myClass;
+				ret += "\r\n";
+				ret += "     " + record.getLevel() + ": ";
+				ret += " " + msg.replace("\n", "");
+				ret += "\r\n";
+				ret += "     Exception: " + exceptionText;
 				ret += "\r\n";
 				
-				if(isAlert && record.getLevel().intValue() == Level.INFO.intValue()) { // bei welchem Level soll was ausgegeben werden, z.B.: ein Alert
-					alert(AlertType.INFORMATION, ret);
-				}
-				
-				if(isAlert && record.getLevel().intValue() == Level.WARNING.intValue()) { // bei welchem Level soll was ausgegeben werden, z.B.: ein Alert
-					alert(AlertType.WARNING, ret);
-				}
-				
-				if(isAlert && record.getLevel().intValue() == Level.SEVERE.intValue()) { // bei welchem Level soll was ausgegeben werden, z.B.: ein Alert
-					alert(AlertType.ERROR, ret);
-				}
-				
+//				if(isAlert && record.getLevel().intValue() == Level.INFO.intValue()) { // bei welchem Level soll was ausgegeben werden, z.B.: ein Alert
+//					alert(AlertType.INFORMATION, msg, myClass, exceptionText);
+//				}
+//				
+//				if(isAlert && record.getLevel().intValue() == Level.WARNING.intValue()) { // bei welchem Level soll was ausgegeben werden, z.B.: ein Alert
+//					alert(AlertType.WARNING, msg, myClass, exceptionText);
+//				}
+//				
+//				if(isAlert && record.getLevel().intValue() == Level.SEVERE.intValue()) { // bei welchem Level soll was ausgegeben werden, z.B.: ein Alert
+//					alert(AlertType.ERROR, msg, myClass, exceptionText);
+//				}
+				System.out.println(ret);
 				return ret;
 			}
 		});
@@ -127,30 +160,61 @@ public interface ILogs {
 		root.addHandler(txt);		
 	}
 	
-	public default void alert(AlertType alertType, String ret) {
-		
-		String title = "";
-		
-		switch (alertType) {
-	        case INFORMATION:
-	        	title = "Information";
-	            break;	                
-	        case WARNING:
-	        	title = "Warnung";
-	            break;	                     
-	        case ERROR:
-	        	title = "Fehler";
-	            break;                   
-	        default:
-	            break;
-	    }
-		
-		Alert alert = new Alert(alertType);
-		alert.setTitle(title);
-		alert.setHeaderText(null);
-		alert.setContentText(ret);
-
-		alert.showAndWait();
-	}
+//	public default void alert(AlertType alertType, String msg, String klasse, String exceptionText) {
+//		
+//		String title = "";
+//		
+//		switch (alertType) {
+//	        case INFORMATION:
+//	        	title = "Information";
+//	            break;	                
+//	        case WARNING:
+//	        	title = "Warnung";
+//	            break;	                     
+//	        case ERROR:
+//	        	title = "Fehler";
+//	            break;                   
+//	        default:
+//	            break;
+//	    }
+//		
+//		Alert alert = new Alert(alertType);
+//		Stage alertStage = (Stage) alert.getDialogPane().getScene().getWindow();
+//		setOpenWindowInWindowCenter(alertStage);
+//		alert.setTitle(title);
+//		alert.setHeaderText(null);
+//		alert.setContentText(msg);
+//		
+////		if (exceptionText != null && !exceptionText.isEmpty()) {
+//			// Create expandable Exception.
+//			StringWriter sw = new StringWriter();
+//			PrintWriter pw = new PrintWriter(sw);
+//
+//			Label label = new Label("Exception:");
+//
+//			String ausgabe = "Class: " + klasse + "\n\n" + exceptionText;
+//			
+//			TextArea textArea = new TextArea();				
+//			textArea.setText(ausgabe);
+//			textArea.setEditable(false);
+//			textArea.setWrapText(true);
+//
+//			textArea.setMaxWidth(Double.MAX_VALUE);
+//			textArea.setMaxHeight(Double.MAX_VALUE);
+//			GridPane.setVgrow(textArea, Priority.ALWAYS);
+//			GridPane.setHgrow(textArea, Priority.ALWAYS);
+//
+//			GridPane expContent = new GridPane();
+//			expContent.setMaxWidth(Double.MAX_VALUE);
+//			expContent.add(label, 0, 0);
+//			expContent.add(textArea, 0, 1);
+//
+//			alert.getDialogPane().setExpandableContent(expContent);
+////		}
+//
+//
+//		
+//		alert.showAndWait();
+//	}
 	
 }

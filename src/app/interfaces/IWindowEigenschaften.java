@@ -1,6 +1,7 @@
 package app.interfaces;
 
 import app.StartWacherDemo;
+import app.controller.CTree;
 import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -9,20 +10,30 @@ import javafx.stage.Stage;
 
 public interface IWindowEigenschaften {
 
-	public default double[] setOpenWindowInWindowCenter(Stage stageMain, Stage stage) {
+
+	public default double[] setOpenWindowInWindowCenter(Stage stage) {
 		double[] array = new double[2];
 		
 		Platform.runLater(() -> {	
-		
-			double stageMainPosX = stageMain.getX();
-			double stageMainPosY = stageMain.getY();
-			double stageMainWidth = stageMain.getWidth();
-			double stageMainHeight = stageMain.getHeight();
+
+//			double stageMainPosX = stageMain.getX();
+//			double stageMainPosY = stageMain.getY();
+//			double stageMainWidth = stageMain.getWidth();
+//			double stageMainHeight = stageMain.getHeight();
 			
+			System.out.println("X: " + CTree.primaryStageLocationX);
+			System.out.println("Y: " + CTree.primaryStageLocationY);
+			System.out.println("Width: " + CTree.primaryStageWidth);
+			System.out.println("Height: " + CTree.primaryStageHeight);
+			
+			double stageMainPosX = CTree.primaryStageLocationX;
+			double stageMainPosY = CTree.primaryStageLocationY;
+			double stageMainWidth = CTree.primaryStageWidth;
+			double stageMainHeight = CTree.primaryStageHeight;
+
 			Stage stageChild = (Stage) stage.getScene().getWindow();
 			double stageChildWidth = stageChild.getWidth();
-			double stageChildHeight = stageChild.getHeight();
-			
+			double stageChildHeight = stageChild.getHeight();			
 	
 			double posX = (stageMainWidth / 2) - (stageChildWidth / 2) +  stageMainPosX;
 			double posY = (stageMainHeight / 2) - (stageChildHeight / 2) +  stageMainPosY;
@@ -41,7 +52,7 @@ public interface IWindowEigenschaften {
 		return array;		
 		
 	}
-
+	
 	public default void setSceneEigenschaften(Scene scene) {
 //		scene.getStylesheets().add(StartMain.class.getResource("/app/view/css/MainStage.css").toExternalForm());
 		scene.getStylesheets().add(StartWacherDemo.class.getResource("/app/style/MainStyle.css").toExternalForm());

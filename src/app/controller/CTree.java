@@ -36,6 +36,10 @@ import app.sort.WindowsExplorerComparator;
 import app.threads.LoadDBService;
 import app.threads.SortWinExplorerTask;
 import app.threads.TreeLoaderTask;
+import app.view.functions.notification.INotification;
+import app.view.functions.notification.Notification;
+import app.view.functions.notification.Notification.NotificationType;
+import app.view.functions.notification.NotificationSender;
 import app.watcher.watchService.LockWatcher;
 import app.watcher.watchService.PAWatcher;
 import javafx.application.Platform;
@@ -48,6 +52,7 @@ import javafx.concurrent.Task;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.SelectionMode;
@@ -71,7 +76,7 @@ import javafx.stage.Stage;
  *
  */
 
-public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpandedItems, IBindings, ILockDir, ITreeUpdateHandler, ILogs {
+public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpandedItems, IBindings, ILockDir, ITreeUpdateHandler, ILogs, INotification {
 	
 
 	
@@ -91,6 +96,12 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 	private StartWacherDemo startWacherDemo;
 	private Stage primaryStage;
 
+	// primaryStage Properties
+	public static double primaryStageLocationX;
+	public static double primaryStageLocationY;
+	public static double primaryStageWidth;
+	public static double primaryStageHeight;
+	
 	// Services & Tasks
 	private static LoadDBService loadDBService;
 	
@@ -118,6 +129,9 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 	// Drag N Drop 
 	private SimpleBooleanProperty propBoolBlockDragNDrop = new SimpleBooleanProperty();
 	
+	// Notification
+	private NotificationSender notificationSender = new NotificationSender();
+	
 	public static boolean isInternalChange = false;
 	
 	private Path rootPath;
@@ -132,7 +146,6 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 	public static HashMap<String, Image> suffixIcon = new HashMap<>();
 	
 	private StringProperty messageProp = new SimpleStringProperty();
-
 	
 	@FXML private VBox vBoxMessage;
 	
@@ -163,6 +176,8 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 	@Override
 	public void initialize(URL arg0, ResourceBundle arg1) {
 		System.out.println("CTree()");	
+
+
 //		pathList = new PathList(pathFileDB);
 		scrollingByDragNDrop = new ScrollingByDragNDrop(tree);
 //		service = Executors.newFixedThreadPool(1);
@@ -187,6 +202,22 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 //			System.out.println("     CTree -> set Mouse Released");
 //		});
 		
+	}
+	
+	private void ordnerCheck() {
+		
+		if (!new File(mainDirectory).exists()) {
+			String text = "Der Daten-Ordner \n\"" + mainDirectory + "\"\n konnte nicht gefunden werden.";
+			getNotification().setText(text).start();
+		}
+		if (!new File(DirectoryDB).exists()) {
+			String text = "Der Datenbank-Ordner \n\"" + DirectoryDB + "\"\n konnte nicht gefunden werden.";
+			getNotification().setText(text).start();
+		}
+		if (!new File(pathFileDB).exists()) {
+			String text = "Die Datenbank \n\"" + pathFileDB + "\"\n konnte nicht gefunden werden.";
+			getNotification().setText(text).start();
+		}
 	}
 
 	private void addWebViewLoadingProps() {
@@ -564,7 +595,8 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 	public ScrollingByDragNDrop getScrollingByDragNDrop() {return scrollingByDragNDrop;}
 	public CreateTree getCreateTree() {return createTree;}
 	public ChildrenChangedListener getChildrenChangedListener() {return ChildrenChangedListener;}
-
+	public NotificationSender getNotificationSender() {return notificationSender;}
+	
 	public TreeView<PathItem> getTree() {return tree;}
 	public PathTreeCell getCell() {return cell;}
 	public Stage getPrimaryStage() {return primaryStage;}
@@ -595,13 +627,15 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 
 	// Setter
 	public void setSelectedItems(ObservableList<TreeItem<PathItem>> selectedItems) {this.selectedItems = selectedItems;}
-
+	
 
 
 	public void set(StartWacherDemo startWacherDemo, Stage primaryStage) {
 		this.startWacherDemo = startWacherDemo;
 		this.primaryStage = primaryStage;		
 	
+		ordnerCheck();
+		
 		loadDBService = new LoadDBService(this, pathFileDB);
 		
 		loadTree();
@@ -631,6 +665,23 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 		// TODO Auto-generated method stub
 		
 	}
+
+	@Override
+	public Notification getNotification() {
+		Notification deaultNotification = Notification.create()
+				.setTitle("Fehler")
+				.setNotificationSender(this)
+				.owner(primaryStage)
+				.setClass(getClass()
+				.getCanonicalName())
+				.fehlerCode("000")
+				.type(NotificationType.ERROR)
+				.setLog()
+				.setAlert();
+		return deaultNotification;
+	}
+
+
 
 
 	

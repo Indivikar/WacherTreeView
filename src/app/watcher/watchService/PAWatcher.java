@@ -8,12 +8,16 @@ import java.nio.file.WatchService;
 
 import app.controller.CTree;
 import app.interfaces.ILockDir;
+import app.interfaces.ILogs;
 import app.interfaces.ITreeItemMethods;
 import app.interfaces.ITreeUpdateHandler;
-import app.view.functions.Notification;
-import app.view.functions.Notification.NotificationGraphic;
+import app.view.functions.notification.INotification;
+import app.view.functions.notification.Notification;
+import app.view.functions.notification.Notification.NotificationType;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
@@ -21,21 +25,21 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 import java.io.File;
 import java.io.IOException;
 
-public class PAWatcher implements ITreeUpdateHandler, ITreeItemMethods, ILockDir {
+public class PAWatcher implements ITreeUpdateHandler, ITreeItemMethods, ILockDir, INotification {
 
 	private CTree cTree;
 	
 	private static volatile Boolean mStop = false;
-//	static Logger log = Logger.getLogger(FolderWatcher.class);
 	public static Integer mExecId = 0;
-	
+
+
 //	private static final String inputDirPath = "V:\\Test\\___DB___";
 	
 //	private static final String inputDirPath = cTree.getDirectoryDB();
 //	private AddTreeItems addTreeItems;
 
 	public PAWatcher(CTree cTree) {
-		System.out.println("init -> PAWatcher()");
+		System.out.println("init -> PAWatcher() 1");
 		this.cTree = cTree;
 //		addTreeItems = new AddTreeItems(cTree.getPathFileDB(), cTree, this);
 		
@@ -44,13 +48,15 @@ public class PAWatcher implements ITreeUpdateHandler, ITreeItemMethods, ILockDir
 			public void run() {
 //				log.info("Shutdown hook invoked, Application will terminate...");
 				System.out.println("Shutdown hook invoked, Application will terminate...");
+				String text = "Der Synchronisation-Service wird beendet";
+				getNotification().setText(text).fehlerCode("000").start();
 				mStop = true;
 				try {
 					System.out.println("try");
 					mainThread.join();
 				} catch (InterruptedException e) {
-					System.out.println("catch");
-//					log.error("Error in application shutdown", e);
+					String text2 = "Der Client kann nict mehr mit dem Server synchronisiert werden";
+					getNotification().setText(text2).fehlerCode("000").setException(e).start();
 					e.printStackTrace();
 				}
 			}
@@ -58,7 +64,7 @@ public class PAWatcher implements ITreeUpdateHandler, ITreeItemMethods, ILockDir
 		
 		// Get the directory we want to watch, using the Paths singleton class
 		Path pathToFolder = null;
-
+		System.out.println("init -> PAWatcher() 2");
 		try {
 //			pathToFolder = Paths.get(inputDirPath);
 			pathToFolder = Paths.get(cTree.getDirectoryDB());
@@ -67,10 +73,15 @@ public class PAWatcher implements ITreeUpdateHandler, ITreeItemMethods, ILockDir
 			String lLogMsg = "Error in reading Input directories, ensure directories " +
 					"are configured and accessible, System will now exit";
 //			log.error(lLogMsg, e);
-			// TODO - Fehlermeldung einbauen
-			System.exit(1);
+			// TODO - Fehlermeldung anpassen
+			String text = "Der Client kann nict mehr mit dem Server synchronisiert werden";
+			getNotification().setText(text).fehlerCode("000").setException(e).start();
+//			logSevere(getClass().getCanonicalName(), true, "", e);
+//			System.exit(1);
 		}
 
+		System.out.println("init -> PAWatcher() 3");
+	
 		try {
 			// Make a new watch service that we can register interest in
 			// directories and files with.
@@ -89,15 +100,23 @@ public class PAWatcher implements ITreeUpdateHandler, ITreeItemMethods, ILockDir
 			// The following code will trigger the watch service for any
 			// existing file
 //			File dir = new File(inputDirPath);
+//			File dir = new File("C:\\test");
 			File dir = new File(cTree.getDirectoryDB());
 			triggerWatchService(dir);
-		} catch (IOException ioex) {
+		} catch (IOException e) {
+			System.out.println("init -> PAWatcher() 4");
 			String lLogMsg = "IOException in File Watcher service";
-//			log.error(lLogMsg, ioex);
-			System.exit(1);
+//			log.error(lLogMsg, ioex);			
+//			logSevere(getClass().getCanonicalName(), true, "Schwerer Fehler", ioex);
+			// TODO - Fehlermeldung anpassen
+			String text = "Der Client kann nicht mehr mit dem Server synchronisiert werden";			
+			getNotification().setText(text).fehlerCode("000").setException(e).start();
+			e.printStackTrace();
+//			System.exit(1);			
 		}
 	}
-//	
+	
+
 //	public static void main(String[] args) {
 //
 //		// Registering Shutdown hook
@@ -222,8 +241,8 @@ public class PAWatcher implements ITreeUpdateHandler, ITreeItemMethods, ILockDir
 									Platform.runLater(() -> {
 										// wenn rootItem leer ist, Notification nicht anzeigen
 										if (!isTreeEmpty(cTree.getTree())) {
-											new Notification()
-												.create(Pos.BOTTOM_RIGHT, cTree.getPrimaryStage(), NotificationGraphic.REFRESH, true, "", "es gab eine Änderung");	
+//											new Notification()
+//												.create(Pos.BOTTOM_RIGHT, cTree.getPrimaryStage(), NotificationGraphic.REFRESH, "", "es gab eine Änderung");	
 										}	
 										cTree.refreshTree(true);									
 									});
@@ -241,10 +260,26 @@ public class PAWatcher implements ITreeUpdateHandler, ITreeItemMethods, ILockDir
 					}
 				}
 			} catch (InterruptedException e) {
+				String text = "Es ist ein Fehler aufgetreten.";	
+				getNotification().setText(text).fehlerCode("000").setException(e).start();
 				e.printStackTrace();
 			}
 //			log.info("All application threads stopped, Shutting down...");
 		}
+	}
+
+	@Override
+	public Notification getNotification() {
+		Notification deaultNotification = Notification.create()
+				.setTitle("Fehler")
+				.setNotificationSender(cTree)
+				.owner(cTree.getPrimaryStage())
+				.setClass(getClass()
+				.getCanonicalName())
+				.type(NotificationType.ERROR)
+				.setLog()
+				.setAlert();
+		return deaultNotification;
 	}
 
 

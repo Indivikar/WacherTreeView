@@ -5,7 +5,10 @@ import java.io.IOException;
 
 import app.TreeViewWatchService.CreateTree;
 import app.controller.CTree;
+import app.view.functions.notification.Notification;
+import app.view.functions.notification.Notification.NotificationType;
 import javafx.application.Platform;
+import javafx.geometry.Pos;
 
 public interface ITreeUpdateHandler {
 
@@ -28,7 +31,7 @@ public interface ITreeUpdateHandler {
 			if (!f.exists()) {
 				boolean b = f.createNewFile();
 				if (b) {
-					
+				
 				}
 			}			
 			Thread.sleep(500);
@@ -36,7 +39,9 @@ public interface ITreeUpdateHandler {
 				f.delete();
 			}			
 		} catch (IOException | InterruptedException e) {
-			// TODO Auto-generated catch block
+			String text = "Die Datei \n\"" + f.getAbsolutePath() + "\"\n konnte nicht gefunden werden.";
+			Notification.create().setTitle("Fehler").owner(cTree.getPrimaryStage()).setClass(getClass().getCanonicalName())
+				.fehlerCode("000").type(NotificationType.ERROR).setLog().setAlert().setException(e).setText(text).start();			
 			e.printStackTrace();
 		}
 	}

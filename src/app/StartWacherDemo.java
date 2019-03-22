@@ -6,6 +6,7 @@ import app.controller.CTree;
 import app.interfaces.IBindings;
 import app.interfaces.ILockDir;
 import app.interfaces.ILogs;
+import app.interfaces.IPrimaryStage;
 import app.loadTime.LoadTime;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -21,7 +22,7 @@ import javafx.stage.Stage;
 
 
 
-public class StartWacherDemo extends Application implements ILockDir, IBindings {
+public class StartWacherDemo extends Application implements ILockDir, IBindings, IPrimaryStage {
 
 	// Config
 	boolean startLoadTimeList = false;
@@ -49,12 +50,14 @@ public class StartWacherDemo extends Application implements ILockDir, IBindings 
 		Scene scene = new Scene(root);
 		
 		addController(primaryStage, loader);		
-			
+		setLocationListener(primaryStage);	
+		setSizeListener(primaryStage);
 //		controller.getScrollingByDragNDrop().stopScrolling(root);
 		
 		primaryStage.setTitle("Watch Dir Demo");
 		primaryStage.setScene(scene);
 		File f = new File("C:\\Users\\DH\\AppData\\Roaming\\IndivikarAG\\dev");
+		
 		if (f.exists()) {
 			primaryStage.setX(7050);
 		}		
@@ -94,5 +97,19 @@ public class StartWacherDemo extends Application implements ILockDir, IBindings 
         Platform.exit();
         System.exit(0);
     }
+
+
+
+	@Override
+	public void setLocationListener(Stage primaryStage) {
+		primaryStage.xProperty().addListener((obs, oldVal, newVal) -> CTree.primaryStageLocationX = newVal.doubleValue());
+		primaryStage.yProperty().addListener((obs, oldVal, newVal) -> CTree.primaryStageLocationY = newVal.doubleValue());	
+	}
+
+	@Override
+	public void setSizeListener(Stage primaryStage) {
+		primaryStage.widthProperty().addListener((obs, oldVal, newVal) -> CTree.primaryStageWidth = newVal.doubleValue());
+		primaryStage.heightProperty().addListener((obs, oldVal, newVal) -> CTree.primaryStageHeight = newVal.doubleValue());	
+	}
 
 }

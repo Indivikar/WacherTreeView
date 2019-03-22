@@ -19,7 +19,7 @@ public class DefaultAlert implements IWindowEigenschaften {
 		alert.setContentText(content);
 
 		Stage alertStage = (Stage) alert.getDialogPane().getScene().getWindow();
-		setOpenWindowInWindowCenter(stageMain, alertStage);
+		setOpenWindowInWindowCenter(alertStage);
 		
 		alert.showAndWait();
 	}

@@ -5,30 +5,26 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.nio.file.Path;
 
-import app.TreeViewWatchService.PathTreeCell;
-import app.TreeViewWatchService.contextMenu.CellContextMenu;
 import app.controller.CTree;
 import app.functions.LoadTime;
 import app.interfaces.IBindings;
 import app.interfaces.ILockDir;
 import app.interfaces.ILogs;
 import app.models.ItemsDB;
+import app.view.functions.notification.INotification;
+import app.view.functions.notification.Notification;
+import app.view.functions.notification.Notification.NotificationType;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
-import javafx.scene.Cursor;
-import javafx.stage.Stage;
 
-public class LoadDBService extends Service<ObservableList<ItemsDB>> implements ILockDir, IBindings, ILogs{
+public class LoadDBService extends Service<ObservableList<ItemsDB>> implements ILockDir, IBindings, ILogs, INotification{
 
 	private File pathFileDB;
 	private CTree cTree;
-	
+		
 	private ObservableList<ItemsDB> fileList = FXCollections.observableArrayList();	
 	
 	// Properties
@@ -68,12 +64,9 @@ public class LoadDBService extends Service<ObservableList<ItemsDB>> implements I
 		
 //        SortWinExplorerTask task = new SortWinExplorerTask(cTree, cTree.getTree().getRoot());
 //        new Thread(task).start();
-		
-		
+
 	}
-	
-	
-	
+
 	@Override
 	protected Task<ObservableList<ItemsDB>> createTask() {
 		
@@ -96,9 +89,16 @@ public class LoadDBService extends Service<ObservableList<ItemsDB>> implements I
             	LoadTime.Start();
             	 
             	Thread.sleep(2000);
-            	
-            	
+            	         
             	fileList.clear();
+            	
+            	if (!pathFileDB.exists()) {
+//            		logSevere(getClass().getCanonicalName(), true, "Es ist ein Fehler aufgetreten", "");  
+         			String text = "Die Datei \n\"" + pathFileDB + "\"\n konnte nicht gefunden werden.";
+         			getNotification().setText(text).start();
+            		return fileList;
+				}
+            	
 //         		try (BufferedReader br = new BufferedReader(new FileReader(pathFileDB)))
          		try (BufferedReader br = new BufferedReader(new InputStreamReader(
          			    new FileInputStream(pathFileDB), "UTF-8")))
@@ -127,7 +127,9 @@ public class LoadDBService extends Service<ObservableList<ItemsDB>> implements I
                      br.close();
                  } catch (IOException e) {
                 	 // TODO - V:\test\___DB___\test.txt (Das System kann den angegebenen Pfad nicht finden)               	
-                	 logSevere(e);               	 
+//                	 logSevere(null, true, "Es ist ein Fehler aufgetreten", e); 
+         			String text = "Es ist ein Fehler aufgetreten.";
+         			getNotification().setText(text).setException(e).start();
                      e.printStackTrace();
                  }
          		LoadTime.Stop("updatePathList()", "");
@@ -137,9 +139,15 @@ public class LoadDBService extends Service<ObservableList<ItemsDB>> implements I
          };
 	}
 
-	
 	// Setter
 	public void setWaitIfLocked(boolean waitIfLocked) {this.waitIfLocked = waitIfLocked;}
+
+	@Override
+	public Notification getNotification() {
+		Notification deaultNotification = Notification.create().setTitle("Fehler").owner(cTree.getPrimaryStage())
+				.setClass(getClass().getCanonicalName()).fehlerCode("000").type(NotificationType.ERROR).setLog().setAlert();
+		return deaultNotification;
+	}
 	
 	
 	

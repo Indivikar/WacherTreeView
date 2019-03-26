@@ -17,14 +17,17 @@ import javafx.stage.Stage;
 
 public class StageVerschiebenMitAnchorPane {
 
+	private AnchorPane shadowPane;
+	
 	private double xOffset;
 	private double yOffset;
 
 	private boolean verschieben;
-
-	public StageVerschiebenMitAnchorPane(AnchorPane shadowPane, DialogPane mainAnchorPane, Button buttonWindowMax, Stage stage, boolean isStageWithBorder) {
-
-		mainAnchorPane.setOnMousePressed(new EventHandler<MouseEvent>() {
+	
+	public StageVerschiebenMitAnchorPane(AnchorPane shadowPane, DialogPane dialogPane, Button buttonWindowMax, Stage stage, boolean isStageWithBorder) {
+		this.shadowPane = shadowPane;
+			
+		dialogPane.setOnMousePressed(new EventHandler<MouseEvent>() {
 			@Override
             public void handle(MouseEvent event) {
             	System.out.println("setOnMousePressed");
@@ -48,12 +51,11 @@ public class StageVerschiebenMitAnchorPane {
             }
         });
 
-		mainAnchorPane.setOnMouseDragged(new EventHandler<MouseEvent>() {
+		dialogPane.setOnMouseDragged(new EventHandler<MouseEvent>() {
 			@Override
             public void handle(MouseEvent event) {
 				if (verschieben) {
 //					System.out.println("setOnMouseDragged");
-
 
 					// wenn das Fenster verschoben wird und es noch max. ist, dann erst das Fenster min. und den Schatten wieder einblenden
 	            	if(stage.isMaximized()){
@@ -66,7 +68,7 @@ public class StageVerschiebenMitAnchorPane {
 		            	int yMouse = p.y;
 
 		            	// an welcher Y-Position im Fenster ist die Mouse (in %)
-		            	double mousePosYInProzent = yMouse / mainAnchorPane.getHeight();
+		            	double mousePosYInProzent = yMouse / dialogPane.getHeight();
 
 		            	// das Fenster wieder minimieren
 //	            		setWindowMaxIcon(stage, buttonWindowMax, shadowPane, mainAnchorPane, Start.hasShadowPane);
@@ -75,23 +77,22 @@ public class StageVerschiebenMitAnchorPane {
 	            		double neueFensterPosY = 0;
 
 	            		// wenn die Mouse auf der X-Achse, nach dem minimieren nicht mehr im Fenster ist, dann setze das Fenster auf die Mouse Pos. in X
-	            		if(xMouse > (x + mainAnchorPane.getWidth())){
+	            		if(xMouse > (x + dialogPane.getWidth())){
 
-	            			neueFensterPosX = xMouse - mainAnchorPane.getWidth();
+	            			neueFensterPosX = xMouse - dialogPane.getWidth();
 	            			stage.setX(neueFensterPosX);
 	            			// setzte xOffset neu, ab da wird mit dem neuen wert weiter gerechnet
-	            			xOffset = mainAnchorPane.getWidth() -100;
+	            			xOffset = dialogPane.getWidth() -100;
 	            		}
 
 	            		// wenn die Mouse auf der Y-Achse, nach dem minimieren nicht mehr im Fenster ist, dann setze das Fenster auf die Mouse Pos. in Y
-	            		if(yMouse > (y + mainAnchorPane.getHeight())){
+	            		if(yMouse > (y + dialogPane.getHeight())){
 
-	            			neueFensterPosY = yMouse - (mainAnchorPane.getHeight() * mousePosYInProzent);
+	            			neueFensterPosY = yMouse - (dialogPane.getHeight() * mousePosYInProzent);
 	            			stage.setY(neueFensterPosY);
 	            			// setzte yOffset neu, ab da wird mit dem neuen wert weiter gerechnet
-	            			yOffset = mainAnchorPane.getHeight() - (neueFensterPosY / 2);
+	            			yOffset = dialogPane.getHeight() - (neueFensterPosY / 2);
 	            		}
-
 	            	} else {
 		            	double x = event.getScreenX() - xOffset;
 		            	double y = event.getScreenY() - yOffset;
@@ -99,16 +100,11 @@ public class StageVerschiebenMitAnchorPane {
 		            	stage.setX(x);
 		            	stage.setY(y);
 	            	}
-
-
-
 				}
-
-
             }
         });
 
-		mainAnchorPane.setOnMouseReleased(new EventHandler<MouseEvent>() {
+		dialogPane.setOnMouseReleased(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
             	if (verschieben) {
@@ -132,9 +128,11 @@ public class StageVerschiebenMitAnchorPane {
                 mouseEventY = event.getSceneY(),
                 sceneWidth = stage.getScene().getWidth(),
                 sceneHeight = stage.getScene().getHeight();
-
-        int border = ResizeHelper.ResizeListener.border;
-
+        
+        int border = 0;        
+        if (shadowPane != null) {
+			border = ResizeHelper.ResizeListener.border;
+		}
 
         if (mouseEventX < border && mouseEventY < border) {
         	return true;
@@ -155,7 +153,5 @@ public class StageVerschiebenMitAnchorPane {
         } else {
         	return false;
         }
-
 	}
-
 }

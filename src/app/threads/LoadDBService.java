@@ -6,22 +6,27 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import app.controller.CTree;
 import app.functions.LoadTime;
 import app.interfaces.IBindings;
 import app.interfaces.ILockDir;
-import app.interfaces.ILogs;
 import app.models.ItemsDB;
 import app.view.functions.notification.INotification;
 import app.view.functions.notification.Notification;
 import app.view.functions.notification.Notification.NotificationType;
+import app.watcher.watchService.PAWatcher;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 
-public class LoadDBService extends Service<ObservableList<ItemsDB>> implements ILockDir, IBindings, ILogs, INotification{
+public class LoadDBService extends Service<ObservableList<ItemsDB>> implements ILockDir, IBindings, INotification{
 
+	private static final Logger LOG = LogManager.getLogger(LoadDBService.class);
+	
 	private File pathFileDB;
 	private CTree cTree;
 		
@@ -130,6 +135,7 @@ public class LoadDBService extends Service<ObservableList<ItemsDB>> implements I
 //                	 logSevere(null, true, "Es ist ein Fehler aufgetreten", e); 
          			String text = "Es ist ein Fehler aufgetreten.";
          			getNotification().setText(text).setException(e).start();
+         			LOG.error(text, e);
                      e.printStackTrace();
                  }
          		LoadTime.Stop("updatePathList()", "");
@@ -144,9 +150,9 @@ public class LoadDBService extends Service<ObservableList<ItemsDB>> implements I
 
 	@Override
 	public Notification getNotification() {
-		Notification deaultNotification = Notification.create().setTitle("Fehler").owner(cTree.getPrimaryStage())
-				.setClass(getClass().getCanonicalName()).fehlerCode("000").type(NotificationType.ERROR).setLog().setAlert();
-		return deaultNotification;
+		Notification defaultNotification = Notification.create().setTitle("Fehler").owner(cTree.getPrimaryStage())
+				.setClass(getClass().getCanonicalName()).fehlerCode("000").type(NotificationType.ERROR).setAlert();
+		return defaultNotification;
 	}
 	
 	

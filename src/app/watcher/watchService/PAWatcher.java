@@ -273,16 +273,15 @@ public class PAWatcher implements ITreeUpdateHandler, ITreeItemMethods, ILockDir
 
 	@Override
 	public Notification getNotification() {
-		Notification deaultNotification = Notification.create()
+		Notification defaultNotification = Notification.create()
 				.setTitle("Fehler")
 				.setNotificationSender(cTree)
 				.owner(cTree.getPrimaryStage())
 				.setClass(getClass()
 				.getCanonicalName())
 				.type(NotificationType.ERROR)
-				.setLog()
 				.setAlert();
-		return deaultNotification;
+		return defaultNotification;
 	}
 
 

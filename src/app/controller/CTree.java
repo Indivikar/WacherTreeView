@@ -681,7 +681,7 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 
 	@Override
 	public Notification getNotification() {
-		Notification deaultNotification = Notification.create()
+		Notification defaultNotification = Notification.create()
 				.setTitle("Fehler")
 				.setNotificationSender(this)
 				.owner(primaryStage)
@@ -689,9 +689,8 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 				.getCanonicalName())
 				.fehlerCode("000")
 				.type(NotificationType.ERROR)
-				.setLog()
 				.setAlert();
-		return deaultNotification;
+		return defaultNotification;
 	}
 
 

@@ -6,18 +6,17 @@ import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import app.controller.CTree;
 import app.interfaces.ILockDir;
-import app.interfaces.ILogs;
 import app.interfaces.ITreeItemMethods;
 import app.interfaces.ITreeUpdateHandler;
 import app.view.functions.notification.INotification;
 import app.view.functions.notification.Notification;
 import app.view.functions.notification.Notification.NotificationType;
 import javafx.application.Platform;
-import javafx.geometry.Pos;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
 
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
@@ -27,11 +26,12 @@ import java.io.IOException;
 
 public class PAWatcher implements ITreeUpdateHandler, ITreeItemMethods, ILockDir, INotification {
 
+	private static final Logger LOG = LogManager.getLogger(PAWatcher.class);
+	
 	private CTree cTree;
 	
 	private static volatile Boolean mStop = false;
 	public static Integer mExecId = 0;
-
 
 //	private static final String inputDirPath = "V:\\Test\\___DB___";
 	
@@ -61,7 +61,7 @@ public class PAWatcher implements ITreeUpdateHandler, ITreeItemMethods, ILockDir
 				}
 			}
 		});
-		
+	
 		// Get the directory we want to watch, using the Paths singleton class
 		Path pathToFolder = null;
 		System.out.println("init -> PAWatcher() 2");
@@ -76,6 +76,7 @@ public class PAWatcher implements ITreeUpdateHandler, ITreeItemMethods, ILockDir
 			// TODO - Fehlermeldung anpassen
 			String text = "Der Client kann nict mehr mit dem Server synchronisiert werden";
 			getNotification().setText(text).fehlerCode("000").setException(e).start();
+			LOG.error(text, e);
 //			logSevere(getClass().getCanonicalName(), true, "", e);
 //			System.exit(1);
 		}
@@ -111,6 +112,7 @@ public class PAWatcher implements ITreeUpdateHandler, ITreeItemMethods, ILockDir
 			// TODO - Fehlermeldung anpassen
 			String text = "Der Client kann nicht mehr mit dem Server synchronisiert werden";			
 			getNotification().setText(text).fehlerCode("000").setException(e).start();
+			LOG.error(text, e);
 			e.printStackTrace();
 //			System.exit(1);			
 		}
@@ -262,6 +264,7 @@ public class PAWatcher implements ITreeUpdateHandler, ITreeItemMethods, ILockDir
 			} catch (InterruptedException e) {
 				String text = "Es ist ein Fehler aufgetreten.";	
 				getNotification().setText(text).fehlerCode("000").setException(e).start();
+				LOG.error(text, e);
 				e.printStackTrace();
 			}
 //			log.info("All application threads stopped, Shutting down...");

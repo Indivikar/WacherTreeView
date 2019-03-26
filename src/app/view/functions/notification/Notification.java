@@ -1,31 +1,15 @@
 package app.view.functions.notification;
 
-
-import javafx.concurrent.Task;
-import javafx.event.EventHandler;
-import javafx.fxml.FXMLLoader;
 import javafx.geometry.Bounds;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Control;
-import javafx.scene.control.DialogPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import javafx.stage.Window;
 import javafx.util.Duration;
 
@@ -36,17 +20,12 @@ import java.io.StringWriter;
 import org.controlsfx.control.Notifications;
 import org.controlsfx.tools.Utils;
 
-import com.jfoenix.controls.JFXDialog;
-import com.jfoenix.controls.JFXDialogLayout;
-
 import app.StartWacherDemo;
 import app.controller.CTree;
-import app.interfaces.ILogs;
 import app.interfaces.IStringBreaker;
 import app.view.alerts.AlertExpandableContent;
-import app.view.functions.StageVerschiebenMitAnchorPane;
 
-public class Notification implements ILogs, IStringBreaker{
+public class Notification implements IStringBreaker{
 
 	public enum NotificationType {
 		NULL, PEN, GEAR, REFRESH, INFO, WARNING, ERROR
@@ -75,8 +54,9 @@ public class Notification implements ILogs, IStringBreaker{
 	private AlertType alertType;
 	
 	// Log Properties
-	private boolean writeLog;
+//	private boolean writeLog;
 	private String exceptionText;
+	
 	
 	
 	private Image PEN_GRAPHIC = new Image(StartWacherDemo.class.getResourceAsStream("view/images/edit_32px.png")); 
@@ -84,7 +64,8 @@ public class Notification implements ILogs, IStringBreaker{
 	private Image REFRESH_GRAPHIC = new Image(StartWacherDemo.class.getResourceAsStream("view/images/refresh_32px.png")); 
 	private Image INFO_GRAPHIC = new Image(StartWacherDemo.class.getResourceAsStream("view/images/info_32px.png")); 
 	private Image WARNING_GRAPHIC = new Image(StartWacherDemo.class.getResourceAsStream("view/images/warning_32px.png")); 
-	private Image ERROR_GRAPHIC = new Image(StartWacherDemo.class.getResourceAsStream("view/images/error_32px.png")); 
+	private Image ERROR_GRAPHIC = new Image(StartWacherDemo.class.getResourceAsStream("view/images/error_32px.png"));
+	private Exception e; 
 	
 	
 	public Notification() {
@@ -136,10 +117,10 @@ public class Notification implements ILogs, IStringBreaker{
         return this;
     }
     
-    public Notification setLog() {
-        this.writeLog = true;
-        return this;
-    }
+//    public Notification setLog() {
+//        this.writeLog = true;
+//        return this;
+//    }
     
     public Notification setAlert() {
         this.showAlert = true;
@@ -161,6 +142,7 @@ public class Notification implements ILogs, IStringBreaker{
    	 	StringWriter errors = new StringWriter();
    	 	e.printStackTrace(new PrintWriter(errors));
         this.exceptionText = errors.toString();
+        this.e = e;
         return this;
     }
     
@@ -180,22 +162,13 @@ public class Notification implements ILogs, IStringBreaker{
     
     public void start() { 
 
-    	Task<Void> task = new Task<Void>() {
-		    @Override
-		    public Void call() {
-		    	writeLog();
-		    	return null;
-		    }
-    	};
-    	new Thread(task).start();
-    	
-    	
+    	// Notification syncronisieren und eine kleine Pause zwischen den Notifications einlegen,
+    	// damit es etwas besser dagestellt wird
     	NotificationThread notificationThread = new NotificationThread(cTree, this);
     	notificationThread.start();
 
     }
-    
-    
+       
 	public void createAndShow() {
 
     	// kurze Pause einlegen, sonst gibt es Überlagerungen bei der Darstellung der Notes
@@ -269,23 +242,23 @@ public class Notification implements ILogs, IStringBreaker{
 		}		
 	}
 	
-	private void writeLog() {
-		if (writeLog) {			
-			switch (type) {
-		        case INFO:
-		        	logInfo(klasse, text, exceptionText);
-		            break;	                
-		        case WARNING:
-		        	logWarning(klasse, text, exceptionText);
-		            break;	                     
-		        case ERROR:	        	
-		        	logSevere(klasse, text, exceptionText);
-		            break;                   
-		        default:
-		            break;
-		    }			
-		}	
-	}
+//	private void writeLog() {
+//		if (writeLog) {			
+//			switch (type) {
+//		        case INFO:
+//		        	logInfo(klasse, text, exceptionText);
+//		            break;	                
+//		        case WARNING:
+//		        	logWarning(klasse, text, exceptionText);
+//		            break;	                     
+//		        case ERROR:	        	
+//		        	logSevere(klasse, text, exceptionText, e);
+//		            break;                   
+//		        default:
+//		            break;
+//		    }			
+//		}	
+//	}
 	
 	private void printTextLayoutBounds(Parent p) {
 	    for(Node n : p.getChildrenUnmodifiable()) {

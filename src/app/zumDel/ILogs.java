@@ -1,9 +1,9 @@
 package app.interfaces;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.logging.FileHandler;
@@ -12,19 +12,10 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
-import app.watcher.watchService.PAWatcher;
-import javafx.geometry.Pos;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
-import javafx.stage.Stage;
+import app.controller.CTree;
 
 
-
-public interface ILogs extends IWindowEigenschaften {
+public interface ILogs extends IWindowEigenschaften, IAppData {
 
 	public Logger log = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 	
@@ -75,9 +66,10 @@ public interface ILogs extends IWindowEigenschaften {
 		log.warning(msg);
 	}
 	
-	public default void logSevere(String myClass, String msg, String exceptionText) {
+	public default void logSevere(String myClass, String msg, String exceptionText, Exception e) {
 		log(myClass, exceptionText);			
 		log.severe(msg);
+		log.log( Level.SEVERE, "oh oh", e );
 	}
 	
 //	public default void logInfoAndAlert(boolean setAlert, String msg) {
@@ -106,13 +98,14 @@ public interface ILogs extends IWindowEigenschaften {
 	public default void log(String myClass, String exceptionText) {
 		Logger root = Logger.getLogger("");
 		FileHandler txt = null;
-		
+
 		try {
 			File logDir = new File("./logs/"); 
 			if( !(logDir.exists()) )
 				logDir.mkdir();
-			
-			txt = new FileHandler("logs/log.txt");
+
+			File logFile = new File(getAppDataFile("logs") + File.separator + CTree.logFileName);
+			txt = new FileHandler(logFile.getAbsolutePath());
 		} catch (SecurityException | IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -132,6 +125,7 @@ public interface ILogs extends IWindowEigenschaften {
 				String msg = this.formatMessage(record);
 //				String inKlasse = myClass.getCanonicalName();
 				
+//				ret += readLogs(getAppDataFile("logs") + "//" + CTree.logFileName);
 				ret += df.format(d) + "\r\n";
 				ret += "     Class: " + myClass;
 				ret += "\r\n";
@@ -159,6 +153,24 @@ public interface ILogs extends IWindowEigenschaften {
 		
 		root.addHandler(txt);		
 	}
+	
+	public static String readLogs(String file) {
+		
+		String allLines = null;
+		
+		try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+			String line;
+			allLines = br.toString();
+			
+//			while ((line = br.readLine()) != null) {
+//				allLines += line;
+//			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return allLines;
+	}
+	
 	
 //	public default void alert(AlertType alertType, String msg, String klasse, String exceptionText) {
 //		

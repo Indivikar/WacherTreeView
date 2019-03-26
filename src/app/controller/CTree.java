@@ -15,6 +15,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.ResourceBundle;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import app.functions.LockFileHandler;
 import app.StartWacherDemo;
 import app.TreeViewWatchService.CreateTree;
@@ -24,7 +27,6 @@ import app.TreeViewWatchService.PathTreeCell;
 import app.TreeViewWatchService.ScrollingByDragNDrop;
 import app.interfaces.IBindings;
 import app.interfaces.ILockDir;
-import app.interfaces.ILogs;
 import app.interfaces.ISaveExpandedItems;
 import app.interfaces.ISuffix;
 import app.interfaces.ISystemIcon;
@@ -33,6 +35,7 @@ import app.listeners.ChildrenChangedListener;
 import app.loadTime.LoadTime.LoadTimeOperation;
 import app.models.ItemsDB;
 import app.sort.WindowsExplorerComparator;
+import app.test.log4j2.LogConfigXML;
 import app.threads.LoadDBService;
 import app.threads.SortWinExplorerTask;
 import app.threads.TreeLoaderTask;
@@ -52,7 +55,6 @@ import javafx.concurrent.Task;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.SelectionMode;
@@ -76,11 +78,14 @@ import javafx.stage.Stage;
  *
  */
 
-public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpandedItems, IBindings, ILockDir, ITreeUpdateHandler, ILogs, INotification {
+public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpandedItems, IBindings, ILockDir, ITreeUpdateHandler, INotification {
 	
+	private static final Logger LOG = LogManager.getLogger(CTree.class);
 
-	
-	public static ObservableList<LoadTimeOperation> listLoadTime = FXCollections.observableArrayList();
+	public static String firmenName = "IndivikarAG";
+	public static String programmName = "WatcherTreeView"; 
+		
+	public static String logFileName = "log.txt"; 
 
 //	String mainDirectory = "Y:\\test";
 	public static String lockFileName = "folder.lock";
@@ -91,6 +96,8 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 	private static String fileNameDB = "test.txt";	
 	private String DirectoryDB = mainDirectory + File.separator + DirectoryNameDB;
 	private static String pathFileDB = mainDirectory + File.separator + DirectoryNameDB + File.separator + fileNameDB;
+	
+	public static ObservableList<LoadTimeOperation> listLoadTime = FXCollections.observableArrayList();
 	
 	// Stages
 	private StartWacherDemo startWacherDemo;
@@ -177,6 +184,8 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 	public void initialize(URL arg0, ResourceBundle arg1) {
 		System.out.println("CTree()");	
 
+		// Die Config-Datei für die Logs erstellen und Config-Datei einlesen
+		new LogConfigXML().config().createXML();
 
 //		pathList = new PathList(pathFileDB);
 		scrollingByDragNDrop = new ScrollingByDragNDrop(tree);
@@ -209,14 +218,18 @@ public class CTree implements Initializable, ISuffix, ISystemIcon, ISaveExpanded
 		if (!new File(mainDirectory).exists()) {
 			String text = "Der Daten-Ordner \n\"" + mainDirectory + "\"\n konnte nicht gefunden werden.";
 			getNotification().setText(text).start();
+			LOG.error(text);
+			
 		}
 		if (!new File(DirectoryDB).exists()) {
 			String text = "Der Datenbank-Ordner \n\"" + DirectoryDB + "\"\n konnte nicht gefunden werden.";
 			getNotification().setText(text).start();
+			LOG.error(text);
 		}
 		if (!new File(pathFileDB).exists()) {
 			String text = "Die Datenbank \n\"" + pathFileDB + "\"\n konnte nicht gefunden werden.";
 			getNotification().setText(text).start();
+			LOG.error(text);
 		}
 	}
 

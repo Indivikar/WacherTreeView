@@ -37,10 +37,10 @@ public class CAlertExpandableContent implements Initializable, IStringBreaker {
 			
 		switch (alertType) {
 	        case INFORMATION:
-	        	image = notification.getERROR_GRAPHIC();
+	        	image = notification.getINFO_GRAPHIC();
 	            break;	                
 	        case WARNING:
-	        	image = notification.getERROR_GRAPHIC();
+	        	image = notification.getWARNING_GRAPHIC();
 	            break;	                     
 	        case ERROR:
 	        	image = notification.getERROR_GRAPHIC();

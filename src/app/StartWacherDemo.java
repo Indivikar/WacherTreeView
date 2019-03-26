@@ -5,7 +5,6 @@ import java.io.File;
 import app.controller.CTree;
 import app.interfaces.IBindings;
 import app.interfaces.ILockDir;
-import app.interfaces.ILogs;
 import app.interfaces.IPrimaryStage;
 import app.loadTime.LoadTime;
 import javafx.application.Application;

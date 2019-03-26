@@ -6,27 +6,25 @@
 }
 */
 
-.dialog-pane {
-  -fx-border-insets: 0;
-  -fx-background-insets: 0;
-  -fx-background-radius: 0;
-  -fx-border-radius: 0;
-  -fx-border-color: B5B5B5;
-  -fx-border-style: solid;
-  -fx-border-width: 1;
+
+.myButton{
+    -fx-background-color: transparent;
+    -fx-border-color: #2369B5;
+    -fx-border-radius: 2px;
+    -fx-border-width: 1px;
 }
 
-.dialog-pane {
-    -fx-background-color: linear-gradient(to bottom, #EFEFEF, #D9D9D9);
-    -fx-padding: 0;
+.myButton:hover{
+    -fx-border-color: #606060;
 }
 
+.myButton:pressed{
+    -fx-background-color: #cccccc;
+}
 
 .buttonWindowClose-mini{
 	-fx-graphic: url('../images/windowButtons/Button-Close-mini-20px.png');
 }
-
-
 
 .buttonWindowClose-mini{
 	-fx-background-color: transparent;
@@ -39,12 +37,23 @@
 	-fx-background-color: #2369B5;
 }
 
-
 .buttonWindowClose-mini:hover{
 	-fx-background-color: #E81123;
 }
 
-
 .buttonWindowClose-mini:pressed{
 	-fx-background-color: #F1707A;
 }
+
+.dialog-pane {
+  -fx-border-insets: 0;
+  -fx-background-insets: 0;
+  -fx-background-radius: 0;
+  -fx-border-radius: 0;
+  -fx-border-color: B5B5B5;
+  -fx-border-style: solid;
+  -fx-border-width: 1;
+  -fx-background-color: linear-gradient(to bottom, #EFEFEF, #D9D9D9);
+  -fx-padding: 0;
+}
+

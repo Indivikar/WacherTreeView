@@ -23,10 +23,7 @@ public class StageVerschiebenMitAnchorPane {
 	private boolean verschieben;
 
 	public StageVerschiebenMitAnchorPane(AnchorPane shadowPane, DialogPane mainAnchorPane, Button buttonWindowMax, Stage stage, boolean isStageWithBorder) {
-		
-		
-		
-		
+
 		mainAnchorPane.setOnMousePressed(new EventHandler<MouseEvent>() {
 			@Override
             public void handle(MouseEvent event) {
@@ -49,12 +46,7 @@ public class StageVerschiebenMitAnchorPane {
 
             	System.out.println("xOffset: " + xOffset);
             }
-
-
-
         });
-
-
 
 		mainAnchorPane.setOnMouseDragged(new EventHandler<MouseEvent>() {
 			@Override
